@@ -1,0 +1,2023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPIN OFF - Smart Soccer Ball Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .hero {
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+            padding: 80px 20px 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(255,56,56,0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero h1 {
+            font-size: 5em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff3838 0%, #ff6b6b 50%, #ff3838 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(255,56,56,0.5)); }
+            50% { filter: drop-shadow(0 0 40px rgba(255,56,56,0.8)); }
+        }
+
+        .hero p {
+            font-size: 1.5em;
+            color: #999;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .tagline {
+            font-size: 1.1em;
+            color: #ff3838;
+            font-weight: 600;
+            margin-top: 15px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .nav {
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            border-bottom: 1px solid #222;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            padding: 15px 35px;
+            background: transparent;
+            border: 2px solid #333;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,56,56,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-btn:hover::before {
+            left: 100%;
+        }
+        
+        .nav-btn:hover {
+            border-color: #ff3838;
+            color: #ff3838;
+            box-shadow: 0 0 20px rgba(255,56,56,0.3);
+        }
+        
+        .nav-btn.active {
+            background: #ff3838;
+            border-color: #ff3838;
+            box-shadow: 0 0 30px rgba(255,56,56,0.5);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .status-section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        .status-text {
+            font-size: 1.5em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #ff3838;
+            animation: pulse-dot 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #00ff00;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,56,56,0.7); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 10px rgba(255,56,56,0); }
+        }
+        
+        .connect-btn {
+            padding: 18px 45px;
+            background: linear-gradient(135deg, #ff3838 0%, #e62e2e 100%);
+            border: none;
+            color: white;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            border-radius: 50px;
+            box-shadow: 0 5px 25px rgba(255,56,56,0.4);
+        }
+        
+        .connect-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 35px rgba(255,56,56,0.6);
+        }
+        
+        .connect-btn:disabled {
+            background: #333;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .connect-btn.connected {
+            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            color: #000;
+            box-shadow: 0 5px 25px rgba(0,255,0,0.4);
+        }
+        
+        .mode-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .mode-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+            border: 2px solid #333;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,56,56,0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .mode-card:hover::before {
+            opacity: 1;
+        }
+        
+        .mode-card:hover {
+            border-color: #ff3838;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(255,56,56,0.3);
+        }
+        
+        .mode-card.active {
+            background: linear-gradient(135deg, #ff3838 0%, #e62e2e 100%);
+            border-color: #ff3838;
+            box-shadow: 0 10px 40px rgba(255,56,56,0.5);
+        }
+        
+        .mode-card h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .mode-card p {
+            position: relative;
+            z-index: 1;
+            opacity: 0.9;
+        }
+        
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #ff3838, #ff6b6b);
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+        
+        .metric-card:hover {
+            border-color: #ff3838;
+            transform: translateY(-8px);
+            box-shadow: 0 15px 50px rgba(255,56,56,0.3);
+        }
+
+        .metric-card:hover::after {
+            transform: scaleX(1);
+        }
+        
+        .metric-card.expanded {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #222 0%, #1a1a1a 100%);
+        }
+        
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .metric-label {
+            font-size: 0.85em;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 700;
+        }
+        
+        .expand-icon {
+            color: #ff3838;
+            font-size: 1.5em;
+            transition: transform 0.3s;
+        }
+
+        .metric-card.expanded .expand-icon {
+            transform: rotate(45deg);
+        }
+        
+        .metric-value {
+            font-size: 3.5em;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ff3838 0%, #ff6b6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+        
+        .metric-unit {
+            font-size: 1.1em;
+            color: #666;
+            font-weight: 600;
+        }
+        
+        .metric-details {
+            display: none;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #333;
+        }
+        
+        .metric-card.expanded .metric-details {
+            display: block;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #222;
+        }
+        
+        .detail-label {
+            color: #999;
+            font-size: 0.95em;
+        }
+        
+        .detail-value {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+        
+        .chart-section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        .chart-section h2 {
+            font-size: 2em;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #ff3838 0%, #ff6b6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+        
+        .field-section {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        
+        .soccer-field {
+            background: linear-gradient(180deg, #2d5016 0%, #3a6b1f 50%, #2d5016 100%);
+            border: 4px solid #fff;
+            border-radius: 10px;
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            height: 600px;
+            margin: 20px auto;
+            cursor: crosshair;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.8);
+        }
+
+        .field-line {
+            position: absolute;
+            background: #fff;
+        }
+
+        .halfway-line {
+            left: 50%;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            transform: translateX(-50%);
+        }
+
+        .center-circle {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 120px;
+            height: 120px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: transparent;
+        }
+
+        .center-spot {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .penalty-box {
+            position: absolute;
+            border: 3px solid #fff;
+            background: transparent;
+        }
+
+        .penalty-box-left {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20%;
+            height: 50%;
+        }
+
+        .penalty-box-right {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20%;
+            height: 50%;
+        }
+
+        .goal-box {
+            position: absolute;
+            border: 3px solid #fff;
+            background: transparent;
+        }
+
+        .goal-box-left {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8%;
+            height: 25%;
+        }
+
+        .goal-box-right {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8%;
+            height: 25%;
+        }
+
+        .penalty-spot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .penalty-spot-left {
+            left: 15%;
+        }
+
+        .penalty-spot-right {
+            right: 15%;
+        }
+
+        .corner-arc {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #fff;
+            background: transparent;
+        }
+
+        .corner-arc-tl {
+            top: 0;
+            left: 0;
+            border-radius: 0 0 100% 0;
+            border-top: none;
+            border-left: none;
+        }
+
+        .corner-arc-tr {
+            top: 0;
+            right: 0;
+            border-radius: 0 0 0 100%;
+            border-top: none;
+            border-right: none;
+        }
+
+        .corner-arc-bl {
+            bottom: 0;
+            left: 0;
+            border-radius: 0 100% 0 0;
+            border-bottom: none;
+            border-left: none;
+        }
+
+        .corner-arc-br {
+            bottom: 0;
+            right: 0;
+            border-radius: 100% 0 0 0;
+            border-bottom: none;
+            border-right: none;
+        }
+        
+        .shot-marker {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: #ff3838;
+            border: 3px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(255,56,56,0.8);
+            animation: marker-pulse 2s infinite;
+        }
+
+        @keyframes marker-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+        
+        .shot-line {
+            position: absolute;
+            height: 4px;
+            background: linear-gradient(90deg, #ffff00, #ffaa00);
+            transform-origin: 0 0;
+            z-index: 50;
+            box-shadow: 0 0 15px #ffff00;
+        }
+        
+        .field-controls {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .field-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #333 0%, #222 100%);
+            border: 2px solid #444;
+            border-radius: 50px;
+            color: #fff;
+            margin: 0 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .field-btn:hover {
+            background: linear-gradient(135deg, #ff3838 0%, #e62e2e 100%);
+            border-color: #ff3838;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 25px rgba(255,56,56,0.4);
+        }
+        
+        .shot-log {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 30px;
+        }
+
+        .shot-log::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .shot-log::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        .shot-log::-webkit-scrollbar-thumb {
+            background: #ff3838;
+            border-radius: 4px;
+        }
+        
+        .shot-entry {
+            background: rgba(255,56,56,0.05);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ff3838;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .shot-entry:hover {
+            background: rgba(255,56,56,0.1);
+            transform: translateX(5px);
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 120px 20px;
+        }
+        
+        .no-data-icon {
+            font-size: 8em;
+            margin-bottom: 30px;
+            opacity: 0.2;
+            filter: grayscale(100%);
+        }
+
+        .no-data h2 {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+
+        .alert {
+            background: linear-gradient(135deg, #ff3838 0%, #e62e2e 100%);
+            color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            display: none;
+            font-weight: 600;
+            box-shadow: 0 5px 25px rgba(255,56,56,0.4);
+        }
+
+        .alert.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-mini-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-mini-card:hover {
+            border-color: #ff3838;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255,56,56,0.2);
+        }
+
+        .stat-mini-card .value {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: #ff3838;
+            margin-bottom: 5px;
+        }
+
+        .stat-mini-card .label {
+            color: #999;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .export-btn {
+            padding: 15px 35px;
+            background: linear-gradient(135deg, #333 0%, #222 100%);
+            border: 2px solid #444;
+            border-radius: 50px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+
+        .export-btn:hover {
+            background: linear-gradient(135deg, #ff3838 0%, #e62e2e 100%);
+            border-color: #ff3838;
+            box-shadow: 0 5px 25px rgba(255,56,56,0.4);
+        }
+
+        /* CHATBOT STYLES */
+        .chat-container {
+            background: linear-gradient(135deg, #1a1a1a 0%, #0f0f0f 100%);
+            border: 1px solid #333;
+            border-radius: 15px;
+            padding: 0;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            height: 700px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #ff3838 0%, #e62e2e 100%);
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chat-header h2 {
+            font-size: 1.8em;
+            margin: 0;
+        }
+
+        .ai-badge {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.7em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .api-key-section {
+            background: rgba(255,56,56,0.1);
+            border: 1px solid #ff3838;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+        }
+
+        .api-key-section h3 {
+            color: #ff3838;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .api-key-section p {
+            color: #ccc;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .api-key-section a {
+            color: #ff3838;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .api-key-section a:hover {
+            text-decoration: underline;
+        }
+
+        .api-key-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .api-key-input {
+            flex: 1;
+            padding: 12px 20px;
+            background: #0a0a0a;
+            border: 2px solid #333;
+            border-radius: 25px;
+            color: #fff;
+            font-size: 1em;
+        }
+
+        .api-key-input:focus {
+            outline: none;
+            border-color: #ff3838;
+        }
+
+        .save-key-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #ff3838 0%, #e62e2e 100%);
+            border: none;
+            border-radius: 25px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+        }
+
+        .save-key-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255,56,56,0.4);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #ff3838;
+            border-radius: 4px;
+        }
+
+        .message {
+            padding: 15px 20px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #ff3838 0%, #e62e2e 100%);
+            align-self: flex-end;
+            margin-left: auto;
+        }
+
+        .message.ai {
+            background: rgba(255,56,56,0.1);
+            border: 1px solid #333;
+            align-self: flex-start;
+        }
+
+        .message.ai.loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 5px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #ff3838;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .chat-input-container {
+            padding: 25px;
+            border-top: 1px solid #333;
+            background: #0a0a0a;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 25px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 50px;
+            color: #fff;
+            font-size: 1em;
+            resize: none;
+            font-family: inherit;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #ff3838;
+        }
+
+        .send-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ff3838 0%, #e62e2e 100%);
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.2em;
+            transition: all 0.3s;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 25px rgba(255,56,56,0.4);
+        }
+
+        .send-btn:disabled {
+            background: #333;
+            cursor: not-allowed;
+        }
+
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .quick-question-btn {
+            padding: 10px 20px;
+            background: rgba(255,56,56,0.1);
+            border: 1px solid #333;
+            border-radius: 20px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .quick-question-btn:hover {
+            background: rgba(255,56,56,0.2);
+            border-color: #ff3838;
+            transform: translateY(-2px);
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 3em;
+            }
+            
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metric-card.expanded {
+                grid-column: 1;
+            }
+
+            .nav {
+                gap: 10px;
+            }
+
+            .nav-btn {
+                padding: 10px 20px;
+                font-size: 0.8em;
+            }
+
+            .chat-container {
+                height: 600px;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>SPIN OFF</h1>
+        <p>Advanced Soccer Ball Analytics System</p>
+        <p class="tagline">Data-Driven Training • AI-Powered Coaching • Real Results</p>
+    </div>
+    
+    <div class="nav">
+        <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+        <button class="nav-btn" data-page="chat">AI Chat</button>
+        <button class="nav-btn" data-page="analytics">Analytics</button>
+        <button class="nav-btn" data-page="about">About</button>
+    </div>
+    
+    <div class="container">
+        <div id="alert" class="alert"></div>
+
+        <!-- DASHBOARD PAGE -->
+        <div id="dashboard" class="page active">
+            <div class="status-section">
+                <div class="status-text">
+                    <span class="status-indicator" id="statusIndicator"></span>
+                    <span id="statusText">Not Connected</span>
+                </div>
+                <button id="connectBtn" class="connect-btn">Connect Device</button>
+            </div>
+            
+            <div id="dataDisplay" style="display: none;">
+                <div class="mode-selector">
+                    <div class="mode-card active" id="practiceMode">
+                        <h3>⚽ Practice Mode</h3>
+                        <p>Track your training sessions with comprehensive metrics</p>
+                    </div>
+                    <div class="mode-card" id="shootingMode">
+                        <h3>🎯 Shooting Mode</h3>
+                        <p>Analyze shot placement & technique with precision</p>
+                    </div>
+                </div>
+                
+                <div id="practiceView">
+                    <div class="stats-overview">
+                        <div class="stat-mini-card">
+                            <div class="value" id="quickKicks">0</div>
+                            <div class="label">Total Kicks</div>
+                        </div>
+                        <div class="stat-mini-card">
+                            <div class="value" id="quickMaxSpeed">0</div>
+                            <div class="label">Max Speed (m/s)</div>
+                        </div>
+                        <div class="stat-mini-card">
+                            <div class="value" id="quickAvgSpeed">0</div>
+                            <div class="label">Avg Speed (m/s)</div>
+                        </div>
+                        <div class="stat-mini-card">
+                            <div class="value" id="quickMaxSpin">0</div>
+                            <div class="label">Max Spin (RPM)</div>
+                        </div>
+                    </div>
+
+                    <div class="data-grid">
+                        <div class="metric-card" onclick="toggleExpand(this)">
+                            <div class="metric-header">
+                                <span class="metric-label">Speed</span>
+                                <span class="expand-icon">+</span>
+                            </div>
+                            <div class="metric-value" id="speedMs">--</div>
+                            <div class="metric-unit">m/s</div>
+                            <div class="metric-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Kilometers/Hour</span>
+                                    <span class="detail-value" id="speedKmh">--</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Miles/Hour</span>
+                                    <span class="detail-value" id="speedMph">--</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Professional Range</span>
+                                    <span class="detail-value">25-35 m/s</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card" onclick="toggleExpand(this)">
+                            <div class="metric-header">
+                                <span class="metric-label">Spin Rate</span>
+                                <span class="expand-icon">+</span>
+                            </div>
+                            <div class="metric-value" id="spin">--</div>
+                            <div class="metric-unit">RPM</div>
+                            <div class="metric-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Max Spin This Session</span>
+                                    <span class="detail-value" id="maxSpin">0</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Curve Potential</span>
+                                    <span class="detail-value">Calculating...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card" onclick="toggleExpand(this)">
+                            <div class="metric-header">
+                                <span class="metric-label">Flight Time</span>
+                                <span class="expand-icon">+</span>
+                            </div>
+                            <div class="metric-value" id="flightTime">--</div>
+                            <div class="metric-unit">ms</div>
+                            <div class="metric-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Distance Estimate</span>
+                                    <span class="detail-value" id="distanceEst">Calculating...</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Hang Time Rating</span>
+                                    <span class="detail-value">Good</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card" onclick="toggleExpand(this)">
+                            <div class="metric-header">
+                                <span class="metric-label">Launch Angle</span>
+                                <span class="expand-icon">+</span>
+                            </div>
+                            <div class="metric-value" id="launchAngle">--</div>
+                            <div class="metric-unit">degrees</div>
+                            <div class="metric-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Optimal Range</span>
+                                    <span class="detail-value">20-35°</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Current Rating</span>
+                                    <span class="detail-value" id="angleRating">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card" onclick="toggleExpand(this)">
+                            <div class="metric-header">
+                                <span class="metric-label">Impact Force</span>
+                                <span class="expand-icon">+</span>
+                            </div>
+                            <div class="metric-value" id="impact">--</div>
+                            <div class="metric-unit">m/s²</div>
+                            <div class="metric-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Power Rating</span>
+                                    <span class="detail-value" id="powerRating">--</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Strike Quality</span>
+                                    <span class="detail-value" id="strikeQuality">--</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="metric-card" onclick="toggleExpand(this)">
+                            <div class="metric-header">
+                                <span class="metric-label">Session Stats</span>
+                                <span class="expand-icon">+</span>
+                            </div>
+                            <div class="metric-value" id="totalKicks">0</div>
+                            <div class="metric-unit">kicks</div>
+                            <div class="metric-details">
+                                <div class="detail-row">
+                                    <span class="detail-label">Max Speed</span>
+                                    <span class="detail-value"><span id="maxSpeed">0</span> m/s</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Average Speed</span>
+                                    <span class="detail-value"><span id="avgSpeed">0</span> m/s</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label">Session Duration</span>
+                                    <span class="detail-value" id="sessionTime">0 min</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-section">
+                        <h2>📊 Performance Analytics</h2>
+                        <div class="chart-container">
+                            <canvas id="mainChart"></canvas>
+                        </div>
+                    </div>
+
+                    <button class="export-btn" onclick="exportSessionData()">💾 Export Session Data</button>
+                </div>
+                
+                <div id="shootingView" style="display: none;">
+                    <div class="field-section">
+                        <h2 style="color: #ff3838; margin-bottom: 20px;">🎯 Shot Tracking</h2>
+                        <p style="margin-bottom: 20px; font-size: 1.1em;" id="locationText">Click to mark your position, then your target</p>
+                        <div class="field-controls">
+                            <button class="field-btn" onclick="clearField()">🗑️ Clear Field</button>
+                            <button class="field-btn" onclick="exportShotData()">💾 Export Shots</button>
+                        </div>
+                        <div class="soccer-field" id="soccerField">
+                            <div class="field-line halfway-line"></div>
+                            <div class="center-circle"></div>
+                            <div class="center-spot"></div>
+                            <div class="penalty-box penalty-box-left"></div>
+                            <div class="penalty-box penalty-box-right"></div>
+                            <div class="goal-box goal-box-left"></div>
+                            <div class="goal-box goal-box-right"></div>
+                            <div class="penalty-spot penalty-spot-left"></div>
+                            <div class="penalty-spot penalty-spot-right"></div>
+                            <div class="corner-arc corner-arc-tl"></div>
+                            <div class="corner-arc corner-arc-tr"></div>
+                            <div class="corner-arc corner-arc-bl"></div>
+                            <div class="corner-arc corner-arc-br"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-section">
+                        <h2>📋 Shot Log</h2>
+                        <div class="shot-log" id="shotLog">
+                            <p style="text-align: center; color: #666;">No shots recorded</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="noData" class="no-data">
+                <div class="no-data-icon">⚽</div>
+                <h2>Ready to Begin</h2>
+                <p style="color: #666; margin-top: 10px; font-size: 1.2em;">Connect your Spin Off device to start tracking</p>
+            </div>
+        </div>
+
+        <!-- AI CHAT PAGE -->
+        <div id="chat" class="page">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h2>🤖 AI Soccer Coach</h2>
+                    <span class="ai-badge">Powered by Groq</span>
+                </div>
+
+                <div class="api-key-section" id="apiKeySection">
+                    <h3>⚙️ Setup Required</h3>
+                    <p>To use the AI chat, you need a free Groq API key:</p>
+                    <ol style="margin: 10px 0; padding-left: 20px; line-height: 1.8;">
+                        <li>Go to <a href="https://console.groq.com" target="_blank">console.groq.com</a></li>
+                        <li>Sign up for free (no credit card needed)</li>
+                        <li>Create an API key</li>
+                        <li>Paste it below:</li>
+                    </ol>
+                    <div class="api-key-input-group">
+                        <input type="password" class="api-key-input" id="apiKeyInput" placeholder="gsk_xxxxxxxxxxxxx">
+                        <button class="save-key-btn" onclick="saveApiKey()">Save Key</button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message ai">
+                        👋 Hi! I'm your AI soccer coach. Ask me anything about technique, training, or your performance!
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <div class="quick-questions">
+                        <button class="quick-question-btn" onclick="askQuickQuestion('How do I improve my curve shots?')">💨 Improve Curves</button>
+                        <button class="quick-question-btn" onclick="askQuickQuestion('What is a good warm-up routine?')">🔥 Warm-up Tips</button>
+                        <button class="quick-question-btn" onclick="askQuickQuestion('How can I increase my shot power?')">💪 More Power</button>
+                        <button class="quick-question-btn" onclick="askQuickQuestion('Analyze my last 5 kicks')">📊 Analyze Stats</button>
+                    </div>
+                    <div class="chat-input-wrapper">
+                        <textarea 
+                            class="chat-input" 
+                            id="chatInput" 
+                            placeholder="Ask your AI coach anything..."
+                            rows="1"
+                            onkeydown="handleChatKeyPress(event)"
+                        ></textarea>
+                        <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANALYTICS PAGE -->
+        <div id="analytics" class="page">
+            <div class="chart-section">
+                <h2>📈 Advanced Analytics</h2>
+                <p style="color: #999; margin-bottom: 30px;">Deep dive into your performance metrics</p>
+                
+                <div class="data-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-label">Consistency Score</span>
+                        </div>
+                        <div class="metric-value" id="consistencyScore">--</div>
+                        <div class="metric-unit">%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-label">Improvement Rate</span>
+                        </div>
+                        <div class="metric-value" id="improvementRate">--</div>
+                        <div class="metric-unit">%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-label">Power Index</span>
+                        </div>
+                        <div class="metric-value" id="powerIndex">--</div>
+                        <div class="metric-unit">/100</div>
+                    </div>
+                </div>
+
+                <div class="chart-container" style="margin-top: 40px;">
+                    <canvas id="analyticsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ABOUT PAGE -->
+        <div id="about" class="page">
+            <div class="chart-section">
+                <h2>About Spin Off</h2>
+                <p style="color: #ff3838; font-size: 1.3em; font-weight: 600;">Created by Sahil & Skyler | 7th Grade Inventors</p>
+                <p style="color: #999; font-size: 1.1em; margin-bottom: 40px;">Invention Convention 2026</p>
+                
+                <h3 style="color: #ff3838; font-size: 1.8em; margin: 30px 0 15px;">Our Mission</h3>
+                <p style="line-height: 1.8; font-size: 1.1em; margin-bottom: 20px;">
+                    We created Spin Off to bring professional-grade sports analytics to every soccer player. 
+                    Using advanced sensors and AI-powered coaching, we're making data-driven training accessible to everyone.
+                </p>
+
+                <h3 style="color: #ff3838; font-size: 1.8em; margin: 30px 0 15px;">Technology</h3>
+                <p style="line-height: 1.8; font-size: 1.1em; margin-bottom: 20px;">
+                    Spin Off combines Arduino Nano 33 BLE Sense Rev 2 with Groq AI (Llama 3.3) to deliver real-time performance 
+                    analytics, instant AI coaching responses, and personalized training advice.
+                </p>
+
+                <h3 style="color: #ff3838; font-size: 1.8em; margin: 30px 0 15px;">Features</h3>
+                <ul style="line-height: 2; font-size: 1.1em; margin-left: 30px;">
+                    <li>Real-time speed, spin, and trajectory tracking</li>
+                    <li>AI chatbot coach (powered by Groq)</li>
+                    <li>Shot placement visualization with field lines</li>
+                    <li>Performance analytics and trends</li>
+                    <li>Session export and sharing</li>
+                    <li>Instant technique tips and advice</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SERVICE_UUID = '19b10000-e8f2-537e-4f6c-d104768a1214';
+        const SPEED_CHAR_UUID = '19b10001-e8f2-537e-4f6c-d104768a1214';
+        const SPIN_CHAR_UUID = '19b10002-e8f2-537e-4f6c-d104768a1214';
+        const STATS_CHAR_UUID = '19b10003-e8f2-537e-4f6c-d104768a1214';
+        const MODE_CHAR_UUID = '19b10004-e8f2-537e-4f6c-d104768a1214';
+        
+        let device, speedChar, spinChar, statsChar, modeChar;
+        let chart, analyticsChart;
+        let kickHistory = [];
+        let currentMode = 'practice';
+        let shotLocation = null;
+        let shots = [];
+        let sessionStartTime = Date.now();
+        let sessionData = {
+            kicks: 0,
+            maxSpeed: 0,
+            avgSpeed: 0,
+            maxSpin: 0,
+            speeds: [],
+            spins: [],
+            angles: []
+        };
+
+        // Chat variables
+        let groqApiKey = localStorage.getItem('groqApiKey') || '';
+        let chatHistory = [];
+        
+        function showAlert(message, duration = 3000) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), duration);
+        }
+        
+        function toggleExpand(card) {
+            const wasExpanded = card.classList.contains('expanded');
+            document.querySelectorAll('.metric-card').forEach(c => c.classList.remove('expanded'));
+            if (!wasExpanded) card.classList.add('expanded');
+        }
+        
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(btn.dataset.page).classList.add('active');
+            });
+        });
+        
+        document.getElementById('practiceMode').addEventListener('click', function() {
+            document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('practiceView').style.display = 'block';
+            document.getElementById('shootingView').style.display = 'none';
+            currentMode = 'practice';
+            
+            if (modeChar) {
+                modeChar.writeValue(new TextEncoder().encode('PRACTICE'));
+            }
+        });
+        
+        document.getElementById('shootingMode').addEventListener('click', function() {
+            document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('practiceView').style.display = 'none';
+            document.getElementById('shootingView').style.display = 'block';
+            currentMode = 'shooting';
+            
+            if (modeChar) {
+                modeChar.writeValue(new TextEncoder().encode('SHOOTING'));
+            }
+        });
+        
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            try {
+                document.getElementById('statusText').textContent = 'Searching...';
+                document.getElementById('connectBtn').disabled = true;
+                
+                device = await navigator.bluetooth.requestDevice({
+                    filters: [{ name: 'Spin Off' }],
+                    optionalServices: [SERVICE_UUID]
+                });
+                
+                document.getElementById('statusText').textContent = 'Connecting...';
+                
+                const server = await device.gatt.connect();
+                const service = await server.getPrimaryService(SERVICE_UUID);
+                
+                speedChar = await service.getCharacteristic(SPEED_CHAR_UUID);
+                spinChar = await service.getCharacteristic(SPIN_CHAR_UUID);
+                statsChar = await service.getCharacteristic(STATS_CHAR_UUID);
+                modeChar = await service.getCharacteristic(MODE_CHAR_UUID);
+                
+                await speedChar.startNotifications();
+                await spinChar.startNotifications();
+                await statsChar.startNotifications();
+                
+                speedChar.addEventListener('characteristicvaluechanged', handleData);
+                spinChar.addEventListener('characteristicvaluechanged', handleData);
+                statsChar.addEventListener('characteristicvaluechanged', handleData);
+                
+                document.getElementById('statusText').textContent = 'Connected to Spin Off';
+                document.getElementById('statusIndicator').classList.add('connected');
+                document.getElementById('connectBtn').textContent = '✓ CONNECTED';
+                document.getElementById('connectBtn').classList.add('connected');
+                document.getElementById('connectBtn').disabled = false;
+                document.getElementById('dataDisplay').style.display = 'block';
+                document.getElementById('noData').style.display = 'none';
+                
+                showAlert('✅ Successfully connected to Spin Off!');
+                initChart();
+                initAnalyticsChart();
+                sessionStartTime = Date.now();
+                
+            } catch (error) {
+                console.error('Connection error:', error);
+                document.getElementById('statusText').textContent = 'Connection Failed';
+                document.getElementById('connectBtn').disabled = false;
+                showAlert('❌ Connection failed: ' + error.message);
+            }
+        });
+        
+        function initChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Speed (m/s)',
+                        data: [],
+                        borderColor: '#ff3838',
+                        backgroundColor: 'rgba(255, 56, 56, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            labels: { color: '#fff', font: { size: 14, weight: '600' } } 
+                        } 
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { color: '#888', font: { size: 12 } }, 
+                            grid: { color: '#222' } 
+                        },
+                        x: { 
+                            ticks: { color: '#888', font: { size: 12 } }, 
+                            grid: { color: '#222' } 
+                        }
+                    }
+                }
+            });
+        }
+
+        function initAnalyticsChart() {
+            const ctx = document.getElementById('analyticsChart').getContext('2d');
+            analyticsChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: ['Speed', 'Spin', 'Accuracy', 'Power', 'Consistency'],
+                    datasets: [{
+                        label: 'Performance Profile',
+                        data: [0, 0, 0, 0, 0],
+                        borderColor: '#ff3838',
+                        backgroundColor: 'rgba(255, 56, 56, 0.2)',
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#fff', font: { size: 14, weight: '600' } }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            ticks: { color: '#888', backdropColor: 'transparent' },
+                            grid: { color: '#333' },
+                            pointLabels: { color: '#fff', font: { size: 13 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateSessionTime() {
+            const elapsed = Math.floor((Date.now() - sessionStartTime) / 60000);
+            document.getElementById('sessionTime').textContent = elapsed + ' min';
+        }
+
+        setInterval(updateSessionTime, 60000);
+        
+        function handleData(event) {
+            const value = new TextDecoder().decode(event.target.value);
+            
+            if (value.includes('SPD:')) {
+                const speedMatch = value.match(/SPD:([\d.]+)/);
+                const kmhMatch = value.match(/KMH:([\d.]+)/);
+                const angleMatch = value.match(/ANG:([\d.]+)/);
+                
+                if (speedMatch) {
+                    const speed = parseFloat(speedMatch[1]);
+                    document.getElementById('speedMs').textContent = speed.toFixed(1);
+                    document.getElementById('speedKmh').textContent = kmhMatch ? parseFloat(kmhMatch[1]).toFixed(1) : '--';
+                    document.getElementById('speedMph').textContent = (speed * 2.237).toFixed(1);
+                    
+                    const angle = angleMatch ? parseFloat(angleMatch[1]) : 0;
+                    document.getElementById('launchAngle').textContent = angle.toFixed(0);
+                    
+                    if (angle >= 20 && angle <= 35) {
+                        document.getElementById('angleRating').textContent = 'Optimal ✓';
+                    } else if (angle < 20) {
+                        document.getElementById('angleRating').textContent = 'Too Low';
+                    } else {
+                        document.getElementById('angleRating').textContent = 'Too High';
+                    }
+                    
+                    sessionData.speeds.push(speed);
+                    sessionData.angles.push(angle);
+                    
+                    if (chart) {
+                        kickHistory.push(speed);
+                        chart.data.labels.push('Kick ' + kickHistory.length);
+                        chart.data.datasets[0].data.push(speed);
+                        if (chart.data.labels.length > 15) {
+                            chart.data.labels.shift();
+                            chart.data.datasets[0].data.shift();
+                        }
+                        chart.update();
+                    }
+                }
+            }
+            
+            if (value.includes('SPIN:')) {
+                const spinMatch = value.match(/SPIN:([\d.]+)/);
+                const flightMatch = value.match(/FLT:([\d]+)/);
+                const impactMatch = value.match(/IMP:([\d.]+)/);
+                
+                if (spinMatch) {
+                    const spin = parseFloat(spinMatch[1]);
+                    document.getElementById('spin').textContent = spin.toFixed(0);
+                    
+                    const flightTime = flightMatch ? parseInt(flightMatch[1]) : 0;
+                    document.getElementById('flightTime').textContent = flightTime;
+                    
+                    if (flightTime > 0) {
+                        const dist = (flightTime / 100).toFixed(1);
+                        document.getElementById('distanceEst').textContent = dist + ' m';
+                    }
+                    
+                    const impact = impactMatch ? parseFloat(impactMatch[1]) : 0;
+                    document.getElementById('impact').textContent = impact.toFixed(1);
+                    
+                    if (impact > 20) {
+                        document.getElementById('powerRating').textContent = 'Excellent';
+                        document.getElementById('strikeQuality').textContent = 'Pro Level';
+                    } else if (impact > 15) {
+                        document.getElementById('powerRating').textContent = 'Good';
+                        document.getElementById('strikeQuality').textContent = 'Advanced';
+                    } else {
+                        document.getElementById('powerRating').textContent = 'Moderate';
+                        document.getElementById('strikeQuality').textContent = 'Developing';
+                    }
+                    
+                    sessionData.spins.push(spin);
+                }
+            }
+            
+            if (value.includes('KICKS:')) {
+                const kicksMatch = value.match(/KICKS:(\d+)/);
+                const maxMatch = value.match(/MAX:([\d.]+)/);
+                const avgMatch = value.match(/AVG:([\d.]+)/);
+                const maxSpinMatch = value.match(/MSPIN:([\d.]+)/);
+                
+                if (kicksMatch) {
+                    const kicks = parseInt(kicksMatch[1]);
+                    document.getElementById('totalKicks').textContent = kicks;
+                    document.getElementById('quickKicks').textContent = kicks;
+                    sessionData.kicks = kicks;
+                }
+                if (maxMatch) {
+                    const max = parseFloat(maxMatch[1]);
+                    document.getElementById('maxSpeed').textContent = max.toFixed(1);
+                    document.getElementById('quickMaxSpeed').textContent = max.toFixed(1);
+                    sessionData.maxSpeed = max;
+                }
+                if (avgMatch) {
+                    const avg = parseFloat(avgMatch[1]);
+                    document.getElementById('avgSpeed').textContent = avg.toFixed(1);
+                    document.getElementById('quickAvgSpeed').textContent = avg.toFixed(1);
+                    sessionData.avgSpeed = avg;
+                }
+                if (maxSpinMatch) {
+                    const spin = parseFloat(maxSpinMatch[1]);
+                    document.getElementById('maxSpin').textContent = spin.toFixed(0);
+                    document.getElementById('quickMaxSpin').textContent = spin.toFixed(0);
+                    sessionData.maxSpin = spin;
+                }
+
+                updateAnalytics();
+            }
+        }
+
+        function updateAnalytics() {
+            const maxSpeed = parseFloat(document.getElementById('maxSpeed').textContent) || 0;
+            const maxSpin = parseFloat(document.getElementById('maxSpin').textContent) || 0;
+            
+            const speedScore = Math.min(100, (maxSpeed / 30) * 100);
+            const spinScore = Math.min(100, (maxSpin / 2000) * 100);
+            const consistencyScore = kickHistory.length > 0 ? (1 - (Math.max(...kickHistory) - Math.min(...kickHistory)) / Math.max(...kickHistory)) * 100 : 0;
+            
+            document.getElementById('consistencyScore').textContent = consistencyScore.toFixed(0);
+            document.getElementById('powerIndex').textContent = Math.min(100, speedScore).toFixed(0);
+            
+            if (analyticsChart) {
+                analyticsChart.data.datasets[0].data = [
+                    speedScore,
+                    spinScore,
+                    consistencyScore,
+                    speedScore * 0.9,
+                    consistencyScore
+                ];
+                analyticsChart.update();
+            }
+        }
+
+        function exportSessionData() {
+            const data = {
+                sessionDate: new Date().toISOString(),
+                totalKicks: document.getElementById('totalKicks').textContent,
+                maxSpeed: document.getElementById('maxSpeed').textContent,
+                avgSpeed: document.getElementById('avgSpeed').textContent,
+                maxSpin: document.getElementById('maxSpin').textContent,
+                kickHistory: kickHistory
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `spinoff-session-${Date.now()}.json`;
+            a.click();
+            
+            showAlert('✅ Session data exported!');
+        }
+
+        function exportShotData() {
+            if (shots.length === 0) {
+                showAlert('❌ No shots to export');
+                return;
+            }
+            
+            let csv = 'Shot #,Time,Distance,Position X,Position Y,Target X,Target Y\n';
+            shots.forEach((shot, i) => {
+                csv += `${i+1},${shot.time},${shot.distance},${shot.location.x},${shot.location.y},${shot.target.x},${shot.target.y}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `spinoff-shots-${Date.now()}.csv`;
+            a.click();
+            
+            showAlert('✅ Shot data exported!');
+        }
+        
+        document.getElementById('soccerField').addEventListener('click', (e) => {
+            if (e.target.id !== 'soccerField' && !e.target.classList.contains('field-line') && 
+                !e.target.classList.contains('center-circle') && !e.target.classList.contains('center-spot') &&
+                !e.target.classList.contains('penalty-box') && !e.target.classList.contains('goal-box') &&
+                !e.target.classList.contains('penalty-spot') && !e.target.classList.contains('corner-arc')) {
+                return;
+            }
+            
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+            const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+            
+            if (!shotLocation) {
+                shotLocation = { x, y };
+                
+                const posMarker = document.createElement('div');
+                posMarker.className = 'shot-marker';
+                posMarker.style.left = x + '%';
+                posMarker.style.top = y + '%';
+                posMarker.style.background = '#00ff00';
+                posMarker.id = 'tempMarker';
+                document.getElementById('soccerField').appendChild(posMarker);
+                
+                document.getElementById('locationText').textContent = '✅ Position marked - Now click your target 🎯';
+            } else {
+                const targetMarker = document.createElement('div');
+                targetMarker.className = 'shot-marker';
+                targetMarker.style.left = x + '%';
+                targetMarker.style.top = y + '%';
+                targetMarker.style.background = '#ff3838';
+                document.getElementById('soccerField').appendChild(targetMarker);
+                
+                drawShotLine(shotLocation.x, shotLocation.y, x, y);
+                document.getElementById('tempMarker')?.remove();
+                
+                const distance = Math.sqrt(
+                    Math.pow(x - shotLocation.x, 2) + Math.pow(y - shotLocation.y, 2)
+                ).toFixed(1);
+                
+                shots.push({ 
+                    location: shotLocation, 
+                    target: { x, y },
+                    distance: distance,
+                    time: new Date().toLocaleTimeString() 
+                });
+                updateShotLog();
+                
+                shotLocation = null;
+                document.getElementById('locationText').textContent = '✅ Shot logged! Distance: ' + distance + '% - Click for next shot';
+            }
+        });
+        
+        function drawShotLine(x1, y1, x2, y2) {
+            const field = document.getElementById('soccerField');
+            const fieldRect = field.getBoundingClientRect();
+            
+            const x1px = (x1 / 100) * fieldRect.width;
+            const y1px = (y1 / 100) * fieldRect.height;
+            const x2px = (x2 / 100) * fieldRect.width;
+            const y2px = (y2 / 100) * fieldRect.height;
+            
+            const length = Math.sqrt(Math.pow(x2px - x1px, 2) + Math.pow(y2px - y1px, 2));
+            const angle = Math.atan2(y2px - y1px, x2px - x1px) * 180 / Math.PI;
+            
+            const line = document.createElement('div');
+            line.className = 'shot-line';
+            line.style.left = x1 + '%';
+            line.style.top = y1 + '%';
+            line.style.width = length + 'px';
+            line.style.transform = `rotate(${angle}deg)`;
+            
+            field.appendChild(line);
+        }
+        
+        function clearField() {
+            document.querySelectorAll('.shot-marker, .shot-line').forEach(el => el.remove());
+            shots = [];
+            shotLocation = null;
+            document.getElementById('locationText').textContent = 'Click to mark your position, then your target';
+            updateShotLog();
+        }
+        
+        function updateShotLog() {
+            const log = document.getElementById('shotLog');
+            if (shots.length === 0) {
+                log.innerHTML = '<p style="text-align: center; color: #666;">No shots recorded</p>';
+            } else {
+                log.innerHTML = shots.map((s, i) => 
+                    `<div class="shot-entry">
+                        <strong style="font-size: 1.2em; color: #ff3838;">Shot #${i + 1}</strong> <span style="color: #999;">- ${s.time}</span><br>
+                        <span style="font-size: 1.1em;">📏 Distance: ${s.distance}%</span><br>
+                        <span style="color: #999;">Position: (${s.location.x}, ${s.location.y}) → Target: (${s.target.x}, ${s.target.y})</span>
+                    </div>`
+                ).reverse().join('');
+            }
+        }
+
+        // CHATBOT FUNCTIONS
+        
+        // Check if API key exists on load
+        if (groqApiKey) {
+            document.getElementById('apiKeySection').style.display = 'none';
+        }
+
+        function saveApiKey() {
+            const input = document.getElementById('apiKeyInput');
+            const key = input.value.trim();
+            
+            if (!key) {
+                showAlert('❌ Please enter an API key');
+                return;
+            }
+            
+            if (!key.startsWith('gsk_')) {
+                showAlert('❌ Invalid Groq API key format. Should start with "gsk_"');
+                return;
+            }
+            
+            groqApiKey = key;
+            localStorage.setItem('groqApiKey', key);
+            document.getElementById('apiKeySection').style.display = 'none';
+            showAlert('✅ API key saved! You can now chat with your AI coach.');
+        }
+
+        function addMessage(text, isUser = false) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addLoadingMessage() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai loading';
+            messageDiv.id = 'loadingMessage';
+            messageDiv.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div><span>Thinking...</span>';
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function removeLoadingMessage() {
+            const loadingMsg = document.getElementById('loadingMessage');
+            if (loadingMsg) loadingMsg.remove();
+        }
+
+        async function sendMessage() {
+            if (!groqApiKey) {
+                showAlert('❌ Please save your API key first');
+                return;
+            }
+
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            input.value = '';
+            addMessage(message, true);
+            
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            
+            addLoadingMessage();
+            
+            try {
+                // Build context with performance data
+                let contextMessage = message;
+                if (sessionData.kicks > 0 && message.toLowerCase().includes('analy')) {
+                    contextMessage = `My performance data: ${sessionData.kicks} kicks, max speed ${sessionData.maxSpeed} m/s, avg speed ${sessionData.avgSpeed} m/s, max spin ${sessionData.maxSpin} RPM. Recent speeds: ${sessionData.speeds.slice(-5).join(', ')} m/s. Question: ${message}`;
+                }
+                
+                chatHistory.push({ role: "user", content: contextMessage });
+                
+                const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${groqApiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [
+                            { 
+                                role: "system", 
+                                content: "You are an expert soccer coach helping a young player improve their game. Provide encouraging, practical advice. Keep responses concise (2-3 paragraphs max). Use emojis occasionally to keep it friendly."
+                            },
+                            ...chatHistory
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 500
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const aiMessage = data.choices[0].message.content;
+                
+                chatHistory.push({ role: "assistant", content: aiMessage });
+                
+                // Keep chat history manageable
+                if (chatHistory.length > 10) {
+                    chatHistory = chatHistory.slice(-10);
+                }
+                
+                removeLoadingMessage();
+                addMessage(aiMessage);
+                
+            } catch (error) {
+                removeLoadingMessage();
+                addMessage('Sorry, there was an error connecting to the AI. Please check your API key and try again.');
+                console.error('Chat error:', error);
+                showAlert('❌ Chat error: ' + error.message);
+            }
+            
+            sendBtn.disabled = false;
+        }
+
+        function askQuickQuestion(question) {
+            document.getElementById('chatInput').value = question;
+            sendMessage();
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>
