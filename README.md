@@ -23,7 +23,7 @@ Spin Off is an advanced soccer ball tracking system that measures:
 
 - **Hardware:** Arduino Nano 33 BLE Sense Rev 2
 - **Sensors:** BMI270 accelerometer & gyroscope
-- **AI:** Groq AI (lightning fast!)
+- **AI:** Groq AI
 - **Web:** Bluetooth connectivity, real-time analytics
 
 ## Try It Live
@@ -32,4 +32,4 @@ Spin Off is an advanced soccer ball tracking system that measures:
 
 ---
 
-*Making professional sports analytics accessible to everyone!*
+*Making professional sports analytics available and accessable to everyone!*
