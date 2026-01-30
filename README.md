@@ -10,14 +10,15 @@ Spin Off is an advanced soccer ball tracking system that measures:
 -  Launch angle
 -  Flight time
 -  Impact force
--  AI-powered coaching feedback
+-  AI powered coaching feedback
 
 ## How to Use
 
-1. **Scan the QR code** (at our booth!)
+1. **Scan the QR code** (at our booth!) or click on the link below
 2. **Click "Connect Device"**
 3. **Start kicking!**
-4. **Get instant feedback** from AI coach
+4. **Get instant feedback** from AI coach**
+5. ** After you are done please CLOSE THE WEBPAGE**
 
 ## Technology
 
@@ -32,4 +33,4 @@ Spin Off is an advanced soccer ball tracking system that measures:
 
 ---
 
-*Making professional sports analytics available and accessable to everyone!*
+*Making professional sports analytics available and accessible to everyone!*
