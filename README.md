@@ -169,7 +169,7 @@ Building Spin Off taught us way more than we expected:
 
 ---
 
-## 🔮 Future Plans
+##  Future Plans
 
 ### Short Term (Next 6 Months)
 - [ ] Native iOS and Android apps
