@@ -23,7 +23,7 @@ Our smart soccer ball tracking system measures:
 
 ##  Try It Live!
 
-** [Launch Spin Off Web App](https://inventionconventionspinoff.github.io/Spinoff/spinoff_complete.html)**
+** [Launch Spin Off Web App](https://inventionconventionspinoff.github.io/Spinoff/SpinoffFinal.html)**
 
 ### Quick Start Guide:
 1. Open the link above on Chrome, Edge, or Opera
