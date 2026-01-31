@@ -12,7 +12,7 @@ Invention Convention 2026
 Have you ever wanted to know exactly how fast you kicked a soccer ball? Or how much spin you put on that perfect curve shot? Spin Off makes this possible using cutting-edge sensor technology and artificial intelligence that was previously only available to professional athletes.
 
 Our smart soccer ball tracking system measures:
-- ** Speed** - Real-time kick velocity up to 67 mph
+- ** Speed** - Real-time kick velocity up to 70 mph
 - ** Spin Rate** - Rotations per minute for curve shots
 - ** Launch Angle** - Optimal trajectory analysis
 - ** Flight Time** - How long the ball stays airborne
