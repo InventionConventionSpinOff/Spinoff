@@ -1,4 +1,4 @@
-# ⚽ SPIN OFF - Smart Soccer Ball Analytics
+#  SPIN OFF - Smart Soccer Ball Analytics
 
 **Professional-Grade Sports Technology for Everyone**
 
