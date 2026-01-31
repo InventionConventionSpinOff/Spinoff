@@ -7,23 +7,23 @@ Invention Convention 2026
 
 ---
 
-## 🎯 What is Spin Off?
+##  What is Spin Off?
 
 Have you ever wanted to know exactly how fast you kicked a soccer ball? Or how much spin you put on that perfect curve shot? Spin Off makes this possible using cutting-edge sensor technology and artificial intelligence that was previously only available to professional athletes.
 
 Our smart soccer ball tracking system measures:
-- **⚡ Speed** - Real-time kick velocity up to 67 mph
-- **🌀 Spin Rate** - Rotations per minute for curve shots
-- **📐 Launch Angle** - Optimal trajectory analysis
-- **✈️ Flight Time** - How long the ball stays airborne
-- **💥 Impact Force** - G-force measurement at contact
-- **🤖 AI Coaching** - Personalized feedback and training plans
+- ** Speed** - Real-time kick velocity up to 67 mph
+- ** Spin Rate** - Rotations per minute for curve shots
+- ** Launch Angle** - Optimal trajectory analysis
+- ** Flight Time** - How long the ball stays airborne
+- ** Impact Force** - G-force measurement at contact
+- ** AI Coaching** - Personalized feedback and training plans
 
 ---
 
-## 🚀 Try It Live!
+##  Try It Live!
 
-**👉 [Launch Spin Off Web App](https://inventionconventionspinoff.github.io/Spinoff/)**
+** [Launch Spin Off Web App](https://inventionconventionspinoff.github.io/Spinoff/)**
 
 ### Quick Start Guide:
 1. Open the link above on Chrome, Edge, or Opera
@@ -35,7 +35,7 @@ Our smart soccer ball tracking system measures:
 
 ---
 
-## 💡 The Problem We're Solving
+##  The Problem We're Solving
 
 Professional soccer players have access to expensive tracking systems that cost thousands of dollars. But what about youth players, school teams, or anyone who just loves the sport? We realized that with modern technology, these same analytics could be made affordable and accessible to everyone.
 
@@ -43,7 +43,7 @@ That's why we built Spin Off - to democratize sports science and help every play
 
 ---
 
-## 🔬 How It Works
+##  How It Works
 
 ### The Hardware
 At the heart of Spin Off is an **Arduino Nano 33 BLE Sense Rev 2** - a powerful microcontroller packed with sensors:
@@ -70,7 +70,7 @@ We use physics equations that NASA uses for projectile motion:
 
 ---
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 **Hardware:**
 - Arduino Nano 33 BLE Sense Rev 2
@@ -94,7 +94,7 @@ We use physics equations that NASA uses for projectile motion:
 
 ---
 
-## 📊 Features
+##  Features
 
 ### Live Performance Tracking
 Monitor your kicks in real-time with instant feedback on speed, spin, and trajectory. Every metric is displayed clearly with professional-grade charts that show your improvement over time.
@@ -125,7 +125,7 @@ Download your session data in JSON format to:
 
 ---
 
-## 🎓 What We Learned
+##  What We Learned
 
 Building Spin Off taught us way more than we expected:
 
@@ -155,7 +155,7 @@ Building Spin Off taught us way more than we expected:
 
 ---
 
-## 🚧 Development Journey
+##  Development Journey
 
 **September 2025:** Initial brainstorming - "What if we could track soccer ball data?"
 
@@ -189,21 +189,6 @@ Our ultimate goal is to make Spin Off available to schools and youth programs at
 
 ---
 
-## 📖 Documentation
-
-### For Users:
-- [User Guide](docs/USER_GUIDE.md) - How to use Spin Off
-- [FAQ](docs/FAQ.md) - Common questions and troubleshooting
-- [Training Tips](docs/TRAINING.md) - Get the most from your data
-
-### For Developers:
-- [Hardware Assembly](docs/HARDWARE.md) - Build your own device
-- [Firmware Guide](docs/FIRMWARE.md) - Understanding the Arduino code
-- [Web App Setup](docs/WEBAPP.md) - Local development guide
-- [API Documentation](docs/API.md) - Bluetooth protocol specifications
-
----
-
 ## Contributing
 
 While Spin Off is currently a school project, we welcome feedback and suggestions! If you have ideas for improvements or find any issues, please:
@@ -228,23 +213,6 @@ This project was inspired by professional sports analytics systems like Adidas m
 
 ---
 
-##  Contact
-
-**Sahil & Skyler**  
-7th Grade Inventors  
-Invention Convention 2026
-
-- **Email:** spinoff.inventors@gmail.com (example - update with real)
-- **GitHub:** [@InventionConventionSpinOff](https://github.com/InventionConventionSpinOff)
-- **Website:** [inventionconventionspinoff.github.io/Spinoff](https://inventionconventionspinoff.github.io/Spinoff/)
-
----
-
-##  Star Us!
-
-If you think Spin Off is cool, give us a star on GitHub! It really motivates us to keep improving the project.
-
----
 
 <div align="center">
 
