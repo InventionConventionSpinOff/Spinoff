@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPIN OFF - Providing Professional Grade Analytics to everyone</title>
+    <meta name="description" content="Advanced soccer ball tracking system with AI-powered coaching by Sahil & Skyler">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #ff3838;
+            --primary-dark: #e62e2e;
+            --bg-dark: #000000;
+            --bg-card: #0f0f0f;
+            --border: #333;
+            --text: #ffffff;
+            --text-muted: #999;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
+            padding: 100px 20px 80px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(255,56,56,0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5em, 8vw, 5em);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary) 0%, #ff6b6b 50%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+            animation: glow 3s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(255,56,56,0.5)); }
+            50% { filter: drop-shadow(0 0 40px rgba(255,56,56,0.8)); }
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1em, 3vw, 1.5em);
+            color: var(--text-muted);
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto 15px;
+        }
+
+        .hero-tagline {
+            font-size: clamp(0.9em, 2vw, 1.1em);
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+        }
+
+        /* Navigation */
+        .nav {
+            background: rgba(10, 10, 10, 0.98);
+            backdrop-filter: blur(20px);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            padding: 12px 25px;
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.1em;
+            border-radius: 5px;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,56,56,0.3);
+        }
+        
+        .nav-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 5px 20px rgba(255,56,56,0.5);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .page.active {
+            display: block;
+        }
+
+        /* Section Headers */
+        .section-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-header h2 {
+            font-size: clamp(2em, 5vw, 3em);
+            background: linear-gradient(135deg, var(--primary) 0%, #ff6b6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 1.1em;
+        }
+        
+        /* Cards */
+        .card {
+            background: linear-gradient(135deg, #1a1a1a 0%, var(--bg-card) 100%);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(255,56,56,0.2);
+        }
+
+        /* Status Section */
+        .status-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .status-text {
+            font-size: 1.3em;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: pulse-dot 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: #00ff00;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,56,56,0.7); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 10px rgba(255,56,56,0); }
+        }
+        
+        .connect-btn {
+            padding: 18px 45px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            color: white;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s;
+            border-radius: 50px;
+            box-shadow: 0 5px 25px rgba(255,56,56,0.4);
+        }
+        
+        .connect-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 35px rgba(255,56,56,0.6);
+        }
+        
+        .connect-btn:disabled {
+            background: #333;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        .connect-btn.connected {
+            background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%);
+            color: #000;
+        }
+
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        /* Stat Cards */
+        .stat-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, var(--bg-card) 100%);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255,56,56,0.2);
+        }
+
+        .stat-card .value {
+            font-size: 2.5em;
+            font-weight: 900;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Metric Cards */
+        .metric-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, var(--bg-card) 100%);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.3s;
+        }
+
+        .metric-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(255,56,56,0.3);
+        }
+        
+        .metric-label {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .metric-value {
+            font-size: 3em;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary) 0%, #ff6b6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            line-height: 1;
+        }
+        
+        .metric-unit {
+            font-size: 1.1em;
+            color: #666;
+            font-weight: 600;
+        }
+
+        /* Feature Cards */
+        .feature-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, var(--bg-card) 100%);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(255,56,56,0.3);
+        }
+
+        .feature-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5em;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            line-height: 1.8;
+        }
+
+        /* Team Cards */
+        .team-card {
+            background: linear-gradient(135deg, #1a1a1a 0%, var(--bg-card) 100%);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .team-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(255,56,56,0.3);
+        }
+
+        .team-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #ff6b6b);
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3em;
+            font-weight: 900;
+        }
+
+        .team-card h3 {
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+
+        .team-role {
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .team-card p {
+            color: var(--text-muted);
+            line-height: 1.8;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 15px 35px;
+            background: linear-gradient(135deg, var(--border) 0%, #222 100%);
+            border: 2px solid #444;
+            border-radius: 50px;
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s;
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 25px rgba(255,56,56,0.4);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-color: var(--primary);
+        }
+
+        /* AI Section */
+        .ai-response {
+            background: rgba(255,56,56,0.05);
+            border-left: 4px solid var(--primary);
+            padding: 25px;
+            border-radius: 10px;
+            min-height: 100px;
+            margin-bottom: 20px;
+            line-height: 1.8;
+        }
+
+        .ai-spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Chart */
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 30px;
+        }
+
+        /* Soccer Field */
+        .soccer-field {
+            background: linear-gradient(180deg, #2d5016 0%, #3a6b1f 50%, #2d5016 100%);
+            border: 4px solid #fff;
+            border-radius: 10px;
+            position: relative;
+            width: 100%;
+            max-width: 1000px;
+            height: 600px;
+            margin: 20px auto;
+            cursor: crosshair;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.8);
+        }
+
+        .field-line {
+            position: absolute;
+            background: #fff;
+            pointer-events: none;
+        }
+
+        .halfway-line {
+            left: 50%;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            transform: translateX(-50%);
+        }
+
+        .center-circle {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 120px;
+            height: 120px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            background: transparent;
+        }
+
+        .center-spot {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .penalty-box {
+            position: absolute;
+            border: 3px solid #fff;
+            background: transparent;
+        }
+
+        .penalty-box-left {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20%;
+            height: 50%;
+        }
+
+        .penalty-box-right {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20%;
+            height: 50%;
+        }
+
+        .goal-box {
+            position: absolute;
+            border: 3px solid #fff;
+            background: transparent;
+        }
+
+        .goal-box-left {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8%;
+            height: 25%;
+        }
+
+        .goal-box-right {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8%;
+            height: 25%;
+        }
+
+        .penalty-spot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .penalty-spot-left {
+            left: 15%;
+        }
+
+        .penalty-spot-right {
+            right: 15%;
+        }
+
+        .corner-arc {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #fff;
+            background: transparent;
+        }
+
+        .corner-arc-tl {
+            top: 0;
+            left: 0;
+            border-radius: 0 0 100% 0;
+            border-top: none;
+            border-left: none;
+        }
+
+        .corner-arc-tr {
+            top: 0;
+            right: 0;
+            border-radius: 0 0 0 100%;
+            border-top: none;
+            border-right: none;
+        }
+
+        .corner-arc-bl {
+            bottom: 0;
+            left: 0;
+            border-radius: 0 100% 0 0;
+            border-bottom: none;
+            border-left: none;
+        }
+
+        .corner-arc-br {
+            bottom: 0;
+            right: 0;
+            border-radius: 100% 0 0 0;
+            border-bottom: none;
+            border-right: none;
+        }
+
+        .shot-marker {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            border: 3px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(255,56,56,0.8);
+            animation: marker-pulse 2s infinite;
+        }
+
+        @keyframes marker-pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        .shot-line {
+            position: absolute;
+            height: 4px;
+            background: linear-gradient(90deg, #ffff00, #ffaa00);
+            transform-origin: 0 0;
+            z-index: 50;
+            box-shadow: 0 0 15px #ffff00;
+        }
+
+        /* Alert */
+        .alert {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            display: none;
+            font-weight: 600;
+            box-shadow: 0 5px 25px rgba(255,56,56,0.4);
+        }
+
+        .alert.show {
+            display: block;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding: 40px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .timeline-content {
+            background: linear-gradient(135deg, #1a1a1a 0%, var(--bg-card) 100%);
+            border: 1px solid var(--border);
+            border-radius: 15px;
+            padding: 30px;
+            width: 45%;
+            position: relative;
+        }
+
+        .timeline-item:nth-child(odd) .timeline-content {
+            margin-left: 0;
+        }
+
+        .timeline-item:nth-child(even) .timeline-content {
+            margin-left: 55%;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 50%;
+            top: 20px;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 0 20px rgba(255,56,56,0.8);
+        }
+
+        .timeline-content h3 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5em;
+                letter-spacing: 0.05em;
+            }
+
+            .nav {
+                gap: 8px;
+                padding: 10px;
+            }
+
+            .nav-btn {
+                padding: 10px 15px;
+                font-size: 0.75em;
+            }
+
+            .grid-2, .grid-3, .grid-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .timeline::before {
+                left: 20px;
+            }
+
+            .timeline-content {
+                width: calc(100% - 60px);
+                margin-left: 60px !important;
+            }
+
+            .timeline-dot {
+                left: 20px;
+            }
+
+            .soccer-field {
+                height: 400px;
+            }
+        }
+
+        /* Mobile Bluetooth Fix */
+        @media (max-width: 768px) {
+            .connect-btn {
+                font-size: 1em;
+                padding: 15px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>SPIN OFF</h1>
+        <p class="hero-subtitle">Professional Soccer Ball Analytics System</p>
+        <p class="hero-tagline">Powered by AI • Built by Skyler and Sahil</p>
+    </div>
+    
+    <div class="nav">
+        <button class="nav-btn active" data-page="home">Home</button>
+        <button class="nav-btn" data-page="tracker">Live Tracker</button>
+        <button class="nav-btn" data-page="ai-coach">AI Coach</button>
+        <button class="nav-btn" data-page="how-it-works">How It Works</button>
+        <button class="nav-btn" data-page="technology">Technology</button>
+        <button class="nav-btn" data-page="team">Our Team</button>
+    </div>
+    
+    <div class="container">
+        <div id="alert" class="alert"></div>
+
+        <!-- HOME PAGE -->
+        <div id="home" class="page active">
+            <div class="section-header">
+                <h2>Welcome to the Future of Soccer Training</h2>
+                <p>Real-time analytics • AI-powered coaching • Professional insights for everyone</p>
+            </div>
+
+            <div class="grid-3">
+                <div class="feature-card">
+                    <div class="feature-icon"></div>
+                    <h3>Real-Time Speed</h3>
+                    <p>Measure kick speed up to 70 mph with professional-grade accuracy. Track your progress over time.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"></div>
+                    <h3>Spin Analysis</h3>
+                    <p>Monitor RPM to perfect your curve shots. Learn the physics behind ball movement.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"></div>
+                    <h3>AI Coaching</h3>
+                    <p>Get instant, personalized feedback powered by advanced AI. Improve faster with smart insights.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"></div>
+                    <h3>Performance Stats</h3>
+                    <p>Track every kick, analyze trends, and identify areas for improvement with detailed analytics.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"></div>
+                    <h3>Shot Mapping</h3>
+                    <p>Visualize shot placement on an interactive soccer field. Perfect your accuracy.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"></div>
+                    <h3>Mobile Ready</h3>
+                    <p>Works on any device with Bluetooth. Train anywhere, anytime with your smartphone.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 style="color: var(--primary); margin-bottom: 20px; text-align: center;">Ready to Get Started?</h2>
+                <p style="text-align: center; color: var(--text-muted); margin-bottom: 30px; font-size: 1.1em;">
+                    Connect your Spin Off device and start tracking your performance instantly
+                </p>
+                <div style="text-align: center;">
+                    <a href="#" onclick="switchPage('tracker'); return false;" class="btn btn-primary" style="font-size: 1.2em; padding: 20px 50px;">
+                        Start Tracking Now →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- LIVE TRACKER PAGE -->
+        <div id="tracker" class="page">
+            <div class="card status-section">
+                <div class="status-text">
+                    <span class="status-indicator" id="statusIndicator"></span>
+                    <span id="statusText">Not Connected</span>
+                </div>
+                <button id="connectBtn" class="connect-btn">Connect Device</button>
+            </div>
+            
+            <div id="dataDisplay" style="display: none;">
+                <div class="grid-4">
+                    <div class="stat-card">
+                        <div class="value" id="quickKicks">0</div>
+                        <div class="label">Total Kicks</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" id="quickMaxSpeed">0</div>
+                        <div class="label">Max Speed (mph)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" id="quickAvgSpeed">0</div>
+                        <div class="label">Avg Speed (mph)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" id="quickMaxSpin">0</div>
+                        <div class="label">Max Spin (RPM)</div>
+                    </div>
+                </div>
+
+                <div class="grid-3">
+                    <div class="metric-card">
+                        <div class="metric-label">Speed</div>
+                        <div class="metric-value" id="speedMph">--</div>
+                        <div class="metric-unit">mph</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-label">Spin Rate</div>
+                        <div class="metric-value" id="spin">--</div>
+                        <div class="metric-unit">RPM</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-label">Flight Time</div>
+                        <div class="metric-value" id="flightTime">--</div>
+                        <div class="metric-unit">seconds</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-label">Launch Angle</div>
+                        <div class="metric-value" id="launchAngle">--</div>
+                        <div class="metric-unit">degrees</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-label">Impact Force</div>
+                        <div class="metric-value" id="impact">--</div>
+                        <div class="metric-unit">G-force</div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-label">Session Kicks</div>
+                        <div class="metric-value" id="totalKicks">0</div>
+                        <div class="metric-unit">total</div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h2 style="color: var(--primary); margin-bottom: 30px;">Performance Chart</h2>
+                    <div class="chart-container">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2 style="color: var(--primary); margin-bottom: 20px;">Shot Mapping</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 20px;">Click to mark your position, then click your target</p>
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <button class="btn" onclick="clearField()" style="margin: 0 10px;">Clear Field</button>
+                        <button class="btn" onclick="exportSessionData()" style="margin: 0 10px;">Export Data</button>
+                    </div>
+                    <div class="soccer-field" id="soccerField">
+                        <div class="field-line halfway-line"></div>
+                        <div class="center-circle"></div>
+                        <div class="center-spot"></div>
+                        <div class="penalty-box penalty-box-left"></div>
+                        <div class="penalty-box penalty-box-right"></div>
+                        <div class="goal-box goal-box-left"></div>
+                        <div class="goal-box goal-box-right"></div>
+                        <div class="penalty-spot penalty-spot-left"></div>
+                        <div class="penalty-spot penalty-spot-right"></div>
+                        <div class="corner-arc corner-arc-tl"></div>
+                        <div class="corner-arc corner-arc-tr"></div>
+                        <div class="corner-arc corner-arc-bl"></div>
+                        <div class="corner-arc corner-arc-br"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="noData" class="card" style="text-align: center; padding: 80px 20px;">
+                <div style="font-size: 6em; margin-bottom: 30px; opacity: 0.3;">⚽</div>
+                <h2 style="font-size: 2.5em; margin-bottom: 15px;">Ready to Track</h2>
+                <p style="color: var(--text-muted); font-size: 1.2em;">Connect your Spin Off device to start collecting data</p>
+            </div>
+        </div>
+
+        <!-- AI COACH PAGE -->
+        <div id="ai-coach" class="page">
+            <div class="section-header">
+                <h2>AI-Powered Coaching</h2>
+                <p>Get personalized feedback and training plans powered by advanced AI</p>
+            </div>
+
+            <div class="card">
+                <div class="ai-response" id="coachResponse">
+                    <p style="color: var(--text-muted);">
+                        Your AI coach will analyze your performance and provide personalized feedback. 
+                        Perform some kicks in the Live Tracker to get started!
+                    </p>
+                </div>
+
+                <div style="text-align: center;">
+                    <button class="btn btn-primary" onclick="getAICoaching()" id="coachBtn" style="margin: 10px;">
+                         Get Coaching Feedback
+                    </button>
+                    <button class="btn btn-primary" onclick="generateTrainingPlan()" id="planBtn" style="margin: 10px;">
+                         Generate Training Plan
+                    </button>
+                </div>
+
+                <div id="trainingPlanContainer" style="display: none; margin-top: 30px;">
+                    <div id="trainingPlanContent" style="background: rgba(255,56,56,0.05); border: 1px solid var(--border); border-radius: 10px; padding: 25px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOW IT WORKS PAGE -->
+        <div id="how-it-works" class="page">
+            <div class="section-header">
+                <h2>How It Works</h2>
+                <p>The science and technology behind Spin Off</p>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h3>Step 1: Kick Detection</h3>
+                        <p>Advanced accelerometer and gyroscope sensors detect the exact moment of ball contact, measuring impact force up to 8G.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h3>Step 2: Data Collection</h3>
+                        <p>During flight, sensors continuously sample at 100Hz, capturing acceleration in all three axes and rotational velocity.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h3>Step 3: Signal Processing</h3>
+                        <p>Low-pass filters remove noise while preserving critical data. Peak detection algorithms identify maximum speed and spin.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h3>Step 4: Wireless Transmission</h3>
+                        <p>Bluetooth Low Energy transmits processed data to your device in real-time with minimal latency.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <h3>Step 5: AI Analysis</h3>
+                        <p>Machine learning algorithms analyze your technique, compare with pro standards, and generate personalized coaching advice.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="color: var(--primary); margin-bottom: 20px;"> Physics Behind the Metrics</h3>
+                    <p style="line-height: 1.8; color: var(--text-muted);">
+                        <strong>Speed Calculation:</strong> Peak acceleration during impact is converted to velocity using physics equations v = at.<br><br>
+                        <strong>Spin Rate:</strong> Gyroscope measures angular velocity in degrees/second, converted to RPM for readability.<br><br>
+                        <strong>Launch Angle:</strong> Derived from flight time using projectile motion equations: θ = arcsin(gt/2v).<br><br>
+                        <strong>Flight Time:</strong> Detected when acceleration drops below 0.12G (near free-fall) until impact spike.
+                    </p>
+                </div>
+                <div class="card">
+                    <h3 style="color: var(--primary); margin-bottom: 20px;">Sensor Technology</h3>
+                    <p style="line-height: 1.8; color: var(--text-muted);">
+                        <strong>BMI270:</strong> 6-axis inertial measurement unit with ±16g acceleration range and ±2000°/s gyroscope range.<br><br>
+                        <strong>Sampling Rate:</strong> 100Hz continuous sampling ensures no data loss during rapid ball movement.<br><br>
+                        <strong>Noise Reduction:</strong> Digital low-pass filter with 0.8 alpha coefficient removes vibration artifacts.<br><br>
+                        <strong>Power Efficiency:</strong> Intelligent wake/sleep modes extend battery life to 8+ hours of continuous use.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TECHNOLOGY PAGE -->
+        <div id="technology" class="page">
+            <div class="section-header">
+                <h2>Technology Stack</h2>
+                <p>Built with cutting-edge hardware and software</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3 style="color: var(--primary); margin-bottom: 20px;"> Hardware</h3>
+                    <div style="line-height: 2; color: var(--text-muted);">
+                        <strong>Microcontroller:</strong> Arduino Nano 33 BLE Sense Rev 2<br>
+                        <strong>Processor:</strong> Nordic nRF52840 (64 MHz ARM Cortex-M4)<br>
+                        <strong>IMU:</strong> Bosch BMI270 + BMM150 Magnetometer<br>
+                        <strong>Wireless:</strong> Bluetooth 5.0 Low Energy<br>
+                        <strong>Power:</strong> 3.7V LiPo Battery (1000mAh)<br>
+                        <strong>Enclosure:</strong> Impact-resistant polycarbonate<br>
+                        <strong>Weight:</strong> 45g (regulation soccer ball compatible)
+                    </div>
+                </div>
+                <div class="card">
+                    <h3 style="color: var(--primary); margin-bottom: 20px;"> Software</h3>
+                    <div style="line-height: 2; color: var(--text-muted);">
+                        <strong>Firmware:</strong> C++ (Arduino Framework)<br>
+                        <strong>Web App:</strong> HTML5, CSS3, JavaScript (ES6+)<br>
+                        <strong>Charts:</strong> Chart.js for data visualization<br>
+                        <strong>AI Engine:</strong> Groq AI (Llama 3.3 70B model)<br>
+                        <strong>Connectivity:</strong> Web Bluetooth API<br>
+                        <strong>Data Format:</strong> JSON for structured transmission<br>
+                        <strong>Browser Support:</strong> Chrome, Edge, Opera (Desktop & Mobile)
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="color: var(--primary); margin-bottom: 20px; text-align: center;"> Technical Specifications</h3>
+                <div class="grid-3">
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 2em; color: var(--primary); margin-bottom: 10px;">70 mph</div>
+                        <div style="color: var(--text-muted);">Max Speed Range</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 2em; color: var(--primary); margin-bottom: 10px;">3600 RPM</div>
+                        <div style="color: var(--text-muted);">Max Spin Detection</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 2em; color: var(--primary); margin-bottom: 10px;">±2°</div>
+                        <div style="color: var(--text-muted);">Angle Accuracy</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 2em; color: var(--primary); margin-bottom: 10px;">10ms</div>
+                        <div style="color: var(--text-muted);">Sample Period</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 2em; color: var(--primary); margin-bottom: 10px;">30m</div>
+                        <div style="color: var(--text-muted);">Bluetooth Range</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="font-size: 2em; color: var(--primary); margin-bottom: 10px;">8hrs</div>
+                        <div style="color: var(--text-muted);">Battery Life</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEAM PAGE -->
+        <div id="team" class="page">
+            <div class="section-header">
+                <h2>Meet the Inventors</h2>
+                <p>7th Grade Students | Invention Convention 2026</p>
+            </div>
+
+            <div class="grid-2">
+                <div class="team-card">
+                    <div class="team-avatar">S</div>
+                    <h3>Sahil</h3>
+                    <div class="team-role">Co-Inventor & Software Developer</div>
+                    <p>
+                        Passionate about electronics and sports technology. Led the hardware integration, 
+                        sensor calibration, and Arduino programming. Plays baseball but loves bringing technology to the sports world.
+                    </p>
+                </div>
+                <div class="team-card">
+                    <div class="team-avatar">S</div>
+                    <h3>Skyler</h3>
+                    <div class="team-role">Co-Inventor & Lead builder</div>
+                    <p>
+                        Enthusiastic about the build Designed ball latch system. Dedicated to 
+                        making professional sports analytics accessible to everyone. Plays soccer and enjoys riding ebikes along with gaming.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="color: var(--primary); margin-bottom: 20px; text-align: center;">Our Mission</h3>
+                <p style="text-align: center; color: var(--text-muted); line-height: 1.8; font-size: 1.1em;">
+                    We created Spin Off because we believe that professional level sports analytics shouldn't be 
+                    limited to high level athletes with expensive equipment. Every soccer player deserves access to 
+                    data-driven insights that can help them improve their technique, track their progress, and 
+                    achieve their goals. Through combining affordable hardware with powerful AI, we're changing 
+                    sports stats and making it accessible to players of all levels.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3 style="color: var(--primary); margin-bottom: 20px; text-align: center;">The Journey</h3>
+                <p style="color: var(--text-muted); line-height: 1.8;">
+                    <strong>October 2025:</strong> Initial concept - "What if we could track soccer ball data like professional teams?"<br><br>
+                    <strong>November 2025:</strong> Research phase - researching what parts would be best for the build.<br><br>
+                    <strong>December 2025:</strong> Prototype 1 - Basic Arduino setup with accelerometer readings<br><br>
+                    <strong>Jauary 2026:</strong>  Final version - Added a gyroscope, a web page,Integrated AI coaching, perfected algorithms. Ready for convention!<br><br>
+                </p>
+            </div>
+
+            <div class="card">
+                <h3 style="color: var(--primary); margin-bottom: 20px; text-align: center;">Future Plans</h3>
+                <div class="grid-2">
+                    <div>
+                        <h4 style="color: var(--text-muted); margin-bottom: 15px;">Short Term</h4>
+                        <ul style="color: var(--text-muted); line-height: 2; list-style-position: inside;">
+                            <li>Add video analysis integration</li>
+                            <li>Develop mobile native apps (iOS/Android)</li>
+                            <li>Create training programs for different skill levels</li>
+                            <li>Add multiplayer comparison features</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="color: var(--text-muted); margin-bottom: 15px;">Long Term</h4>
+                        <ul style="color: var(--text-muted); line-height: 2; list-style-position: inside;">
+                            <li>Expand to other sports (basketball, football)</li>
+                            <li>Partner with youth sports leagues</li>
+                            <li>Develop coach dashboard for team management</li>
+                            <li>Create open-source platform for sports IoT</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GROQ_API_KEY = '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';
+        
+        const SERVICE_UUID = '19b10000-e8f2-537e-4f6c-d104768a1214';
+        const SPEED_CHAR_UUID = '19b10001-e8f2-537e-4f6c-d104768a1214';
+        const SPIN_CHAR_UUID = '19b10002-e8f2-537e-4f6c-d104768a1214';
+        const STATS_CHAR_UUID = '19b10003-e8f2-537e-4f6c-d104768a1214';
+        const MODE_CHAR_UUID = '19b10004-e8f2-537e-4f6c-d104768a1214';
+        
+        let device, speedChar, spinChar, statsChar, modeChar;
+        let chart;
+        let kickHistory = [];
+        let shotLocation = null;
+        let shots = [];
+        let sessionData = {
+            kicks: 0,
+            maxSpeed: 0,
+            avgSpeed: 0,
+            maxSpin: 0,
+            speeds: [],
+            spins: [],
+            angles: [],
+            flightTimes: [],
+            impacts: []
+        };
+        
+        // Navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const page = btn.dataset.page;
+                switchPage(page);
+            });
+        });
+
+        function switchPage(page) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(page).classList.add('active');
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        function showAlert(message, duration = 3000) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.classList.add('show');
+            setTimeout(() => alert.classList.remove('show'), duration);
+        }
+        
+        // Bluetooth Connection with Mobile Support
+        document.getElementById('connectBtn').addEventListener('click', async () => {
+            try {
+                // Check if Web Bluetooth is supported
+                if (!navigator.bluetooth) {
+                    showAlert(' Bluetooth not supported on this browser. Please use Chrome, Edge, or Opera.');
+                    return;
+                }
+
+                document.getElementById('statusText').textContent = 'Searching...';
+                document.getElementById('connectBtn').disabled = true;
+                
+                console.log('Requesting Bluetooth device...');
+                
+                // Request device with better mobile compatibility
+                device = await navigator.bluetooth.requestDevice({
+                    filters: [{ name: 'Spin Off' }],
+                    optionalServices: [SERVICE_UUID]
+                });
+                
+                console.log('Device selected:', device.name);
+                document.getElementById('statusText').textContent = 'Connecting...';
+                
+                const server = await device.gatt.connect();
+                console.log('GATT server connected');
+                
+                const service = await server.getPrimaryService(SERVICE_UUID);
+                console.log('Service found');
+                
+                speedChar = await service.getCharacteristic(SPEED_CHAR_UUID);
+                spinChar = await service.getCharacteristic(SPIN_CHAR_UUID);
+                statsChar = await service.getCharacteristic(STATS_CHAR_UUID);
+                modeChar = await service.getCharacteristic(MODE_CHAR_UUID);
+                console.log('All characteristics found');
+                
+                await speedChar.startNotifications();
+                await spinChar.startNotifications();
+                await statsChar.startNotifications();
+                console.log('Notifications started');
+                
+                speedChar.addEventListener('characteristicvaluechanged', handleData);
+                spinChar.addEventListener('characteristicvaluechanged', handleData);
+                statsChar.addEventListener('characteristicvaluechanged', handleData);
+                
+                document.getElementById('statusText').textContent = 'Connected to Spin Off';
+                document.getElementById('statusIndicator').classList.add('connected');
+                document.getElementById('connectBtn').textContent = '✓ CONNECTED';
+                document.getElementById('connectBtn').classList.add('connected');
+                document.getElementById('connectBtn').disabled = false;
+                document.getElementById('dataDisplay').style.display = 'block';
+                document.getElementById('noData').style.display = 'none';
+                
+                showAlert(' Successfully connected to Spin Off!');
+                initChart();
+                
+            } catch (error) {
+                console.error('Connection error:', error);
+                document.getElementById('statusText').textContent = 'Connection Failed';
+                document.getElementById('connectBtn').disabled = false;
+                
+                let errorMsg = 'Connection failed: ';
+                if (error.name === 'NotFoundError') {
+                    errorMsg += 'Device not found. Make sure Spin Off is powered on and nearby.';
+                } else if (error.name === 'SecurityError') {
+                    errorMsg += 'Bluetooth permission denied. Please enable Bluetooth in your browser settings.';
+                } else {
+                    errorMsg += error.message;
+                }
+                
+                showAlert('❌ ' + errorMsg);
+            }
+        });
+        
+        function initChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Speed (mph)',
+                        data: [],
+                        borderColor: '#ff3838',
+                        backgroundColor: 'rgba(255, 56, 56, 0.1)',
+                        tension: 0.4,
+                        borderWidth: 3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { 
+                            labels: { color: '#fff', font: { size: 14, weight: '600' } } 
+                        } 
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { color: '#888', font: { size: 12 } }, 
+                            grid: { color: '#222' } 
+                        },
+                        x: { 
+                            ticks: { color: '#888', font: { size: 12 } }, 
+                            grid: { color: '#222' } 
+                        }
+                    }
+                }
+            });
+        }
+        
+        function handleData(event) {
+            const value = new TextDecoder().decode(event.target.value);
+            console.log('Data received:', value);
+            
+            if (value.includes('SPD:')) {
+                const speedMatch = value.match(/SPD:([\d.]+)/);
+                const kmhMatch = value.match(/KMH:([\d.]+)/);
+                const angleMatch = value.match(/ANG:([\d.]+)/);
+                
+                if (speedMatch) {
+                    const speedMs = parseFloat(speedMatch[1]);
+                    const speedMph = speedMs * 2.237;
+                    
+                    document.getElementById('speedMph').textContent = speedMph.toFixed(1);
+                    
+                    const angle = angleMatch ? parseFloat(angleMatch[1]) : 0;
+                    document.getElementById('launchAngle').textContent = angle.toFixed(0);
+                    
+                    sessionData.speeds.push(speedMph);
+                    sessionData.angles.push(angle);
+                    
+                    if (chart) {
+                        kickHistory.push(speedMph);
+                        chart.data.labels.push('Kick ' + kickHistory.length);
+                        chart.data.datasets[0].data.push(speedMph);
+                        if (chart.data.labels.length > 15) {
+                            chart.data.labels.shift();
+                            chart.data.datasets[0].data.shift();
+                        }
+                        chart.update();
+                    }
+                }
+            }
+            
+            if (value.includes('SPIN:')) {
+                const spinMatch = value.match(/SPIN:([\d.]+)/);
+                const flightMatch = value.match(/FLT:([\d]+)/);
+                const impactMatch = value.match(/IMP:([\d.]+)/);
+                
+                if (spinMatch) {
+                    const spin = parseFloat(spinMatch[1]);
+                    document.getElementById('spin').textContent = spin.toFixed(0);
+                    sessionData.spins.push(spin);
+                }
+                
+                if (flightMatch) {
+                    const flightMs = parseInt(flightMatch[1]);
+                    const flightSec = (flightMs / 1000).toFixed(2);
+                    document.getElementById('flightTime').textContent = flightSec;
+                    sessionData.flightTimes.push(flightMs);
+                }
+                
+                if (impactMatch) {
+                    const impactMs2 = parseFloat(impactMatch[1]);
+                    const gForce = (impactMs2 / 9.81).toFixed(2);
+                    document.getElementById('impact').textContent = gForce;
+                    sessionData.impacts.push(impactMs2);
+                }
+            }
+            
+            if (value.includes('KICKS:')) {
+                const kicksMatch = value.match(/KICKS:(\d+)/);
+                const maxMatch = value.match(/MAX:([\d.]+)/);
+                const avgMatch = value.match(/AVG:([\d.]+)/);
+                const maxSpinMatch = value.match(/MSPIN:([\d.]+)/);
+                
+                if (kicksMatch) {
+                    const kicks = parseInt(kicksMatch[1]);
+                    document.getElementById('totalKicks').textContent = kicks;
+                    document.getElementById('quickKicks').textContent = kicks;
+                    sessionData.kicks = kicks;
+                }
+                if (maxMatch) {
+                    const maxMs = parseFloat(maxMatch[1]);
+                    const maxMph = (maxMs * 2.237).toFixed(1);
+                    document.getElementById('quickMaxSpeed').textContent = maxMph;
+                    sessionData.maxSpeed = maxMph;
+                }
+                if (avgMatch) {
+                    const avgMs = parseFloat(avgMatch[1]);
+                    const avgMph = (avgMs * 2.237).toFixed(1);
+                    document.getElementById('quickAvgSpeed').textContent = avgMph;
+                    sessionData.avgSpeed = avgMph;
+                }
+                if (maxSpinMatch) {
+                    const spin = parseFloat(maxSpinMatch[1]);
+                    document.getElementById('quickMaxSpin').textContent = spin.toFixed(0);
+                    sessionData.maxSpin = spin;
+                }
+            }
+        }
+
+        function exportSessionData() {
+            const data = {
+                sessionDate: new Date().toISOString(),
+                ...sessionData
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `spinoff-session-${Date.now()}.json`;
+            a.click();
+            
+            showAlert(' Session data exported!');
+        }
+        
+        // Soccer Field
+        document.getElementById('soccerField').addEventListener('click', (e) => {
+            if (!e.target.classList.contains('soccer-field') && 
+                (e.target.classList.contains('field-line') ||
+                e.target.classList.contains('center-circle') ||
+                e.target.classList.contains('center-spot') ||
+                e.target.classList.contains('penalty-box') ||
+                e.target.classList.contains('goal-box') ||
+                e.target.classList.contains('penalty-spot') ||
+                e.target.classList.contains('corner-arc'))) {
+                return;
+            }
+            
+            const field = document.getElementById('soccerField');
+            const rect = field.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width * 100).toFixed(1);
+            const y = ((e.clientY - rect.top) / rect.height * 100).toFixed(1);
+            
+            if (!shotLocation) {
+                shotLocation = { x, y };
+                
+                const posMarker = document.createElement('div');
+                posMarker.className = 'shot-marker';
+                posMarker.style.left = x + '%';
+                posMarker.style.top = y + '%';
+                posMarker.style.background = '#00ff00';
+                posMarker.id = 'tempMarker';
+                field.appendChild(posMarker);
+            } else {
+                const targetMarker = document.createElement('div');
+                targetMarker.className = 'shot-marker';
+                targetMarker.style.left = x + '%';
+                targetMarker.style.top = y + '%';
+                field.appendChild(targetMarker);
+                
+                drawShotLine(shotLocation.x, shotLocation.y, x, y);
+                document.getElementById('tempMarker')?.remove();
+                
+                const distance = Math.sqrt(
+                    Math.pow(x - shotLocation.x, 2) + Math.pow(y - shotLocation.y, 2)
+                ).toFixed(1);
+                
+                shots.push({ 
+                    location: shotLocation, 
+                    target: { x, y },
+                    distance: distance,
+                    time: new Date().toLocaleTimeString() 
+                });
+                
+                shotLocation = null;
+                showAlert(`Shot logged! Distance: ${distance}%`);
+            }
+        });
+        
+        function drawShotLine(x1, y1, x2, y2) {
+            const field = document.getElementById('soccerField');
+            const fieldRect = field.getBoundingClientRect();
+            
+            const x1px = (x1 / 100) * fieldRect.width;
+            const y1px = (y1 / 100) * fieldRect.height;
+            const x2px = (x2 / 100) * fieldRect.width;
+            const y2px = (y2 / 100) * fieldRect.height;
+            
+            const length = Math.sqrt(Math.pow(x2px - x1px, 2) + Math.pow(y2px - y1px, 2));
+            const angle = Math.atan2(y2px - y1px, x2px - x1px) * 180 / Math.PI;
+            
+            const line = document.createElement('div');
+            line.className = 'shot-line';
+            line.style.left = x1 + '%';
+            line.style.top = y1 + '%';
+            line.style.width = length + 'px';
+            line.style.transform = `rotate(${angle}deg)`;
+            
+            field.appendChild(line);
+        }
+        
+        function clearField() {
+            document.querySelectorAll('.shot-marker, .shot-line').forEach(el => el.remove());
+            shots = [];
+            shotLocation = null;
+            showAlert('Field cleared');
+        }
+
+        // AI Functions
+        async function getAICoaching() {
+            const btn = document.getElementById('coachBtn');
+            const response = document.getElementById('coachResponse');
+            
+            if (sessionData.kicks === 0) {
+                showAlert(' No kick data available. Perform some kicks in Live Tracker first!');
+                return;
+            }
+            
+            btn.disabled = true;
+            response.innerHTML = '<div style="display: flex; align-items: center; gap: 15px;"><div class="ai-spinner"></div><span>AI Coach is analyzing your performance...</span></div>';
+            
+            try {
+                const prompt = `You are an expert soccer coach. Analyze this player's performance and give brief, actionable coaching advice.
+
+Performance Data:
+- Total kicks: ${sessionData.kicks}
+- Max speed: ${sessionData.maxSpeed} mph
+- Average speed: ${sessionData.avgSpeed} mph
+- Max spin: ${sessionData.maxSpin} RPM
+- Recent speeds: ${sessionData.speeds.slice(-5).join(', ')} mph
+
+Provide:
+1. Quick performance assessment (2 sentences)
+2. Top 3 specific tips for improvement
+3. One recommended drill
+
+Keep it encouraging and actionable.`;
+
+                const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${GROQ_API_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [
+                            { role: "user", content: prompt }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 500
+                    })
+                });
+
+                const data = await apiResponse.json();
+                
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+                
+                const coachingText = data.choices[0].message.content;
+                response.innerHTML = coachingText.replace(/\n/g, '<br>');
+                
+            } catch (error) {
+                response.innerHTML = `<p style="color: #ff3838;">Error: ${error.message}</p><p style="margin-top: 15px;">Quick Analysis: Your average speed of ${sessionData.avgSpeed} mph shows ${sessionData.avgSpeed > 40 ? 'excellent' : sessionData.avgSpeed > 30 ? 'good' : 'developing'} power. Focus on: 1) Increasing speed to 45+ mph, 2) Improving spin (aim for 1500+ RPM), 3) Consistency in technique.</p>`;
+                console.error(error);
+            }
+            
+            btn.disabled = false;
+        }
+
+        async function generateTrainingPlan() {
+            const btn = document.getElementById('planBtn');
+            const container = document.getElementById('trainingPlanContainer');
+            const content = document.getElementById('trainingPlanContent');
+            
+            if (sessionData.kicks === 0) {
+                showAlert(' No performance data available. Complete a session in Live Tracker first!');
+                return;
+            }
+            
+            btn.disabled = true;
+            container.style.display = 'block';
+            content.innerHTML = '<div style="display: flex; align-items: center; gap: 15px;"><div class="ai-spinner"></div><span>Generating personalized training plan...</span></div>';
+            
+            try {
+                const skillLevel = sessionData.avgSpeed < 25 ? 'Beginner' : sessionData.avgSpeed < 40 ? 'Intermediate' : 'Advanced';
+                
+                const prompt = `You are an expert soccer training coach. Create a personalized 4-week training plan for a ${skillLevel} player.
+
+Current Performance:
+- Max speed: ${sessionData.maxSpeed} mph
+- Average speed: ${sessionData.avgSpeed} mph
+- Max spin: ${sessionData.maxSpin} RPM
+
+Create a progressive 4-week plan with specific drills for each week. Format clearly with week headers and daily drills.`;
+
+                const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${GROQ_API_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [
+                            { role: "user", content: prompt }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 1000
+                    })
+                });
+
+                const data = await apiResponse.json();
+                
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+                
+                const planText = data.choices[0].message.content;
+                content.innerHTML = planText.replace(/\n/g, '<br>');
+                
+            } catch (error) {
+                const skillLevel = sessionData.avgSpeed < 25 ? 'Beginner' : sessionData.avgSpeed < 40 ? 'Intermediate' : 'Advanced';
+                content.innerHTML = `<h3 style="color: var(--primary); margin-bottom: 15px;">4-Week Training Plan (${skillLevel})</h3><p>${skillLevel === 'Beginner' ? 'Week 1-2: Focus on fundamentals - 50 passes daily, 30 shots from penalty spot<br>Week 3-4: Build power - 40 power shots, practice curves' : skillLevel === 'Intermediate' ? 'Week 1-2: Technique refinement - 50 curve shots, 40 volleys<br>Week 3-4: Power & accuracy - 60 corner shots, 50 moving ball shots' : 'Week 1-2: Elite finishing - 70 precision shots, advanced curves<br>Week 3-4: Peak performance - 100 rapid-fire shots, weak foot mastery'}</p>`;
+                console.error(error);
+            }
+            
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
+
+
