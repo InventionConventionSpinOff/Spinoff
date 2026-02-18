@@ -1,8 +1,5 @@
-/*
-  Spin Off - FINAL FIX
-  Detects CHANGE in acceleration, not absolute gravity
-  Annotated for beginners
-*/
+// Welcome to the 2026 Invention Convention. Here is the code for the Arduino inside the ball that is collecting all the data. We have made an effort to make the text easy to read by including comments that describe the function of each line. Have fun!
+
 
 #include <Arduino_BMI270_BMM150.h>  // Library for reading accelerometer & gyroscope
 #include <ArduinoBLE.h>             // Library to handle Bluetooth Low Energy (BLE)
@@ -349,3 +346,4 @@ void loop() {
 
   delay(10); // Small delay to avoid overloading CPU
 }
+
