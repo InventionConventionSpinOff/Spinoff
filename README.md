@@ -27,7 +27,9 @@ Our smart soccer ball tracking system measures:
 
 
 ---
+## Here is the code for the Arduino inside the ball!
 
+** [Launch Spin Off code](https://inventionconventionspinoff.github.io/Spinoff/spinoffexplained.txt)**
 ##  The Problem We're Solving
 
 Professional soccer players have access to expensive tracking systems that cost thousands of dollars. But what about youth players, school teams, or anyone who just loves the sport? We realized that with modern technology, these same analytics could be made affordable and accessible to everyone.
