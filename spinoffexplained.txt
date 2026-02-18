@@ -1,0 +1,351 @@
+/*
+  Spin Off - FINAL FIX
+  Detects CHANGE in acceleration, not absolute gravity
+  Annotated for beginners
+*/
+
+#include <Arduino_BMI270_BMM150.h>  // Library for reading accelerometer & gyroscope
+#include <ArduinoBLE.h>             // Library to handle Bluetooth Low Energy (BLE)
+
+
+// -------------------- BLE Setup --------------------
+BLEService spinOffService("19b10000-e8f2-537e-4f6c-d104768a1214"); // Create a BLE service
+BLECharacteristic speedChar("19b10001-e8f2-537e-4f6c-d104768a1214", BLERead | BLENotify, 50);  // BLE for speed
+BLECharacteristic spinChar("19b10002-e8f2-537e-4f6c-d104768a1214", BLERead | BLENotify, 50);   // BLE for spin
+BLECharacteristic statsChar("19b10003-e8f2-537e-4f6c-d104768a1214", BLERead | BLENotify, 100); // BLE for stats
+BLECharacteristic modeChar("19b10004-e8f2-537e-4f6c-d104768a1214", BLERead | BLEWrite | BLENotify, 20); // BLE for mode
+
+// -------------------- IMU Variables --------------------
+float accelX, accelY, accelZ;   // Raw accelerometer readings (X, Y, Z axis)
+float gyroX, gyroY, gyroZ;      // Raw gyroscope readings (rotation rates X, Y, Z)
+float velocityX = 0, velocityY = 0, velocityZ = 0; // Integrated velocities (simple physics)
+float speed = 0;                // Combined speed magnitude
+float spinRate = 0;             // Spin of ball in RPM
+float maxSpeedDuringKick = 0;   // Max speed during current kick
+float maxSpinDuringKick = 0;    // Max spin during current kick
+
+unsigned long lastTime = 0;     // Timestamp of last loop iteration
+float deltaTime = 0;            // Time difference in seconds
+
+// -------------------- Kick Detection Variables --------------------
+float prevAccelMag = 9.81;      // Previous acceleration magnitude (used to detect CHANGE)
+const float kickChangeThreshold = 3.0; // Acceleration change threshold for detecting a kick
+bool kickDetected = false;      // Flag to track if a kick is currently detected
+unsigned long kickTime = 0;     // Time when kick was detected
+
+const float movementThreshold = 0.5; // Threshold to determine if ball is still moving
+unsigned long lastMovementTime = 0;  // Time of last detected movement
+const unsigned long stoppedDuration = 1000; // How long to wait before considering ball stopped (ms)
+bool ballStopped = false;       // Flag for if ball has stopped
+bool dataAlreadySent = false;   // Flag to prevent sending the same kick multiple times
+
+// -------------------- Flight Variables --------------------
+bool inFlight = false;           // Is the ball in the air?
+unsigned long flightStartTime = 0; // When ball left the ground
+unsigned long flightDuration = 0;  // How long the ball was in the air
+
+// -------------------- Stats Tracking --------------------
+int kickCount = 0;               // Number of kicks recorded
+float maxSpeed = 0;              // Max speed across all kicks
+float totalSpeed = 0;            // Sum of all speeds (for calculating average)
+float avgSpeed = 0;              // Average speed
+float maxSpin = 0;               // Max spin across all kicks
+float impactForce = 0;           // Impact acceleration at kick
+float launchAngle = 0;           // Estimated launch angle
+
+// -------------------- BLE & Mode --------------------
+String currentMode = "PRACTICE"; // Default mode
+bool isConnected = false;        // BLE connection status
+unsigned long lastKickTime = 0;  // Time of last kick
+const unsigned long kickCooldown = 2000; // Minimum time between kicks (ms)
+
+// -------------------- Setup Function --------------------
+void setup() {
+  Serial.begin(115200);          // Start serial communication for debugging
+  delay(2000);                   // Wait for Arduino to initialize
+
+  // -------------------- Setup LEDs --------------------
+  pinMode(LED_BUILTIN, OUTPUT);  // Internal board LED
+  pinMode(LEDR, OUTPUT);         // External red LED
+  pinMode(LEDG, OUTPUT);         // External green LED
+  pinMode(LEDB, OUTPUT);         // External blue LED
+
+  // Turn LEDs off initially
+  digitalWrite(LEDR, HIGH);
+  digitalWrite(LEDG, HIGH);
+  digitalWrite(LEDB, HIGH);
+  digitalWrite(LED_BUILTIN, LOW);
+
+  // Print startup banner
+  Serial.println("\n\n=================================");
+  Serial.println("      SPIN OFF - FINAL FIX      ");
+  Serial.println("=================================");
+
+  // Blink LEDs 3 times to show setup is running
+  for(int i=0; i<3; i++) {
+    digitalWrite(LEDR, LOW);
+    digitalWrite(LEDB, LOW);
+    delay(100);
+    digitalWrite(LEDR, HIGH);
+    digitalWrite(LEDB, HIGH);
+    delay(100);
+  }
+
+  // -------------------- Initialize IMU --------------------
+  if (!IMU.begin()) {  // Start accelerometer/gyro
+    Serial.println("IMU FAILED!");
+    while (1) {         // If IMU fails, blink red forever
+      digitalWrite(LEDR, LOW);
+      delay(200);
+      digitalWrite(LEDR, HIGH);
+      delay(200);
+    }
+  }
+  Serial.println("IMU OK!");
+
+  // -------------------- Initialize BLE --------------------
+  if (!BLE.begin()) {
+    Serial.println("BLE FAILED!");
+    while (1);  // Stop program if BLE fails
+  }
+
+  // Configure BLE service and characteristics
+  BLE.setLocalName("Spin Off");  // Name of BLE device
+  BLE.setAdvertisedService(spinOffService);
+  spinOffService.addCharacteristic(speedChar);
+  spinOffService.addCharacteristic(spinChar);
+  spinOffService.addCharacteristic(statsChar);
+  spinOffService.addCharacteristic(modeChar);
+  BLE.addService(spinOffService);
+  BLE.advertise();               // Start advertising BLE
+
+  // Set default mode value
+  modeChar.writeValue(currentMode.c_str());
+  modeChar.setEventHandler(BLEWritten, modeCharacteristicWritten); // Handle mode changes
+
+  Serial.println("BLE OK!");
+  Serial.println("\nDETECTION METHOD:");
+  Serial.println("  Detects CHANGE in accel");
+  Serial.println("  Change threshold: 3.0 m/s");
+  Serial.println("  Ignores gravity!");
+  Serial.println("\nLEDs:");
+  Serial.println("  Orange: Connected");
+  Serial.println("  Purple: 1=recorded, 3=sent");
+  Serial.println("\nReady!");
+  Serial.println("=================================\n");
+
+  lastTime = millis(); // Save start time
+}
+
+// -------------------- Handle Mode Changes --------------------
+void modeCharacteristicWritten(BLEDevice central, BLECharacteristic characteristic) {
+  if (characteristic.valueLength() > 0) {
+    char buffer[20];
+    characteristic.readValue(buffer, sizeof(buffer)); // Read value sent by app
+    currentMode = String(buffer);                     // Store as string
+    Serial.print("Mode: ");
+    Serial.println(currentMode);                      // Print new mode
+  }
+}
+
+// -------------------- Update Statistics --------------------
+void updateStats() {
+  avgSpeed = (kickCount > 0) ? (totalSpeed / kickCount) : 0; // Calculate average
+  char statsData[100];
+  snprintf(statsData, sizeof(statsData), 
+           "KICKS:%d|MAX:%.1f|AVG:%.1f|MSPIN:%.0f",
+           kickCount, maxSpeed, avgSpeed, maxSpin);   // Format stats as string
+  statsChar.writeValue(statsData);                      // Send via BLE
+}
+
+// -------------------- Send Kick Data via BLE --------------------
+void sendKickData() {
+  if (dataAlreadySent) return; // Prevent sending twice
+
+  // Update stats
+  kickCount++;
+  totalSpeed += maxSpeedDuringKick;
+  if(maxSpeedDuringKick > maxSpeed) maxSpeed = maxSpeedDuringKick;
+  if(maxSpinDuringKick > maxSpin) maxSpin = maxSpinDuringKick;
+
+  // Calculate launch angle if ball was in flight
+  if(flightDuration > 0 && maxSpeedDuringKick > 0) {
+    float t_seconds = flightDuration / 1000.0;
+    float sin_theta = (t_seconds * 9.81) / (2.0 * maxSpeedDuringKick);
+    if(sin_theta >= -1.0 && sin_theta <= 1.0) {
+      launchAngle = asin(sin_theta) * 180.0 / PI;
+    } else {
+      launchAngle = 0;
+    }
+  }
+
+  // Print kick info to Serial for debugging
+  Serial.println("\n========================================");
+  Serial.print("KICK #");
+  Serial.println(kickCount);
+  Serial.println("========================================");
+  Serial.print("Speed: ");
+  Serial.print(maxSpeedDuringKick);
+  Serial.println(" m/s");
+  Serial.print("       ");
+  Serial.print(maxSpeedDuringKick * 3.6);
+  Serial.println(" km/h");
+  Serial.print("Spin:  ");
+  Serial.print(maxSpinDuringKick);
+  Serial.println(" RPM");
+  Serial.print("Flight: ");
+  Serial.print(flightDuration);
+  Serial.println(" ms");
+  Serial.print("Angle: ");
+  Serial.print(launchAngle);
+  Serial.println(" deg");
+  Serial.print("Impact: ");
+  Serial.print(impactForce);
+  Serial.println(" m/s");
+  Serial.println("========================================\n");
+
+  // Prepare BLE strings
+  char speedData[50];
+  char spinData[50];
+  char statsData[100];
+
+  snprintf(speedData, sizeof(speedData), "SPD:%.1f|KMH:%.1f|ANG:%.0f", 
+           maxSpeedDuringKick, maxSpeedDuringKick*3.6, launchAngle);
+  snprintf(spinData, sizeof(spinData), "SPIN:%.0f|FLT:%lu|IMP:%.0f", 
+           maxSpinDuringKick, flightDuration, impactForce);
+  snprintf(statsData, sizeof(statsData), 
+           "KICKS:%d|MAX:%.1f|AVG:%.1f|MSPIN:%.0f",
+           kickCount, maxSpeed, avgSpeed, maxSpin);
+
+  Serial.println("SENDING BLE:");
+  Serial.println(speedData);
+  Serial.println(spinData);
+  Serial.println(statsData);
+
+  // Blink LEDs 3 times to indicate data sent
+  for(int i=0; i<3; i++) {
+    digitalWrite(LEDR, LOW);
+    digitalWrite(LEDB, LOW);
+    delay(100);
+    digitalWrite(LEDR, HIGH);
+    digitalWrite(LEDB, HIGH);
+    delay(100);
+  }
+
+  // Send BLE data
+  speedChar.writeValue(speedData);
+  delay(50);
+  spinChar.writeValue(spinData);
+  delay(50);
+  statsChar.writeValue(statsData);
+
+  Serial.println("SENT!\n");
+  updateStats();           // Update stats characteristic
+  dataAlreadySent = true;  // Prevent re-sending
+}
+
+// -------------------- Main Loop --------------------
+void loop() {
+  BLEDevice central = BLE.central(); // Check if a device is connected
+
+  // -------------------- Handle BLE connection --------------------
+  if (central && central.connected() && !isConnected) {
+    Serial.println("\nCONNECTED!\n");
+    digitalWrite(LED_BUILTIN, HIGH); // Turn on built-in LED
+    isConnected = true;
+  } else if ((!central || !central.connected()) && isConnected) {
+    Serial.println("\nDISCONNECTED\n");
+    digitalWrite(LED_BUILTIN, LOW); // Turn off built-in LED
+    isConnected = false;
+  }
+
+  // -------------------- Read IMU --------------------
+  if (IMU.accelerationAvailable() && IMU.gyroscopeAvailable()) {
+    IMU.readAcceleration(accelX, accelY, accelZ); // Read acceleration
+    IMU.readGyroscope(gyroX, gyroY, gyroZ);      // Read rotation
+
+    // Convert g to m/s²
+    accelX *= 9.81;
+    accelY *= 9.81;
+    accelZ *= 9.81;
+
+    // Calculate deltaTime
+    unsigned long currentTime = millis();
+    deltaTime = (currentTime - lastTime) / 1000.0;
+    if(deltaTime == 0) deltaTime = 0.01; // Avoid division by zero
+    lastTime = currentTime;
+
+    // -------------------- Kick Detection --------------------
+    float accelMagnitude = sqrt(accelX*accelX + accelY*accelY + accelZ*accelZ); // Total accel
+    float accelChange = abs(accelMagnitude - prevAccelMag);                     // Change since last loop
+
+    if (!kickDetected && (currentTime - lastKickTime) > kickCooldown) {
+      if (accelChange > kickChangeThreshold) {  // Detect significant change
+        kickDetected = true;
+        lastKickTime = currentTime;
+        velocityX = velocityY = velocityZ = 0;
+        flightDuration = 0;
+        impactForce = accelMagnitude;
+        maxSpeedDuringKick = 0;
+        maxSpinDuringKick = 0;
+        inFlight = false;
+        ballStopped = false;
+        dataAlreadySent = false;
+        lastMovementTime = currentTime;
+
+        Serial.println("\nKICK DETECTED!");
+        Serial.print("Change: ");
+        Serial.print(accelChange);
+        Serial.println(" m/s");
+        Serial.println("Tracking...\n");
+      }
+    }
+
+    prevAccelMag = accelMagnitude; // Save for next loop
+
+    // -------------------- Track movement & speed --------------------
+    if(kickDetected) {
+      velocityX += accelX * deltaTime; // Integrate acceleration to velocity
+      velocityY += accelY * deltaTime;
+      velocityZ += accelZ * deltaTime;
+
+      speed = sqrt(velocityX*velocityX + velocityY*velocityY + velocityZ*velocityZ);
+      spinRate = sqrt(gyroX*gyroX + gyroY*gyroY + gyroZ*gyroZ) * 60.0 / 360.0;
+
+      if(speed > maxSpeedDuringKick) maxSpeedDuringKick = speed;
+      if(spinRate > maxSpinDuringKick) maxSpinDuringKick = spinRate;
+
+      // -------------------- Detect stop --------------------
+      float accelDeviation = abs(accelMagnitude - 9.81); // How close to gravity?
+
+      if(accelDeviation > movementThreshold) {
+        lastMovementTime = currentTime;
+        ballStopped = false; // Ball still moving
+      } else {
+        if(!ballStopped && (currentTime - lastMovementTime) > stoppedDuration) {
+          ballStopped = true;
+          Serial.println("STOPPED!");
+
+          // Blink purple LED once
+          digitalWrite(LEDR, LOW);
+          digitalWrite(LEDB, LOW);
+          delay(100);
+          digitalWrite(LEDR, HIGH);
+          digitalWrite(LEDB, HIGH);
+
+          // Send data if BLE connected
+          if (central && central.connected()) {
+            sendKickData();
+          } else {
+            Serial.println("Not connected\n");
+          }
+
+          kickDetected = false; // Reset for next kick
+          velocityX = velocityY = velocityZ = 0;
+        }
+      }
+    }
+  }
+
+  delay(10); // Small delay to avoid overloading CPU
+}
