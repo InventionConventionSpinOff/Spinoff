@@ -21,17 +21,10 @@ Our smart soccer ball tracking system measures:
 
 ---
 
-##  Try It Live!
+##  Check out our app!
 
-** [Launch Spin Off Web App](https://inventionconventionspinoff.github.io/Spinoff/SpinoffFinal.html)**
+** [Launch Spin Off Web App](https://inventionconventionspinoff.github.io/Spinoff/finalspit.html)**
 
-### Quick Start Guide:
-1. Open the link above on Chrome, Edge, or Opera
-2. Click **"Connect Device"**
-3. Select your Spin Off ball from the Bluetooth menu
-4. Start kicking and watch the data appear in real-time!
-
-**Note:** Safari doesn't support Web Bluetooth yet. For iOS devices, you can use the free **Bluefy browser** from the App Store.
 
 ---
 
@@ -76,8 +69,8 @@ We use physics equations that NASA uses for projectile motion:
 - Arduino Nano 33 BLE Sense Rev 2
 - Bosch BMI270 6-axis IMU
 - Nordic nRF52840 Bluetooth module
-- 3.7V 1000mAh LiPo battery
-- Custom 3D-printed enclosure
+- 3000 mAH attom tech slim battery
+- Bubble wrap enclosure
 
 **Software:**
 - **Firmware:** C++ (Arduino Framework)
@@ -140,6 +133,7 @@ Building Spin Off taught us way more than we expected:
 - Creating responsive web applications
 - Working with Bluetooth protocols
 - Integrating AI APIs
+- Writing HTML5, CSS3, JavaScript (ES6+)
 
 **Physics & Math:**
 - Projectile motion equations
@@ -155,19 +149,6 @@ Building Spin Off taught us way more than we expected:
 
 ---
 
-##  Development Journey
-
-**September 2025:** Initial brainstorming - "What if we could track soccer ball data?"
-
-**October 2025:** Research phase - studied IMU sensors, Bluetooth, and sports physics. Ordered our first Arduino and started learning about accelerometers.
-
-**November 2025:** Built Prototype 1 - basic setup that could detect kicks and measure acceleration. The readings were wildly inaccurate (we were seeing 80+ mph on gentle tosses!) but it proved the concept worked.
-
-**December 2025:** Major breakthrough - implemented low-pass filtering and peak detection instead of integration. This made our speed measurements actually realistic. Also developed the web application with real-time charts.
-
-**January 2026:** Final polish - added AI coaching, perfected the algorithms, created professional documentation, and prepared for the invention convention.
-
----
 
 ##  Future Plans
 
@@ -185,31 +166,19 @@ Building Spin Off taught us way more than we expected:
 - [ ] Machine learning for technique analysis
 - [ ] Open-source platform for sports IoT
 
-Our ultimate goal is to make Spin Off available to schools and youth programs at an affordable price point (under $50 per device) so that data-driven training becomes accessible to everyone, not just elite athletes.
 
 ---
 
-## Contributing
-
-While Spin Off is currently a school project, we welcome feedback and suggestions! If you have ideas for improvements or find any issues, please:
-
-1. **Open an Issue** - Describe the bug or feature request
-2. **Submit Feedback** - Use the feedback form on our website
-3. **Share Your Data** - Help us improve our algorithms
-
-We're still learning, so constructive feedback is incredibly valuable to us!
 
 ---
 
 ##  Acknowledgments
 
 **Special Thanks To:**
-- Our STEM teacher, who encouraged us to keep going when it was tough
+- Our STEAM teacher, who encouraged us to keep going when it was tough
 - Our families for supporting our project (and dealing with soccer balls flying around the house)
 - Everyone who tested early prototypes and gave us honest feedback
 
-**Inspiration:**
-This project was inspired by professional sports analytics systems like Adidas miCoach and the FIFA-approved KINEXON tracking system. We wanted to prove that with creativity and determination, middle school students could build something that works on similar principles.
 
 ---
 
