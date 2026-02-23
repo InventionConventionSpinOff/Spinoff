@@ -32,7 +32,11 @@ Our smart soccer ball tracking system measures:
 ** [Launch Spin Off code](https://inventionconventionspinoff.github.io/Spinoff/spinoffexplained.txt)**
 
 ---
+## Here is our Data!
 
+** [Launch Spin Off Data](https://inventionconventionspinogg.github.io/Spinoff/DATA.csv)**
+
+---
 
 ##  The Problem We're Solving
 
