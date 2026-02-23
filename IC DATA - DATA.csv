@@ -1,0 +1,96 @@
+Test Date,Tester,Age,Team/Affiliation,Actual Skill Level,Shot Type,Spin Off Speed (mph),Radar Gun Speed (mph),Speed Difference,Spin (RPM),Flight Time (ms),Launch Angle (deg),Impact Force (G),w,AI Correct?,Surface Type,Weather,Notes
+2/5/2026,Beach FC U13 Player,13,Beach FC South Bay,Intermediate,Penalty Kick,28.4,29.2,0.8,780,580,30,4.8,Intermediate,Yes,Grass,Sunny,Clean strike from penalty spot
+2/5/2026,Beach FC U13 Player,13,Beach FC South Bay,Intermediate,Penalty Kick,30.2,31.5,1.3,820,620,33,5.2,Intermediate,Yes,Grass,Sunny,Good power and placement
+2/5/2026,Beach FC U13 Player,13,Beach FC South Bay,Intermediate,Penalty Kick,27.9,28.6,0.7,760,560,29,4.6,Intermediate,Yes,Grass,Sunny,Solid technique
+2/5/2026,Beach FC U13 Player,13,Beach FC South Bay,Intermediate,Penalty Kick,29.1,30.3,1.2,795,600,31,4.9,Intermediate,Yes,Grass,Sunny,Consistent form
+2/5/2026,Beach FC U13 Player,13,Beach FC South Bay,Intermediate,Penalty Kick,28.7,29.8,1.1,785,590,30,4.7,Intermediate,Yes,Grass,Sunny,Upper right corner
+2/6/2026,ECNL Beach FC,14,Beach FC ECNL,Advanced,Penalty Kick,42.5,44.1,1.6,1190,810,36,7.1,Advanced,Yes,Grass,Sunny,Elite level striker
+2/6/2026,ECNL Beach FC,14,Beach FC ECNL,Advanced,Penalty Kick,44.8,46.5,1.7,1240,850,38,7.5,Advanced,Yes,Grass,Sunny,Maximum power shot
+2/6/2026,ECNL Beach FC,14,Beach FC ECNL,Advanced,Penalty Kick,41.3,42.8,1.5,1160,790,35,6.9,Advanced,Yes,Grass,Sunny,Top left corner
+2/6/2026,ECNL Beach FC,14,Beach FC ECNL,Advanced,Penalty Kick,43.6,45.2,1.6,1210,830,37,7.3,Advanced,Yes,Grass,Sunny,Unstoppable shot
+2/6/2026,ECNL Beach FC,14,Beach FC ECNL,Advanced,Penalty Kick,42.9,44.6,1.7,1200,820,36,7.2,Advanced,Yes,Grass,Sunny,Professional form
+2/7/2026,Sand and Surf Flight 2,13,Sand and Surf SC,Intermediate,Penalty Kick,31.4,32.7,1.3,860,640,33,5.3,Intermediate,Yes,Grass,Sunny,Club level player
+2/7/2026,Sand and Surf Flight 2,13,Sand and Surf SC,Intermediate,Penalty Kick,32.8,34.1,1.3,900,670,35,5.6,Intermediate,Yes,Grass,Sunny,Strong right foot
+2/7/2026,Sand and Surf Flight 2,13,Sand and Surf SC,Intermediate,Penalty Kick,30.6,31.9,1.3,840,620,32,5.1,Intermediate,Yes,Grass,Sunny,Good accuracy
+2/7/2026,Sand and Surf Flight 2,13,Sand and Surf SC,Intermediate,Penalty Kick,31.9,33.3,1.4,875,655,34,5.4,Intermediate,Yes,Grass,Sunny,Consistent power
+2/7/2026,Sand and Surf Flight 2,13,Sand and Surf SC,Intermediate,Penalty Kick,32.1,33.6,1.5,885,665,34,5.5,Intermediate,Yes,Grass,Sunny,Bottom right corner
+2/8/2026,MLS Next LA Galaxy,15,LA Galaxy South Bay,Advanced,Penalty Kick,52.3,54.2,1.9,1620,1020,43,8.7,Advanced,Yes,Grass,Sunny,Academy striker
+2/8/2026,MLS Next LA Galaxy,15,LA Galaxy South Bay,Advanced,Penalty Kick,54.8,56.9,2.1,1720,1080,45,9.2,Advanced,Yes,Grass,Sunny,Hardest recorded shot
+2/8/2026,MLS Next LA Galaxy,15,LA Galaxy South Bay,Advanced,Penalty Kick,51.6,53.4,1.8,1580,990,42,8.5,Advanced,Yes,Grass,Sunny,Professional technique
+2/8/2026,MLS Next LA Galaxy,15,LA Galaxy South Bay,Advanced,Penalty Kick,53.5,55.5,2,1680,1050,44,9,Advanced,Yes,Grass,Sunny,Upper 90 placement
+2/8/2026,MLS Next LA Galaxy,15,LA Galaxy South Bay,Advanced,Penalty Kick,52.9,54.9,2,1650,1030,43,8.8,Advanced,Yes,Grass,Sunny,Goalkeeper had no chance
+2/9/2026,Beach FC U14 Flight 1,14,Beach FC South Bay,Intermediate,Penalty Kick,35.8,37.2,1.4,990,690,35,6,Advanced,No,Grass,Sunny,Strong for age group
+2/9/2026,Beach FC U14 Flight 1,14,Beach FC South Bay,Intermediate,Penalty Kick,37.4,38.9,1.5,1050,730,37,6.4,Advanced,No,Grass,Sunny,Excellent power
+2/9/2026,Beach FC U14 Flight 1,14,Beach FC South Bay,Intermediate,Penalty Kick,34.9,36.2,1.3,965,670,34,5.8,Intermediate,Yes,Grass,Sunny,Good placement
+2/9/2026,Beach FC U14 Flight 1,14,Beach FC South Bay,Intermediate,Penalty Kick,36.5,38,1.5,1020,710,36,6.2,Advanced,No,Grass,Sunny,Side netting
+2/9/2026,Beach FC U14 Flight 1,14,Beach FC South Bay,Intermediate,Penalty Kick,35.2,36.6,1.4,980,685,35,5.9,Intermediate,Yes,Grass,Sunny,Center of goal
+2/10/2026,South Bay Force U12,12,South Bay Force,Beginner,Penalty Kick,18.3,19.4,1.1,470,370,26,3,Beginner,Yes,Grass,Cloudy,First year player
+2/10/2026,South Bay Force U12,12,South Bay Force,Beginner,Penalty Kick,19.7,20.9,1.2,510,400,28,3.3,Beginner,Yes,Grass,Cloudy,Improving technique
+2/10/2026,South Bay Force U12,12,South Bay Force,Beginner,Penalty Kick,17.5,18.5,1,440,350,24,2.8,Beginner,Yes,Grass,Cloudy,Good contact
+2/10/2026,South Bay Force U12,12,South Bay Force,Beginner,Penalty Kick,18.9,20.1,1.2,485,385,27,3.1,Beginner,Yes,Grass,Cloudy,Learning curve
+2/10/2026,South Bay Force U12,12,South Bay Force,Beginner,Penalty Kick,19.2,20.4,1.2,495,395,27,3.2,Beginner,Yes,Grass,Cloudy,Better each attempt
+2/11/2026,Redondo Beach Breakers,13,Redondo Breakers,Intermediate,Penalty Kick,29.8,31,1.2,815,610,32,5,Intermediate,Yes,Grass,Sunny,Local competitive team
+2/11/2026,Redondo Beach Breakers,13,Redondo Breakers,Intermediate,Penalty Kick,31.3,32.6,1.3,855,645,34,5.4,Intermediate,Yes,Grass,Sunny,Strong left foot
+2/11/2026,Redondo Beach Breakers,13,Redondo Breakers,Intermediate,Penalty Kick,28.9,30.1,1.2,790,595,31,4.8,Intermediate,Yes,Grass,Sunny,Accurate shooter
+2/11/2026,Redondo Beach Breakers,13,Redondo Breakers,Intermediate,Penalty Kick,30.5,31.8,1.3,835,630,33,5.2,Intermediate,Yes,Grass,Sunny,Good follow-through
+2/11/2026,Redondo Beach Breakers,13,Redondo Breakers,Intermediate,Penalty Kick,29.3,30.5,1.2,805,605,32,4.9,Intermediate,Yes,Grass,Sunny,Consistent technique
+2/11/2026,Manhattan Beach United U15,15,MB United,Advanced,Penalty Kick,46.7,48.5,1.8,1320,920,40,7.6,Advanced,Yes,Turf,Sunny,High school varsity
+2/11/2026,Manhattan Beach United U15,15,MB United,Advanced,Penalty Kick,48.2,50.1,1.9,1380,960,42,8,Advanced,Yes,Turf,Sunny,Team leading scorer
+2/11/2026,Manhattan Beach United U15,15,MB United,Advanced,Penalty Kick,45.9,47.6,1.7,1300,900,39,7.4,Advanced,Yes,Turf,Sunny,Top corner finish
+2/11/2026,Manhattan Beach United U15,15,MB United,Advanced,Penalty Kick,47.5,49.4,1.9,1350,940,41,7.8,Advanced,Yes,Turf,Sunny,Unstoppable power
+2/11/2026,Manhattan Beach United U15,15,MB United,Advanced,Penalty Kick,46.3,48.1,1.8,1310,910,40,7.5,Advanced,Yes,Turf,Sunny,Perfect placement
+2/12/2026,Hermosa Beach SC,14,Hermosa Beach SC,Intermediate,Penalty Kick,33.6,35,1.4,920,665,34,5.7,Intermediate,Yes,Grass,Sunny,Beach club player
+2/12/2026,Hermosa Beach SC,14,Hermosa Beach SC,Intermediate,Penalty Kick,34.9,36.4,1.5,955,695,36,6,Intermediate,Yes,Grass,Sunny,Strong technique
+2/12/2026,Hermosa Beach SC,14,Hermosa Beach SC,Intermediate,Penalty Kick,32.7,34,1.3,895,650,33,5.5,Intermediate,Yes,Grass,Sunny,Clean strike
+2/12/2026,Hermosa Beach SC,14,Hermosa Beach SC,Intermediate,Penalty Kick,34.1,35.6,1.5,935,680,35,5.8,Intermediate,Yes,Grass,Sunny,Good power
+2/12/2026,Hermosa Beach SC,14,Hermosa Beach SC,Intermediate,Penalty Kick,33.3,34.7,1.4,910,660,34,5.6,Intermediate,Yes,Grass,Sunny,Side netting
+2/13/2026,Torrance United Flight 1,13,Torrance United,Intermediate,Penalty Kick,30.9,32.2,1.3,845,635,33,5.2,Intermediate,Yes,Grass,Sunny,Flight 1 level
+2/13/2026,Torrance United Flight 1,13,Torrance United,Intermediate,Penalty Kick,32.4,33.8,1.4,885,665,34,5.5,Intermediate,Yes,Grass,Sunny,Competitive player
+2/13/2026,Torrance United Flight 1,13,Torrance United,Intermediate,Penalty Kick,29.7,30.9,1.2,820,620,32,5,Intermediate,Yes,Grass,Sunny,Good accuracy
+2/13/2026,Torrance United Flight 1,13,Torrance United,Intermediate,Penalty Kick,31.6,33,1.4,865,650,33,5.4,Intermediate,Yes,Grass,Sunny,Strong shot
+2/13/2026,Torrance United Flight 1,13,Torrance United,Intermediate,Penalty Kick,30.3,31.5,1.2,830,625,32,5.1,Intermediate,Yes,Grass,Sunny,Bottom corner
+2/14/2026,Rolling Hills Prep,15,RHP Varsity,Advanced,Penalty Kick,49.2,51.1,1.9,1440,970,42,8.2,Advanced,Yes,Grass,Sunny,High school varsity captain
+2/14/2026,Rolling Hills Prep,15,RHP Varsity,Advanced,Penalty Kick,51,53,2,1520,1010,44,8.6,Advanced,Yes,Grass,Sunny,Good spin
+2/14/2026,Rolling Hills Prep,15,RHP Varsity,Advanced,Penalty Kick,48.3,50.2,1.9,1410,950,41,8,Advanced,Yes,Grass,Sunny,College prospect
+2/14/2026,Rolling Hills Prep,15,RHP Varsity,Advanced,Penalty Kick,50.1,52.1,2,1480,990,43,8.4,Advanced,Yes,Grass,Sunny,Top shelf
+2/14/2026,Rolling Hills Prep,15,RHP Varsity,Advanced,Penalty Kick,49.6,51.6,2,1460,980,42,8.3,Advanced,Yes,Grass,Sunny,Unstoppable velocity
+2/14/2026,South Bay Surf U13,13,South Bay Surf,Intermediate,Penalty Kick,28.1,29.2,1.1,765,575,30,4.7,Intermediate,Yes,Grass,Cloudy,Recreational plus
+2/14/2026,South Bay Surf U13,13,South Bay Surf,Intermediate,Penalty Kick,29.4,30.6,1.2,800,605,31,5,Intermediate,Yes,Grass,Cloudy,Good fundamentals
+2/14/2026,South Bay Surf U13,13,South Bay Surf,Intermediate,Penalty Kick,27.5,28.6,1.1,750,565,29,4.6,Intermediate,Yes,Grass,Cloudy,Solid contact
+2/14/2026,South Bay Surf U13,13,South Bay Surf,Intermediate,Penalty Kick,28.7,29.9,1.2,780,590,30,4.8,Intermediate,Yes,Grass,Cloudy,Improving weekly
+2/14/2026,South Bay Surf U13,13,South Bay Surf,Intermediate,Penalty Kick,28.3,29.4,1.1,770,580,30,4.7,Intermediate,Yes,Grass,Cloudy,Right footed
+2/15/2026,Palos Verdes Peninsula,14,PV Peninsula FC,Intermediate,Penalty Kick,34.5,35.9,1.4,945,685,35,5.9,Intermediate,Yes,Grass,Sunny,Peninsula league
+2/15/2026,Palos Verdes Peninsula,14,PV Peninsula FC,Intermediate,Penalty Kick,36.1,37.6,1.5,985,715,37,6.3,Advanced,No,Grass,Sunny,Exceptional power
+2/15/2026,Palos Verdes Peninsula,14,PV Peninsula FC,Intermediate,Penalty Kick,33.8,35.1,1.3,925,675,34,5.7,Intermediate,Yes,Grass,Sunny,Good technique
+2/15/2026,Palos Verdes Peninsula,14,PV Peninsula FC,Intermediate,Penalty Kick,35.3,36.8,1.5,965,700,36,6.1,Intermediate,Yes,Grass,Sunny,Strong follow-through
+2/15/2026,Palos Verdes Peninsula,14,PV Peninsula FC,Intermediate,Penalty Kick,34.2,35.6,1.4,940,680,35,5.8,Intermediate,Yes,Grass,Sunny,Accurate placement
+2/15/2026,El Segundo Eagles,12,El Segundo SC,Beginner,Penalty Kick,16.8,17.7,0.9,440,350,24,2.8,Beginner,Yes,Grass,Sunny,Youth development
+2/15/2026,El Segundo Eagles,12,El Segundo SC,Beginner,Penalty Kick,18.2,19.2,1,475,380,26,3.1,Beginner,Yes,Grass,Sunny,First season
+2/15/2026,El Segundo Eagles,12,El Segundo SC,Beginner,Penalty Kick,15.9,16.7,0.8,420,335,23,2.6,Beginner,Yes,Grass,Sunny,Learning basics
+2/15/2026,El Segundo Eagles,12,El Segundo SC,Beginner,Penalty Kick,17.5,18.5,1,455,365,25,2.9,Beginner,Yes,Grass,Sunny,Getting stronger
+2/15/2026,El Segundo Eagles,12,El Segundo SC,Beginner,Penalty Kick,17.1,18,0.9,445,355,24,2.8,Beginner,Yes,Grass,Sunny,Good effort
+2/16/2026,Torrance National,14,Torrance National,Advanced,Penalty Kick,45.3,47,1.7,1280,895,39,7.3,Advanced,Yes,Grass,Sunny,NPL level player
+2/16/2026,Torrance National,14,Torrance National,Advanced,Penalty Kick,47.1,49,1.9,1345,935,41,7.7,Advanced,Yes,Grass,Sunny,Elite club team
+2/16/2026,Torrance National,14,Torrance National,Advanced,Penalty Kick,44.6,46.2,1.6,1260,880,38,7.1,Advanced,Yes,Grass,Sunny,Top corner
+2/16/2026,Torrance National,14,Torrance National,Advanced,Penalty Kick,46.4,48.2,1.8,1315,920,40,7.5,Advanced,Yes,Grass,Sunny,Powerful shot
+2/16/2026,Torrance National,14,Torrance National,Advanced,Penalty Kick,45.8,47.6,1.8,1295,905,39,7.4,Advanced,Yes,Grass,Sunny,High level
+2/17/2026,Redondo Union HS,15,RUHS Varsity,Advanced,Penalty Kick,50.6,52.6,2,1505,1000,43,8.5,Advanced,Yes,Grass,Sunny,Bay League champion
+2/17/2026,Redondo Union HS,15,RUHS Varsity,Advanced,Penalty Kick,52.4,54.5,2.1,1585,1040,45,9,Advanced,Yes,Grass,Sunny,Team captain
+2/17/2026,Redondo Union HS,15,RUHS Varsity,Advanced,Penalty Kick,49.8,51.7,1.9,1475,985,42,8.3,Advanced,Yes,Grass,Sunny,All-league striker
+2/17/2026,Redondo Union HS,15,RUHS Varsity,Advanced,Penalty Kick,51.5,53.5,2,1545,1020,44,8.7,Advanced,Yes,Grass,Sunny,Good spin
+2/17/2026,Redondo Union HS,15,RUHS Varsity,Advanced,Penalty Kick,50.2,52.1,1.9,1490,995,43,8.4,Advanced,Yes,Grass,Sunny,Maximum power
+2/17/2026,South Bay Coach,35,Sand and Surf SC,Advanced,Penalty Kick,56.2,58.4,2.2,1810,1120,46,9.6,Advanced,Yes,Grass,Sunny,Former college player
+2/17/2026,South Bay Coach,35,Sand and Surf SC,Advanced,Penalty Kick,58.1,60.4,2.3,1890,1180,48,10.1,Advanced,Yes,Grass,Sunny,Maximum recorded speed
+2/17/2026,South Bay Coach,35,Sand and Surf SC,Advanced,Penalty Kick,55.7,57.8,2.1,1780,1100,45,9.4,Advanced,Yes,Grass,Sunny,Professional technique
+2/17/2026,South Bay Coach,35,Sand and Surf SC,Advanced,Penalty Kick,57.3,59.5,2.2,1850,1150,47,9.8,Advanced,Yes,Grass,Sunny,Goalkeeper certified
+2/17/2026,South Bay Coach,35,Sand and Surf SC,Advanced,Penalty Kick,56.8,59,2.2,1825,1135,46,9.7,Advanced,Yes,Grass,Sunny,Unstoppable power
+2/18/2026,Carson Colts,13,Carson SC,Intermediate,Penalty Kick,27.2,28.2,1,745,565,29,4.5,Intermediate,Yes,Turf,Sunny,Local recreational
+2/18/2026,Carson Colts,13,Carson SC,Intermediate,Penalty Kick,28.5,29.6,1.1,775,590,30,4.8,Intermediate,Yes,Turf,Sunny,Improving player
+2/18/2026,Carson Colts,13,Carson SC,Intermediate,Penalty Kick,26.9,27.9,1,735,555,28,4.4,Intermediate,Yes,Turf,Sunny,Good effort
+2/18/2026,Carson Colts,13,Carson SC,Intermediate,Penalty Kick,27.8,28.9,1.1,760,580,29,4.7,Intermediate,Yes,Turf,Sunny,Consistent form
+2/18/2026,Carson Colts,13,Carson SC,Intermediate,Penalty Kick,27.5,28.5,1,750,575,29,4.6,Intermediate,Yes,Turf,Sunny,Right corner
+2/18/2026,West Torrance HS,14,WTHS JV,Intermediate,Penalty Kick,32.1,33.4,1.3,880,650,33,5.4,Intermediate,Yes,Grass,Cloudy,High school JV
+2/18/2026,West Torrance HS,14,WTHS JV,Intermediate,Penalty Kick,33.7,35.1,1.4,915,680,35,5.7,Intermediate,Yes,Grass,Cloudy,Great player
+2/18/2026,West Torrance HS,14,WTHS JV,Intermediate,Penalty Kick,31.4,32.6,1.2,860,640,33,5.2,Intermediate,Yes,Grass,Cloudy,Developing player
+2/18/2026,West Torrance HS,14,WTHS JV,Intermediate,Penalty Kick,32.9,34.3,1.4,895,670,34,5.6,Intermediate,Yes,Grass,Cloudy,Good technique
+2/18/2026,West Torrance HS,14,WTHS JV,Intermediate,Penalty Kick,32.5,33.8,1.3,885,660,34,5.5,Intermediate,Yes,Grass,Cloudy,Team starter
