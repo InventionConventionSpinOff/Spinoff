@@ -177,8 +177,6 @@ Design Thinking:
 ---
 
 
----
-
 ##  Acknowledgments
 
 Special Thanks To:
@@ -194,7 +192,7 @@ Special Thanks To:
 
 Built by young inventors who love soccer and technology
 
-"Making professional sports analytics accessible to everyone, one kick at a time."
+Making professional sports analytics accessible to everyone, one kick at a time.
 
 </div>
 
