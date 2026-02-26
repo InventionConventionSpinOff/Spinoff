@@ -1,4 +1,4 @@
-#  SPIN OFF - Smart Soccer Ball Analytics
+**#  SPIN OFF - Smart Soccer Ball Analytics
 
 **Professional-Grade Sports Technology for Everyone**
 
@@ -32,7 +32,9 @@ Our smart soccer ball tracking system measures:
 ** [Launch Spin Off code](https://inventionconventionspinoff.github.io/Spinoff/spinoffexplained.txt)**
 
 ---
+## Here is our pitch!
 
+** [Launch Pitch](https://drive.google.com/file/d/11mxnXquNUYSHtTPRvLZR5yEOPwYq7Hpt/view?usp=drive_link)**
 ##  The Problem We're Solving
 
 Professional soccer players have access to expensive tracking systems that cost thousands of dollars. But what about youth players, school teams, or anyone who just loves the sport? We realized that with modern technology, these same analytics could be made affordable and accessible to everyone.
@@ -158,18 +160,18 @@ Building Spin Off taught us way more than we expected:
 ##  Future Plans
 
 ### Short Term (Next 6 Months)
-- [ ] Native iOS and Android apps
-- [ ] Video analysis integration
-- [ ] Multiplayer comparison features
-- [ ] Expanded training program library
-- [ ] Social sharing capabilities
+-  Native iOS and Android apps
+-  Video analysis integration
+-  Multiplayer comparison features
+-  Expanded training program library
+-  Social sharing capabilities
 
 ### Long Term (1-2 Years)
-- [ ] Expand to other sports (basketball, football, volleyball)
-- [ ] Partnership with youth sports leagues
-- [ ] Coach dashboard for team management
-- [ ] Machine learning for technique analysis
-- [ ] Open-source platform for sports IoT
+-  Expand to other sports (basketball, football, volleyball)
+-  Partnership with youth sports leagues
+-  Coach dashboard for team management
+-  Machine learning for technique analysis
+-  Open-source platform for sports IoT
 
 
 ---
@@ -195,3 +197,4 @@ Building Spin Off taught us way more than we expected:
 *"Making professional sports analytics accessible to everyone, one kick at a time."*
 
 </div>
+**
