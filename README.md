@@ -83,7 +83,7 @@ Software:
 - Firmware: C++ (Arduino Framework)
 - Web App: HTML5, CSS3, JavaScript
 - Data Visualization: Chart.js library
-- AI Engine: Groq API (Llama 3.3 70B model)
+- AI Engine: Amir (Amir is an AI that we created and trained ourselves)
 - Connectivity: Web Bluetooth API
 
 Key Features:
