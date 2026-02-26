@@ -1,4 +1,4 @@
-**  SPIN OFF - Smart Soccer Ball Analytics
+  #SPIN OFF - Smart Soccer Ball Analytics
 
 **Professional-Grade Sports Technology for Everyone**
 
@@ -23,18 +23,18 @@ Our smart soccer ball tracking system measures:
 
 ##  Check out our app!
 
-** [Launch Spin Off Web App](https://inventionconventionspinoff.github.io/Spinoff/finalspit.html)**
+ [Launch Spin Off Web App](https://inventionconventionspinoff.github.io/Spinoff/finalspit.html)**
 
 
 ---
 ## Here is the code for the Arduino inside the ball!
 
-** [Launch Spin Off code](https://inventionconventionspinoff.github.io/Spinoff/spinoffexplained.txt)**
+ [Launch Spin Off code](https://inventionconventionspinoff.github.io/Spinoff/spinoffexplained.txt)**
 
 ---
 ## Here is our pitch!
 
-** [Launch Pitch](https://drive.google.com/file/d/11mxnXquNUYSHtTPRvLZR5yEOPwYq7Hpt/view?usp=drive_link)**
+ [Launch Pitch](https://drive.google.com/file/d/11mxnXquNUYSHtTPRvLZR5yEOPwYq7Hpt/view?usp=drive_link)**
 ##  The Problem We're Solving
 
 Professional soccer players have access to expensive tracking systems that cost thousands of dollars. But what about youth players, school teams, or anyone who just loves the sport? We realized that with modern technology, these same analytics could be made affordable and accessible to everyone.
