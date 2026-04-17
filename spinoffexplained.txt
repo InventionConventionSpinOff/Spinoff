@@ -1,5 +1,5 @@
 // Welcome to the 2026 Invention Convention. Here is the code for the Arduino inside the ball that is collecting all the data. We have made an effort to make the text easy to read by including comments that describe the function of each line. Have fun!
-
+//IF you have any questions about what each line does more specifially, feel free to ask!
 
 #include <Arduino_BMI270_BMM150.h>  // Library for reading accelerometer & gyroscope
 #include <ArduinoBLE.h>             // Library to handle Bluetooth Low Energy (BLE)
@@ -75,7 +75,7 @@ void setup() {
 
   // Print startup banner
   Serial.println("\n\n=================================");
-  Serial.println("      SPIN OFF - FINAL FIX      ");
+  Serial.println("      SPIN OFF      ");
   Serial.println("=================================");
 
   // Blink LEDs 3 times to show setup is running
