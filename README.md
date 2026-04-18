@@ -139,7 +139,6 @@ Programming Skills:
 - Writing efficient C++ code for embedded systems
 - Creating responsive web applications
 - Working with Bluetooth protocols
-- Integrating AI APIs
 - Writing HTML5, CSS3, JavaScript (ES6+)
 
 Physics & Math:
