@@ -9,7 +9,7 @@ Invention Convention 2026
 
 ##  What is Spin Off?
 
-Have you ever wanted to know exactly how fast you kicked a soccer ball? Or how much spin you put on that perfect curve shot? Spin Off makes this possible using sensor technology and artificial intelligence that was previously only available to professional athletes.
+Have you ever wanted to know exactly how fast you kicked a soccer ball? Or how much spin you put on that perfect curve shot? Spin Off makes this possible using sensor technology and artificial intelligence previously available only to professional athletes.
 
 Our smart soccer ball tracking system measures:
 -  Speed - Real-time kick velocity up to 70 mph
@@ -32,9 +32,7 @@ Our smart soccer ball tracking system measures:
  [Launch Spin Off code](https://inventionconventionspinoff.github.io/Spinoff/spinoffexplained.txt)
 
 ---
-## Here is our pitch!
 
- [Launch Pitch](https://drive.google.com/file/d/11mxnXquNUYSHtTPRvLZR5yEOPwYq7Hpt/view?usp=drive_link)
 ##  The Problem We're Solving
 
 Professional soccer players have access to expensive tracking systems that cost thousands of dollars. But what about youth players, school teams, or anyone who just loves the sport? We realized that with modern technology, these same analytics could be made affordable and accessible to everyone.
@@ -85,12 +83,17 @@ Software:
 - Data Visualization: Chart.js library
 - AI Engine: Amir (Amir is an AI that we created and trained ourselves)
 - Connectivity: Web Bluetooth API
+- The code for the [app](https://inventionconventionspinoff.github.io/Spinoff/STATEOFF.html) was built inside of VS Code on a Windows PC.
+- The code consists of 4 different coding languages: C++, HTML5, CSS3, and JavaScript.
+- From start to finish, designing the AI, creating the website, and coding the ball, took around **5 MONTHS TO BUILD AND CREATE**
+
 
 Key Features:
 - Real-time data streaming (< 100ms latency)
 - Advanced signal filtering (low-pass filter with 0.6 alpha)
 - Automatic calibration for realistic speed measurements
 - Cross-platform compatibility (Windows, Mac, Android)
+
 
 ---
 
@@ -184,6 +187,12 @@ Special Thanks To:
 
 ---
 
+## Feedback
+
+If you have any feedback about the project feel free to email us at inventionconventionspinoff@gmail.com or you can fill out [this](https://forms.gle/feNw5kNKt2TsMMKo9) survey. Thank you!
+
+---
+
 ## Final Thoughts
 
 <details>
@@ -191,7 +200,7 @@ Special Thanks To:
 
 Now that we look back at Spin Off, we see how far we’ve come. The obstacles we’ve overcome, the moments that challenged us, and the progress we didn’t always recognize while it was happening.
 
-When we first started, it was just an idea: a soccer ball that could measure performance. But turning that idea into something real was far from simple. There were moments when the data didn’t make sense, when our system failed in ways we didn’t expect, and when we had to step back and rethink everything we had built. At times, it felt like we were going in circles—fixing one problem only to discover another.
+When we first started, it was just an idea, a soccer ball that could measure performance. But turning that idea into something real was far from simple. There were moments when the data didn’t make sense, when our system failed in ways we didn’t expect, and when we had to step back and rethink everything we had built. At times, it felt like we were going in circles, fixing one problem only to discover another.
 
 But looking back, those moments weren’t setbacks in the way we first saw them. They were part of the process. Every error forced us to understand our system more deeply, every failure pushed us to improve our design, and every revision brought us one step closer to something that actually worked.
 
@@ -199,7 +208,7 @@ And even when things got hard, we weren’t alone. We had people who supported u
 
 Right now, it’s 10:30 PM as we write this. And maybe that says something about the project itself. Spin Off wasn’t built in a single moment of inspiration. It was built across late nights, early mornings, long debugging sessions, and quiet moments of thinking things through when no one else was around. Most of those moments we won’t remember clearly, but together they shaped everything that we’ve built here.
 
-The good and the bad are both part of this journey. The successes gave us confidence, and the failures taught us patience. Together, they shaped not only our invention, but also how we think as engineers, problem solvers, and learners.
+The good and the bad are both part of this journey. The successes gave us confidence, and the failures taught us patience. Together, they shaped not only our invention but also how we think as engineers, problem solvers, and learners.
 
 In the end, Spin Off represents something bigger than technology, it represents the belief that improvement should never be guesswork, but something you can see, measure, and build on every day.
 
@@ -208,7 +217,7 @@ In the end, Spin Off represents something bigger than technology, it represents 
 
 
 
-
+<br>
 
 
 <div align="center">
