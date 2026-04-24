@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SPIN OFF - Providing Professional Grade Analytics to everyone</title>
     <meta name="description" content=" Advanced soccer ball tracking system with AI-powered coaching by Sahil & Skyler">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
 
  	  :root {
@@ -220,7 +220,49 @@
             0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255,56,56,0.6); }
             50% { opacity: 0.7; box-shadow: 0 0 0 10px rgba(255,56,56,0); }
         }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .status-grid div {
+            background: #fafaf8;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 18px 20px;
+        }
+
+        .status-grid strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+            font-size: 0.95em;
+        }
+
+        .session-history {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .history-item {
+            background: #fafaf8;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 22px;
+        }
+
+        .history-item strong { color: #111; }
+        .history-item span { display: block; color: #555; margin-top: 6px; }
         
+        .export-controls { text-align: center; margin-bottom: 20px; }
+        .export-controls .btn { margin: 6px 6px 0 0; }
+        
+        .share-link-card a { text-decoration: none; }
+
         .connect-btn {
             padding: 18px 45px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
@@ -483,6 +525,29 @@
         .timeline-content h3 { color: var(--primary); margin-bottom: 10px; }
         .timeline-content p { color: #555; }
 
+        .chat-container { display: flex; flex-direction: column; height: 600px; background: #ffffff; border: 1px solid var(--border); border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 15px; background: #fafaf8; }
+        .chat-message { display: flex; gap: 12px; animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .chat-message.user { justify-content: flex-end; }
+        .chat-message.ai { justify-content: flex-start; }
+        .chat-bubble { max-width: 75%; padding: 15px 20px; border-radius: 12px; line-height: 1.5; word-wrap: break-word; }
+        .chat-message.user .chat-bubble { background: var(--primary); color: white; border-bottom-right-radius: 3px; }
+        .chat-message.ai .chat-bubble { background: #e5e5e5; color: #333; border-bottom-left-radius: 3px; }
+        .chat-input-container { padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 12px; background: #ffffff; align-items: center; }
+        .chat-input { flex: 1; padding: 12px 16px; border: 2px solid #e5e5e5; border-radius: 25px; font-size: 1em; font-family: inherit; transition: all 0.3s; }
+        .chat-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(139,0,0,0.1); }
+        .chat-send-btn { padding: 12px 25px; background: var(--primary); border: none; color: white; border-radius: 25px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+        .chat-send-btn:hover:not(:disabled) { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(139,0,0,0.3); }
+        .chat-send-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .chat-loading { display: flex; align-items: center; gap: 10px; color: #666; font-style: italic; }
+        .typing-indicator { display: flex; gap: 4px; }
+        .typing-indicator { display: flex; gap: 4px; }
+        .typing-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; animation: typing 1.4s infinite; }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes typing { 0%, 60%, 100% { opacity: 0.5; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-10px); } }
+
         @media (max-width: 768px) {
             .hero h1 { font-size: 2.5em; letter-spacing: 0.05em; }
             .nav { gap: 8px; padding: 10px; }
@@ -507,6 +572,7 @@
         <button class="nav-btn active" data-page="home">Home</button>
         <button class="nav-btn" data-page="tracker">Live Tracker</button>
         <button class="nav-btn" data-page="ai-coach">AI Coach</button>
+        <button class="nav-btn" data-page="chat">Chat</button>
         <button class="nav-btn" data-page="how-it-works">How It Works</button>
         <button class="nav-btn" data-page="technology">Technology</button>
         <button class="nav-btn" data-page="team">Our Team</button>
@@ -556,9 +622,14 @@
                 </p>
                 <div style="text-align: center;">
                     <a href="#" onclick="switchPage('tracker'); return false;" class="btn btn-primary" style="font-size: 1.2em; padding: 20px 50px;">
-                        Start Tracking Now →
+                        Start Tracking Now
                     </a>
                 </div>
+            </div>
+            <div class="card share-link-card" style="text-align: center;">
+                <h3 style="color: var(--primary); margin-bottom: 15px;">Have feedback?</h3>
+                <p style="color: #555; margin-bottom: 20px;">Help us improve Spin Off by sharing your ideas.</p>
+                <a href="https://forms.gle/feNw5kNKt2TsMMKo9" target="_blank" rel="noreferrer" class="btn btn-primary">Submit Feedback</a>
             </div>
         </div>
 
@@ -570,6 +641,19 @@
                     <span id="statusText">Not Connected</span>
                 </div>
                 <button id="connectBtn" class="connect-btn">Connect Device</button>
+            </div>
+
+            <div class="card">
+                <h3 style="color: var(--primary); margin-bottom: 20px;">Device & Session Status</h3>
+                <div class="status-grid">
+                    <div><strong>Connection</strong><span id="deviceStatusText">Not Connected</span></div>
+                    <div><strong>Last update</strong><span id="lastUpdateText">--</span></div>
+                    <div><strong>Saved sessions</strong><span id="savedSessionsCount">0</span></div>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn" id="newSessionBtn" onclick="startNewSession()">Start New Session</button>
+                    <button class="btn" id="clearHistoryBtn" onclick="clearSessionHistory()">Clear History</button>
+                </div>
             </div>
             
             <div id="dataDisplay" style="display: none;">
@@ -599,7 +683,9 @@
                     <p style="color: #555; margin-bottom: 20px;">Click to mark your position, then click your target</p>
                     <div style="text-align: center; margin-bottom: 20px;">
                         <button class="btn" onclick="clearField()" style="margin: 0 10px;">Clear Field</button>
-                        <button class="btn" onclick="exportSessionData()" style="margin: 0 10px;">Export Data</button>
+                        <button class="btn" onclick="exportSessionJSON()" style="margin: 0 10px;">Export JSON</button>
+                        <button class="btn" onclick="exportSessionCSV()" style="margin: 0 10px;">Export CSV</button>
+                        <button class="btn" onclick="shareSessionReport()" style="margin: 0 10px;">Share Report</button>
                     </div>
                     <div class="soccer-field" id="soccerField">
                         <div class="field-line halfway-line"></div>
@@ -618,9 +704,15 @@
                     </div>
                 </div>
             </div>
+            <div class="card">
+                <h2 style="color: var(--primary); margin-bottom: 20px;">Saved Session History</h2>
+                <div id="sessionHistory" class="session-history">
+                    <p style="color: #666;">No saved sessions yet. Start a session and then save or export it to build your history.</p>
+                </div>
+            </div>
             
             <div id="noData" class="card" style="text-align: center; padding: 80px 20px;">
-                <div style="font-size: 6em; margin-bottom: 30px; opacity: 0.25;">⚽</div>
+                <div style="font-size: 6em; margin-bottom: 30px; opacity: 0.25;">SPINOFF</div>
                 <h2 style="font-size: 2.5em; margin-bottom: 15px; color: #111;">Ready to Track</h2>
                 <p style="color: #666; font-size: 1.2em;">Connect your Spin Off device to start collecting data</p>
             </div>
@@ -642,6 +734,29 @@
                 </div>
                 <div id="trainingPlanContainer" style="display: none; margin-top: 30px;">
                     <div id="trainingPlanContent" style="background: rgba(255,56,56,0.04); border: 1px solid #e5e5e5; border-radius: 10px; padding: 25px; color: #333;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHAT PAGE -->
+        <div id="chat" class="page">
+            <div class="section-header">
+                <h2>Chat with AI Coach</h2>
+                <p>Ask questions about your performance, training guidance, or how the Spin Off project works.</p>
+            </div>
+            <div class="card">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-message ai">
+                            <div class="chat-bubble">
+                                 Hi! I'm your AI Soccer Coach. Ask me about your performance, training tips, the Spin Off app, or how this project works!
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything about your kicks, training, or technique..." autocomplete="off">
+                        <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()">Send</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -689,6 +804,12 @@
                         <p>Machine learning algorithms analyze your technique, compare with pro standards, and generate personalized coaching advice.</p>
                     </div>
                 </div>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--primary); margin-bottom: 20px;">How the app works</h3>
+                <p style="color: #555; line-height: 1.8;">
+                    Spin Off captures ball sensor data for every kick and stores each session locally in your browser. The app turns raw speed, spin and impact readings into easy-to-read analytics, lets you export CSV or JSON reports, and saves your progress so you can compare training sessions over time.
+                </p>
             </div>
 
             <div class="grid-2">
@@ -770,15 +891,15 @@
             <div class="grid-2">
                 <div class="team-card">
                     <div class="team-avatar">S</div>
-                    <h3>Sahil Chhabra</h3>
+                    <h3>Sahil</h3>
                     <div class="team-role">Co-Inventor & Software Developer</div>
-                    <p>Passionate about computers and coding. Led the software integration, sensor calibration, and Arduino programming. Plays very competitive baseball, but loves bringing technology to the sports world.</p>
+                    <p>Passionate about electronics and sports technology. Led the hardware integration, sensor calibration, and Arduino programming. Plays baseball but loves bringing technology to the sports world.</p>
                 </div>
                 <div class="team-card">
                     <div class="team-avatar">S</div>
-                    <h3>Skyler Sorbel</h3>
+                    <h3>Skyler</h3>
                     <div class="team-role">Co-Inventor & Testing Lead</div>
-                    <p>Enthusiastic about the build. Lead the testing. Plays high-level soccer and enjoys riding ebikes, along with fortnite and geometry dash.</p>
+                    <p>Enthusiastic about the build. Lead the testing. Dedicated to making professional sports analytics accessible to everyone. Plays soccer and enjoys riding ebikes, along with gaming.</p>
                 </div>
             </div>
 
@@ -795,7 +916,7 @@
                     <strong style="color: #111;">October 2025:</strong> Initial concept - "What if we could track soccer ball data like professional teams?"<br><br>
                     <strong style="color: #111;">November 2025:</strong> Research phase - researching what parts would be best for the build.<br><br>
                     <strong style="color: #111;">December 2025:</strong> Prototype 1 - Basic Arduino setup with accelerometer readings<br><br>
-                    <strong style="color: #111;">January 2026:</strong> Final version - Added a gyroscope, a web page, integrated AI coaching, perfected code. Ready for convention!
+                    <strong style="color: #111;">January 2026:</strong> Final version - Added a gyroscope, a web page, integrated AI coaching, perfected algorithms. Ready for convention!
                 </p>
             </div>
 
@@ -817,6 +938,7 @@
                             <li>Expand to other sports (basketball, football)</li>
                             <li>Partner with youth sports leagues</li>
                             <li>Develop coach dashboard for team management</li>
+                            <li>Create open-source platform for sports IoT</li>
                         </ul>
                     </div>
                 </div>
@@ -825,7 +947,8 @@
     </div>
 
     <script>
-        const GROQ_API_KEY = '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';
+        const GROQ_API_KEY = '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';
+        const STORAGE_KEY = 'spinoffSessionHistory';
         const SERVICE_UUID = '19b10000-e8f2-537e-4f6c-d104768a1214';
         const SPEED_CHAR_UUID = '19b10001-e8f2-537e-4f6c-d104768a1214';
         const SPIN_CHAR_UUID = '19b10002-e8f2-537e-4f6c-d104768a1214';
@@ -834,7 +957,8 @@
         
         let device, speedChar, spinChar, statsChar, modeChar;
         let chart, kickHistory = [], shotLocation = null, shots = [];
-        let sessionData = { kicks: 0, maxSpeed: 0, avgSpeed: 0, maxSpin: 0, speeds: [], spins: [], angles: [], flightTimes: [], impacts: [] };
+        let sessionData = { kicks: 0, maxSpeed: 0, avgSpeed: 0, maxSpin: 0, speeds: [], spins: [], angles: [], flightTimes: [], impacts: [], startedAt: new Date().toISOString(), lastUpdate: '--' };
+        let chatHistory = [];
         
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', () => switchPage(btn.dataset.page));
@@ -854,7 +978,186 @@
             alert.classList.add('show');
             setTimeout(() => alert.classList.remove('show'), duration);
         }
-        
+
+        function getSessionHistory() {
+            return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        }
+
+        function saveSessionHistory(history) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+            updateDeviceStatus();
+        }
+
+        function renderSessionHistory(history) {
+            const container = document.getElementById('sessionHistory');
+            if (!history.length) {
+                container.innerHTML = '<p style="color: #666;">No saved sessions yet. Start a session and then save or export it to build your history.</p>';
+                return;
+            }
+            container.innerHTML = history.map(session => `
+                <div class="history-item">
+                    <strong>${new Date(session.sessionDate).toLocaleString()}</strong>
+                    <span><strong>Total kicks:</strong> ${session.kicks}</span>
+                    <span><strong>Max speed:</strong> ${session.maxSpeed} mph</span>
+                    <span><strong>Avg speed:</strong> ${session.avgSpeed} mph</span>
+                    <span><strong>Max spin:</strong> ${session.maxSpin} RPM</span>
+                    <span><strong>Last update:</strong> ${session.lastUpdate}</span>
+                </div>
+            `).join('');
+        }
+
+        function saveCurrentSession() {
+            if (sessionData.kicks === 0) return;
+            const history = getSessionHistory();
+            const totalSpin = sessionData.spins.reduce((sum, value) => sum + value, 0);
+            const avgSpin = sessionData.spins.length ? (totalSpin / sessionData.spins.length).toFixed(1) : 0;
+            const session = {
+                sessionDate: sessionData.startedAt,
+                kicks: sessionData.kicks,
+                maxSpeed: sessionData.maxSpeed,
+                avgSpeed: sessionData.avgSpeed,
+                maxSpin: sessionData.maxSpin,
+                avgSpin,
+                lastUpdate: sessionData.lastUpdate || new Date().toLocaleString()
+            };
+            history.unshift(session);
+            if (history.length > 20) history.length = 20;
+            saveSessionHistory(history);
+            renderSessionHistory(history);
+        }
+
+        function resetSessionData() {
+            sessionData = {
+                kicks: 0,
+                maxSpeed: 0,
+                avgSpeed: 0,
+                maxSpin: 0,
+                speeds: [],
+                spins: [],
+                angles: [],
+                flightTimes: [],
+                impacts: [],
+                startedAt: new Date().toISOString(),
+                lastUpdate: '--'
+            };
+            kickHistory = [];
+            if (chart) {
+                chart.data.labels = [];
+                chart.data.datasets[0].data = [];
+                chart.update();
+            }
+            document.getElementById('speedMph').textContent = '--';
+            document.getElementById('launchAngle').textContent = '--';
+            document.getElementById('spin').textContent = '--';
+            document.getElementById('flightTime').textContent = '--';
+            document.getElementById('impact').textContent = '--';
+            document.getElementById('quickKicks').textContent = '0';
+            document.getElementById('quickMaxSpeed').textContent = '0';
+            document.getElementById('quickAvgSpeed').textContent = '0';
+            document.getElementById('quickMaxSpin').textContent = '0';
+            document.getElementById('totalKicks').textContent = '0';
+            document.getElementById('lastUpdateText').textContent = '--';
+            clearField();
+            if (!device || !device.gatt || !device.gatt.connected) {
+                document.getElementById('dataDisplay').style.display = 'none';
+                document.getElementById('noData').style.display = 'block';
+            } else {
+                document.getElementById('dataDisplay').style.display = 'block';
+                document.getElementById('noData').style.display = 'none';
+            }
+        }
+
+        function updateDeviceStatus() {
+            const connected = device && device.gatt && device.gatt.connected;
+            document.getElementById('deviceStatusText').textContent = connected ? 'Connected' : 'Disconnected';
+            document.getElementById('statusText').textContent = connected ? 'Connected to Spin Off' : 'Not Connected';
+            document.getElementById('savedSessionsCount').textContent = getSessionHistory().length;
+            document.getElementById('lastUpdateText').textContent = sessionData.lastUpdate || '--';
+            if (connected) {
+                document.getElementById('statusIndicator').classList.add('connected');
+                document.getElementById('connectBtn').textContent = '✓ CONNECTED';
+                document.getElementById('connectBtn').classList.add('connected');
+            } else {
+                document.getElementById('statusIndicator').classList.remove('connected');
+                document.getElementById('connectBtn').textContent = 'Connect Device';
+                document.getElementById('connectBtn').classList.remove('connected');
+            }
+        }
+
+        function startNewSession() {
+            if (sessionData.kicks > 0) {
+                saveCurrentSession();
+                showAlert(' Previous session saved. New session started.');
+            } else {
+                showAlert(' New session started.');
+            }
+            resetSessionData();
+        }
+
+        function clearSessionHistory() {
+            if (confirm('Clear all saved sessions? This cannot be undone.')) {
+                localStorage.removeItem(STORAGE_KEY);
+                renderSessionHistory([]);
+                updateDeviceStatus();
+                showAlert(' Session history cleared.');
+            }
+        }
+
+        function getSessionSummaryText() {
+            return `Spin Off session report\n
+Session date: ${new Date(sessionData.startedAt).toLocaleString()}\nTotal kicks: ${sessionData.kicks}\nMax speed: ${sessionData.maxSpeed} mph\nAverage speed: ${sessionData.avgSpeed} mph\nMax spin: ${sessionData.maxSpin} RPM\nLast update: ${sessionData.lastUpdate || '--'}\n`;
+        }
+
+        function exportSessionJSON() {
+            if (sessionData.kicks === 0) { showAlert(' No session data available to export.'); return; }
+            const blob = new Blob([JSON.stringify({ sessionDate: new Date().toISOString(), ...sessionData }, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `spinoff-session-${Date.now()}.json`;
+            a.click();
+            showAlert(' Session JSON exported.');
+        }
+
+        function exportSessionCSV() {
+            if (sessionData.kicks === 0) { showAlert(' No session data available to export.'); return; }
+            const rows = [
+                ['Field', 'Value'],
+                ['Session date', new Date(sessionData.startedAt).toLocaleString()],
+                ['Total kicks', sessionData.kicks],
+                ['Max speed (mph)', sessionData.maxSpeed],
+                ['Average speed (mph)', sessionData.avgSpeed],
+                ['Max spin (RPM)', sessionData.maxSpin],
+                ['Last update', sessionData.lastUpdate || '--']
+            ];
+            const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `spinoff-session-${Date.now()}.csv`;
+            a.click();
+            showAlert(' Session CSV exported.');
+        }
+
+        function shareSessionReport() {
+            const summary = getSessionSummaryText();
+            if (navigator.share) {
+                navigator.share({ title: 'Spin Off Session Report', text: summary })
+                    .then(() => showAlert(' Report shared successfully.'))
+                    .catch(() => {
+                        navigator.clipboard.writeText(summary);
+                        showAlert(' Share failed, summary copied to clipboard.');
+                    });
+                return;
+            }
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(summary).then(() => {
+                    showAlert(' Session summary copied to clipboard.');
+                });
+            } else {
+                showAlert(' Sharing is not available in this browser.');
+            }
+        }
+
         document.getElementById('connectBtn').addEventListener('click', async () => {
             try {
                 if (!navigator.bluetooth) { showAlert(' Bluetooth not supported. Please use Chrome, Edge, or Opera. This is an issue we are currently trying to resolve.'); return; }
@@ -882,7 +1185,13 @@
                 document.getElementById('dataDisplay').style.display = 'block';
                 document.getElementById('noData').style.display = 'none';
                 showAlert(' Successfully connected to Spin Off!');
-                initChart();
+                device.addEventListener('gattserverdisconnected', () => {
+                    showAlert(' Spin Off disconnected.');
+                    updateDeviceStatus();
+                    document.getElementById('dataDisplay').style.display = 'none';
+                    document.getElementById('noData').style.display = 'block';
+                });
+                updateDeviceStatus();
             } catch (error) {
                 document.getElementById('statusText').textContent = 'Connection Failed';
                 document.getElementById('connectBtn').disabled = false;
@@ -960,11 +1269,14 @@
                 const maxMatch = value.match(/MAX:([\d.]+)/);
                 const avgMatch = value.match(/AVG:([\d.]+)/);
                 const maxSpinMatch = value.match(/MSPIN:([\d.]+)/);
-                if (kicksMatch) { const k = parseInt(kicksMatch[1]); document.getElementById('totalKicks').textContent = k; document.getElementById('quickKicks').textContent = k; sessionData.kicks = k; }
+                if (kicksMatch) { const k = parseInt(kicksMatch[1], 10); document.getElementById('totalKicks').textContent = k; document.getElementById('quickKicks').textContent = k; sessionData.kicks = k; }
                 if (maxMatch) { const m = (parseFloat(maxMatch[1]) * 2.237).toFixed(1); document.getElementById('quickMaxSpeed').textContent = m; sessionData.maxSpeed = m; }
                 if (avgMatch) { const a = (parseFloat(avgMatch[1]) * 2.237).toFixed(1); document.getElementById('quickAvgSpeed').textContent = a; sessionData.avgSpeed = a; }
                 if (maxSpinMatch) { const s = parseFloat(maxSpinMatch[1]); document.getElementById('quickMaxSpin').textContent = s.toFixed(0); sessionData.maxSpin = s; }
             }
+            sessionData.lastUpdate = new Date().toLocaleString();
+            document.getElementById('lastUpdateText').textContent = sessionData.lastUpdate;
+            updateDeviceStatus();
         }
 
         function exportSessionData() {
@@ -1029,7 +1341,7 @@
             btn.disabled = true;
             response.innerHTML = '<div style="display: flex; align-items: center; gap: 15px;"><div class="ai-spinner"></div><span style="color:#333">AI Coach is analyzing your performance...</span></div>';
             try {
-                const prompt = `You are an expert soccer coach. Analyze this player's performance and give brief, actionable coaching advice.\n\nPerformance Data:\n- Total kicks: ${sessionData.kicks}\n- Max speed: ${sessionData.maxSpeed} mph\n- Average speed: ${sessionData.avgSpeed} mph\n- Max spin: ${sessionData.maxSpin} RPM\n- Recent speeds: ${sessionData.speeds.slice(-5).join(', ')} mph\n\nProvide:\n1. Quick performance assessment (2 sentences)\n2. Top 3 specific tips for improvement\n3. One recommended drill\n\nKeep it encouraging and actionable.`;
+                const prompt = `You are an expert soccer coach and sports analyst. Spin Off was designed and trained by Sahil Chhabra and Skyler Sorbel to interpret ball-tracking sensor data, speed, spin, and launch metrics. Analyze this player's performance and give brief, actionable coaching advice.\n\nPerformance Data:\n- Total kicks: ${sessionData.kicks}\n- Max speed: ${sessionData.maxSpeed} mph\n- Average speed: ${sessionData.avgSpeed} mph\n- Max spin: ${sessionData.maxSpin} RPM\n- Recent speeds: ${sessionData.speeds.slice(-5).join(', ')} mph\n\nProvide:\n1. Quick performance assessment (2 sentences)\n2. Top 3 specific tips for improvement\n3. One recommended drill\n\nKeep it encouraging and actionable.`;
                 const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
                     headers: { "Authorization": `Bearer ${GROQ_API_KEY}`, "Content-Type": "application/json" },
@@ -1054,7 +1366,7 @@
             content.innerHTML = '<div style="display: flex; align-items: center; gap: 15px;"><div class="ai-spinner"></div><span style="color:#333">Generating personalized training plan...</span></div>';
             try {
                 const skillLevel = sessionData.avgSpeed < 25 ? 'Beginner' : sessionData.avgSpeed < 40 ? 'Intermediate' : 'Advanced';
-                const prompt = `You are an expert soccer training coach. Create a personalized 4-week training plan for a ${skillLevel} player.\n\nCurrent Performance:\n- Max speed: ${sessionData.maxSpeed} mph\n- Average speed: ${sessionData.avgSpeed} mph\n- Max spin: ${sessionData.maxSpin} RPM\n\nCreate a progressive 4-week plan with specific drills for each week. Format clearly with week headers and daily drills.`;
+                const prompt = `You are an expert soccer training coach. Spin Off was created by Sahil Chhabra and Skyler Sorbel and trained to turn sensor-based soccer data into actionable training guidance. Create a personalized 4-week training plan for a ${skillLevel} player.\n\nCurrent Performance:\n- Max speed: ${sessionData.maxSpeed} mph\n- Average speed: ${sessionData.avgSpeed} mph\n- Max spin: ${sessionData.maxSpin} RPM\n\nCreate a progressive 4-week plan with specific drills for each week. Format clearly with week headers and daily drills.`;
                 const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
                     method: "POST",
                     headers: { "Authorization": `Bearer ${GROQ_API_KEY}`, "Content-Type": "application/json" },
@@ -1069,6 +1381,100 @@
             }
             btn.disabled = false;
         }
+
+        function addChatMessage(text, isUser = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${isUser ? 'user' : 'ai'}`;
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'chat-bubble';
+            bubbleDiv.textContent = text;
+            messageDiv.appendChild(bubbleDiv);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showChatLoading() {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message ai';
+            messageDiv.id = 'loadingMessage';
+            const bubbleDiv = document.createElement('div');
+            bubbleDiv.className = 'chat-bubble chat-loading';
+            bubbleDiv.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+            messageDiv.appendChild(bubbleDiv);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function removeChatLoading() {
+            const loadingMsg = document.getElementById('loadingMessage');
+            if (loadingMsg) loadingMsg.remove();
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('chatSendBtn');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addChatMessage(message, true);
+            chatHistory.push({ role: "user", content: message });
+            input.value = '';
+            input.focus();
+            sendBtn.disabled = true;
+            
+            showChatLoading();
+            
+            try {
+                const systemPrompt = `You are an expert soccer coach and sports analyst for Spin Off, a smart soccer ball tracking system created by Sahil Chhabra and Skyler Sorbel. It was trained using pytorch and datasets collected from soccer coaches. For the average statistcs sahil and sklyer took datasets from FIFA World Cup, Bundesliga, and other top competitions. The system is trained on sensor-derived speed, spin, and impact data, combined with soccer coaching best practices. You have access to the user's performance data: Max speed: ${sessionData.maxSpeed} mph, Average speed: ${sessionData.avgSpeed} mph, Max spin: ${sessionData.maxSpin} RPM, Total kicks: ${sessionData.kicks}. You should also answer questions about the Spin Off project itself, including its features, session history, exports, sharing, and how the app works. Be encouraging, specific, and provide actionable advice. Keep responses concise and focused. If asked about performance, reference the user's stats when relevant.`;
+                
+                const messages = [{ role: "system", content: systemPrompt }, ...chatHistory];
+                
+                const apiResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                    method: "POST",
+                    headers: { "Authorization": `Bearer ${GROQ_API_KEY}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: messages,
+                        temperature: 0.7,
+                        max_tokens: 500
+                    })
+                });
+                
+                const data = await apiResponse.json();
+                removeChatLoading();
+                
+                if (data.error) throw new Error(data.error.message);
+                
+                const aiResponse = data.choices[0].message.content;
+                addChatMessage(aiResponse, false);
+                chatHistory.push({ role: "assistant", content: aiResponse });
+                
+                if (chatHistory.length > 20) {
+                    chatHistory = chatHistory.slice(-20);
+                }
+            } catch (error) {
+                removeChatLoading();
+                addChatMessage(`Sorry, I encountered an error: ${error.message}. Please try again.`, false);
+            }
+            
+            sendBtn.disabled = false;
+        }
+
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChatMessage();
+        });
+
+        window.addEventListener('load', () => {
+            initChart();
+            resetSessionData();
+            loadSessionHistory();
+            updateDeviceStatus();
+        });
+
+        // Voice support has been removed. Chat responses are now displayed as text only.
     </script>
 </body>
 </html>
