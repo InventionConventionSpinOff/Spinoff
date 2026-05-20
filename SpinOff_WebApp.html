@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPIN OFF - Professional Grade Soccer Analytics</title>
+<meta name="description" content="Advanced soccer ball tracking system with AI-powered coaching by Sahil & Skyler">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+/* ============================ THEME TOKENS ============================ */
+:root{
+  --primary:#8B0000; --primary-dark:#5c0000; --primary-light:#c0392b;
+  --gold:#C6A75E; --gold-soft:#e6d3a3;
+  --bg-main:#f8f6f2; --bg-card:#ffffff; --bg-soft:#fafaf8;
+  --border:#e5e0d8; --text:#1a1a1a; --text-muted:#6b6b6b;
+  --good:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+  --shadow:rgba(0,0,0,0.08); --chart-grid:#eeeeee;
+}
+[data-theme="dark"]{
+  --primary:#e0564a; --primary-dark:#b03a30; --primary-light:#ff7a6e;
+  --gold:#d4b978; --gold-soft:#8a7644;
+  --bg-main:#14110f; --bg-card:#1f1b18; --bg-soft:#262120;
+  --border:#352f2a; --text:#f1ece2; --text-muted:#a59c8e;
+  --good:#34d399; --warn:#fbbf24; --bad:#f87171;
+  --shadow:rgba(0,0,0,0.5); --chart-grid:#332e29;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  font-family:'Georgia','Times New Roman',serif;
+  background:var(--bg-main); color:var(--text);
+  min-height:100vh; overflow-x:hidden;
+  transition:background .4s ease,color .4s ease;
+}
+/* ============================ HERO ============================ */
+.hero{
+  background:linear-gradient(180deg,var(--bg-card) 0%,var(--bg-soft) 100%);
+  padding:90px 20px 70px; text-align:center;
+  border-bottom:3px solid var(--gold); position:relative;
+}
+.hero h1{
+  font-size:clamp(2.5em,8vw,5em); font-weight:900; color:var(--primary);
+  text-transform:uppercase; letter-spacing:.15em; margin-bottom:18px;
+}
+.hero-subtitle{font-size:clamp(1em,3vw,1.4em); color:var(--text-muted); font-weight:300; margin-bottom:12px;}
+.hero-tagline{font-size:clamp(.85em,2vw,1.05em); color:var(--primary); font-weight:700; text-transform:uppercase; letter-spacing:.15em;}
+/* ============================ NAV ============================ */
+.nav{
+  background:var(--bg-card); padding:13px 18px; display:flex;
+  justify-content:center; align-items:center; gap:12px;
+  border-bottom:2px solid var(--border); position:sticky; top:0; z-index:1000;
+  flex-wrap:wrap; box-shadow:0 2px 12px var(--shadow);
+}
+.nav-btn{
+  padding:11px 22px; background:transparent; border:2px solid var(--border);
+  color:var(--text); font-weight:600; cursor:pointer; transition:all .3s;
+  text-transform:uppercase; font-size:.8em; letter-spacing:.1em; border-radius:6px;
+}
+.nav-btn:hover{border-color:var(--primary); color:var(--primary); transform:translateY(-2px);}
+.nav-btn.active{background:var(--primary); border-color:var(--primary); color:#fff; box-shadow:0 4px 15px var(--shadow);}
+.theme-toggle{
+  padding:10px 16px; border-radius:50px; border:2px solid var(--gold);
+  background:transparent; color:var(--text); cursor:pointer; font-size:1.1em;
+  transition:all .3s; line-height:1;
+}
+.theme-toggle:hover{background:var(--gold); transform:rotate(20deg);}
+/* ============================ LAYOUT ============================ */
+.container{max-width:1400px; margin:0 auto; padding:36px 20px;}
+.page{display:none; animation:fadeIn .5s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.section-header{text-align:center; margin-bottom:42px;}
+.section-header h2{font-size:clamp(1.8em,5vw,2.8em); color:var(--primary); margin-bottom:12px;}
+.section-header h2::after{content:'';width:80px;height:3px;background:var(--gold);display:block;margin:14px auto 0;}
+.section-header p{color:var(--text-muted); font-size:1.05em;}
+.card{
+  background:var(--bg-card); border:1px solid var(--border); border-top:4px solid var(--gold);
+  border-radius:14px; padding:32px; margin-bottom:26px;
+  box-shadow:0 10px 30px var(--shadow); transition:transform .3s,box-shadow .3s,background .4s;
+}
+.card:hover{transform:translateY(-4px); box-shadow:0 16px 40px var(--shadow);}
+.card h2,.card h3{color:var(--primary); margin-bottom:18px;}
+.card h4{color:var(--text); margin-bottom:12px;}
+.card p,.card li,.rich{color:var(--text-muted); line-height:1.8;}
+.card strong{color:var(--text);}
+.muted{color:var(--text-muted);}
+.center{text-align:center;}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:26px;margin-bottom:32px;}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:22px;margin-bottom:32px;}
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:18px;margin-bottom:32px;}
+/* ============================ STATUS ============================ */
+.status-section{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;}
+.status-text{font-size:1.25em;font-weight:700;display:flex;align-items:center;gap:14px;}
+.status-indicator{width:14px;height:14px;border-radius:50%;background:var(--bad);animation:pulseDot 2s infinite;}
+.status-indicator.connected{background:var(--good);}
+@keyframes pulseDot{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(239,68,68,.5);}50%{opacity:.7;box-shadow:0 0 0 10px rgba(239,68,68,0);}}
+.status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-top:18px;}
+.status-grid>div{background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;padding:16px 18px;}
+.status-grid strong{display:block;margin-bottom:7px;color:var(--text-muted);font-size:.85em;text-transform:uppercase;letter-spacing:.08em;}
+.status-grid span{color:var(--text);font-weight:700;font-size:1.05em;}
+.connect-btn{
+  padding:16px 42px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));
+  border:none;color:#fff;font-size:1.05em;font-weight:700;cursor:pointer;
+  text-transform:uppercase;letter-spacing:.1em;transition:all .3s;border-radius:50px;
+  box-shadow:0 5px 20px var(--shadow);
+}
+.connect-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 30px var(--shadow);}
+.connect-btn:disabled{background:#999;cursor:not-allowed;}
+.connect-btn.connected{background:linear-gradient(135deg,var(--good),#16a34a);}
+/* ============================ STAT / METRIC CARDS ============================ */
+.stat-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+  padding:26px;text-align:center;transition:all .3s;box-shadow:0 2px 10px var(--shadow);
+}
+.stat-card:hover{border-color:var(--primary);transform:translateY(-4px);}
+.stat-card .value{font-size:2.3em;font-weight:900;color:var(--primary);margin-bottom:4px;}
+.stat-card .label{color:var(--text-muted);font-size:.82em;text-transform:uppercase;letter-spacing:.1em;}
+.metric-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:14px;
+  padding:26px;transition:all .3s;box-shadow:0 2px 10px var(--shadow);
+}
+.metric-card:hover{border-color:var(--primary);transform:translateY(-4px);}
+.metric-label{font-size:.78em;color:var(--text-muted);text-transform:uppercase;letter-spacing:.14em;font-weight:700;margin-bottom:12px;}
+.metric-value{
+  font-size:2.7em;font-weight:900;line-height:1;margin-bottom:8px;
+  background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.metric-unit{font-size:1em;color:var(--text-muted);font-weight:600;}
+.metric-flag{font-size:.72em;color:var(--bad);font-weight:700;margin-top:6px;display:none;}
+.metric-flag.show{display:block;}
+/* ============================ CURRENT KICK / CLASSIFICATION ============================ */
+.kick-banner{
+  display:flex;align-items:center;gap:24px;flex-wrap:wrap;
+  background:linear-gradient(135deg,var(--bg-soft),var(--bg-card));
+  border:1px solid var(--border);border-radius:16px;padding:26px;
+}
+.kick-icon{
+  font-size:1.5em;font-weight:900;color:var(--primary);letter-spacing:.05em;
+  line-height:1;width:110px;height:110px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  background:radial-gradient(circle,var(--gold-soft),transparent 72%);
+  animation:popIn .5s ease;
+}
+@keyframes popIn{0%{transform:scale(.3);opacity:0;}70%{transform:scale(1.12);}100%{transform:scale(1);opacity:1;}}
+.kick-info{flex:1;min-width:200px;}
+.kick-info .kick-type{font-size:1.9em;font-weight:900;color:var(--primary);}
+.kick-info .kick-sub{color:var(--text-muted);font-size:1em;margin-top:4px;}
+.kick-power{text-align:center;}
+.kick-power .num{font-size:3.4em;font-weight:900;color:var(--gold);line-height:1;}
+.kick-power .lbl{font-size:.78em;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);}
+/* ============================ GAUGES ============================ */
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.gauge{
+  --pct:0;width:170px;height:170px;border-radius:50%;
+  background:conic-gradient(var(--primary) calc(var(--pct)*1%),var(--border) 0);
+  display:flex;align-items:center;justify-content:center;transition:filter .3s;
+}
+.gauge-inner{
+  width:128px;height:128px;border-radius:50%;background:var(--bg-card);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:inset 0 0 18px var(--shadow);
+}
+.gauge-inner .gv{font-size:2.4em;font-weight:900;color:var(--primary);line-height:1;}
+.gauge-inner .gl{font-size:.7em;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-top:4px;}
+.gauge-title{font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.1em;font-size:.9em;}
+/* strike meter */
+.meter{background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;padding:24px;}
+.meter-track{height:26px;border-radius:14px;background:var(--border);overflow:hidden;margin:14px 0 10px;}
+.meter-fill{
+  height:100%;width:0%;border-radius:14px;transition:width .8s cubic-bezier(.2,.8,.2,1);
+  background:linear-gradient(90deg,var(--bad),var(--warn),var(--good));
+}
+.meter-row{display:flex;justify-content:space-between;font-size:.85em;color:var(--text-muted);}
+.badge{display:inline-block;padding:5px 14px;border-radius:50px;font-size:.8em;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+.badge.clean{background:rgba(34,197,94,.15);color:var(--good);}
+.badge.off_center{background:rgba(245,158,11,.15);color:var(--warn);}
+.badge.mishit{background:rgba(239,68,68,.15);color:var(--bad);}
+/* ============================ COMPARISON ============================ */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.compare-col{background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.compare-col h4{text-align:center;border-bottom:2px solid var(--gold);padding-bottom:10px;}
+.compare-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px dashed var(--border);font-size:.95em;}
+.compare-row:last-child{border-bottom:none;}
+.compare-row .ck{color:var(--text-muted);}
+.compare-row .cv{font-weight:700;color:var(--text);}
+.diff-up{color:var(--good);font-size:.82em;margin-left:6px;}
+.diff-down{color:var(--bad);font-size:.82em;margin-left:6px;}
+/* ============================ PERSONAL BESTS ============================ */
+.pb-banner{
+  display:none;background:linear-gradient(135deg,var(--gold),var(--gold-soft));
+  color:#3a2e10;font-weight:800;text-align:center;padding:14px;border-radius:12px;
+  margin-bottom:18px;animation:slideDown .4s ease;
+}
+.pb-banner.show{display:block;}
+.pb-card{
+  background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;
+  padding:22px;text-align:center;transition:all .3s;
+}
+.pb-card.flash{border-color:var(--gold);box-shadow:0 0 22px var(--gold-soft);}
+.pb-card .pbv{font-size:2em;font-weight:900;color:var(--gold);}
+.pb-card .pbl{font-size:.78em;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted);margin-top:4px;}
+.pb-card .pbi{font-size:1.6em;}
+/* ============================ RECOMMENDATIONS ============================ */
+.rec-list{display:flex;flex-direction:column;gap:12px;}
+.rec-item{
+  display:flex;gap:14px;align-items:flex-start;background:var(--bg-soft);
+  border-left:4px solid var(--primary);border-radius:10px;padding:16px 18px;
+  animation:slideIn .4s ease;
+}
+.rec-item .rec-num{
+  flex-shrink:0;width:28px;height:28px;border-radius:50%;background:var(--primary);
+  color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.9em;
+}
+.rec-item span{color:var(--text);line-height:1.6;}
+/* ============================ CHARTS ============================ */
+.chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:22px;}
+.chart-box{background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;padding:16px;}
+.chart-box h4{text-align:center;font-size:.9em;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.chart-canvas-wrap{position:relative;height:230px;}
+/* ============================ SESSION HISTORY ============================ */
+.session-history{display:flex;flex-direction:column;gap:12px;}
+.history-item{background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.history-item strong{color:var(--text);}
+.history-item span{display:block;color:var(--text-muted);margin-top:5px;font-size:.92em;}
+.session-summary{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:18px;}
+.summary-card{background:var(--bg-soft);border:1px solid var(--border);border-radius:12px;padding:16px;flex:1;min-width:140px;}
+.summary-card strong{display:block;margin-bottom:8px;color:var(--text-muted);font-size:.85em;text-transform:uppercase;letter-spacing:.06em;}
+.summary-card span{display:block;color:var(--text);font-size:1.5em;font-weight:800;}
+/* ============================ BUTTONS ============================ */
+.btn{
+  padding:13px 30px;border:2px solid var(--gold);background:transparent;color:var(--primary);
+  border-radius:50px;cursor:pointer;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  transition:all .3s;display:inline-block;text-decoration:none;font-family:inherit;font-size:.85em;
+}
+.btn:hover{background:var(--gold);color:#fff;transform:translateY(-2px);}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff;}
+/* ============================ FEATURE / TEAM ============================ */
+.feature-card,.team-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:15px;
+  padding:34px;text-align:center;transition:all .3s;box-shadow:0 2px 10px var(--shadow);
+}
+.feature-card:hover,.team-card:hover{border-color:var(--primary);transform:translateY(-7px);}
+.feature-card h3,.team-card h3{color:var(--primary);}
+.team-card h3{color:var(--text);font-size:1.6em;}
+.team-avatar{
+  width:110px;height:110px;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--primary-light));
+  margin:0 auto 18px;display:flex;align-items:center;justify-content:center;
+  font-size:2.8em;font-weight:900;color:#fff;
+}
+.team-role{color:var(--primary);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:.85em;margin-bottom:12px;}
+/* ============================ AI / CHAT ============================ */
+.ai-response{
+  background:var(--bg-soft);border-left:4px solid var(--primary);padding:24px;
+  border-radius:10px;min-height:90px;margin-bottom:18px;line-height:1.8;color:var(--text);
+}
+.ai-spinner{width:20px;height:20px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.chat-container{display:flex;flex-direction:column;height:600px;background:var(--bg-card);border:1px solid var(--border);border-radius:15px;overflow:hidden;}
+.chat-messages{flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:14px;background:var(--bg-soft);}
+.chat-message{display:flex;gap:10px;animation:slideIn .3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.chat-message.user{justify-content:flex-end;}
+.chat-bubble{max-width:78%;padding:14px 18px;border-radius:12px;line-height:1.5;word-wrap:break-word;}
+.chat-message.user .chat-bubble{background:var(--primary);color:#fff;border-bottom-right-radius:3px;}
+.chat-message.ai .chat-bubble{background:var(--border);color:var(--text);border-bottom-left-radius:3px;}
+.chat-help{color:var(--text-muted);font-size:.9em;line-height:1.6;margin:0 18px 16px;}
+.chat-input-container{padding:18px;border-top:1px solid var(--border);display:flex;gap:10px;background:var(--bg-card);}
+.chat-input{flex:1;padding:12px 16px;border:2px solid var(--border);border-radius:25px;font-size:1em;font-family:inherit;background:var(--bg-soft);color:var(--text);}
+.chat-input:focus{outline:none;border-color:var(--primary);}
+.chat-send-btn{padding:12px 24px;background:var(--primary);border:none;color:#fff;border-radius:25px;cursor:pointer;font-weight:600;transition:all .3s;}
+.chat-send-btn:hover:not(:disabled){background:var(--primary-dark);}
+.chat-send-btn:disabled{background:#999;cursor:not-allowed;}
+.typing-indicator{display:flex;gap:4px;}
+.typing-dot{width:8px;height:8px;background:var(--primary);border-radius:50%;animation:typing 1.4s infinite;}
+.typing-dot:nth-child(2){animation-delay:.2s;}
+.typing-dot:nth-child(3){animation-delay:.4s;}
+@keyframes typing{0%,60%,100%{opacity:.5;transform:translateY(0);}30%{opacity:1;transform:translateY(-9px);}}
+/* ============================ ALERT / TIMELINE / FIELD ============================ */
+.alert{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:18px;margin-bottom:24px;border-radius:10px;display:none;font-weight:600;}
+.alert.show{display:block;animation:slideDown .3s ease;}
+@keyframes slideDown{from{opacity:0;transform:translateY(-18px);}to{opacity:1;transform:translateY(0);}}
+.timeline{position:relative;padding:34px 0;}
+.timeline::before{content:'';position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--border);transform:translateX(-50%);}
+.timeline-item{margin-bottom:44px;position:relative;}
+.timeline-content{background:var(--bg-card);border:1px solid var(--border);border-radius:15px;padding:26px;width:45%;box-shadow:0 2px 10px var(--shadow);}
+.timeline-item:nth-child(even) .timeline-content{margin-left:55%;}
+.timeline-dot{position:absolute;left:50%;top:18px;width:18px;height:18px;background:var(--primary);border-radius:50%;transform:translateX(-50%);}
+.timeline-content h3{color:var(--primary);}
+.soccer-field{
+  background:linear-gradient(180deg,#2d5016,#3a6b1f 50%,#2d5016);border:4px solid #fff;
+  border-radius:10px;position:relative;width:100%;max-width:1000px;height:560px;
+  margin:18px auto;cursor:crosshair;box-shadow:0 8px 35px var(--shadow);
+}
+.field-line{position:absolute;background:#fff;pointer-events:none;}
+.halfway-line{left:50%;top:0;width:3px;height:100%;transform:translateX(-50%);}
+.center-circle{position:absolute;left:50%;top:50%;width:118px;height:118px;border:3px solid #fff;border-radius:50%;transform:translate(-50%,-50%);}
+.center-spot,.penalty-spot{position:absolute;width:8px;height:8px;background:#fff;border-radius:50%;}
+.center-spot{left:50%;top:50%;transform:translate(-50%,-50%);}
+.penalty-box{position:absolute;border:3px solid #fff;}
+.penalty-box-left{left:0;top:50%;transform:translateY(-50%);width:20%;height:50%;}
+.penalty-box-right{right:0;top:50%;transform:translateY(-50%);width:20%;height:50%;}
+.goal-box{position:absolute;border:3px solid #fff;}
+.goal-box-left{left:0;top:50%;transform:translateY(-50%);width:8%;height:25%;}
+.goal-box-right{right:0;top:50%;transform:translateY(-50%);width:8%;height:25%;}
+.penalty-spot{top:50%;transform:translateY(-50%);}
+.penalty-spot-left{left:15%;}.penalty-spot-right{right:15%;}
+.corner-arc{position:absolute;width:18px;height:18px;border:3px solid #fff;}
+.corner-arc-tl{top:0;left:0;border-radius:0 0 100% 0;border-top:none;border-left:none;}
+.corner-arc-tr{top:0;right:0;border-radius:0 0 0 100%;border-top:none;border-right:none;}
+.corner-arc-bl{bottom:0;left:0;border-radius:0 100% 0 0;border-bottom:none;border-left:none;}
+.corner-arc-br{bottom:0;right:0;border-radius:100% 0 0 0;border-bottom:none;border-right:none;}
+.shot-marker{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--primary);border:3px solid var(--gold);transform:translate(-50%,-50%);z-index:60;}
+.shot-line{position:absolute;height:4px;background:linear-gradient(90deg,#ffdd00,#ff8800);transform-origin:0 0;z-index:50;}
+/* ============================ MOBILE ============================ */
+@media(max-width:768px){
+  .hero{padding:60px 16px 46px;}
+  .hero h1{font-size:2.4em;letter-spacing:.05em;}
+  .nav{gap:7px;padding:9px;}
+  .nav-btn{padding:9px 13px;font-size:.7em;}
+  .container{padding:24px 14px;}
+  .card{padding:22px;}
+  .grid-2,.grid-3,.grid-4,.compare-grid,.chart-grid{grid-template-columns:1fr;}
+  .timeline::before{left:18px;}
+  .timeline-content,.timeline-item:nth-child(even) .timeline-content{width:calc(100% - 50px);margin-left:50px;}
+  .timeline-dot{left:18px;}
+  .soccer-field{height:380px;}
+  .kick-banner{justify-content:center;text-align:center;}
+  .compare-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>SPIN OFF</h1>
+  <p class="hero-subtitle">Professional Soccer Ball Analytics System</p>
+  <p class="hero-tagline">Powered by AI • Built by Skyler and Sahil</p>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" data-page="home">Home</button>
+  <button class="nav-btn" data-page="tracker">Live Tracker</button>
+  <button class="nav-btn" data-page="ai-coach">AI Coach</button>
+  <button class="nav-btn" data-page="chat">Chat</button>
+  <button class="nav-btn" data-page="how-it-works">How It Works</button>
+  <button class="nav-btn" data-page="technology">Technology</button>
+  <button class="nav-btn" data-page="team">Our Team</button>
+  <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">Dark</button>
+</div>
+
+<div class="container">
+  <div id="alert" class="alert"></div>
+
+  <!-- ===================== HOME ===================== -->
+  <div id="home" class="page active">
+    <div class="section-header">
+      <h2>Welcome to the Future of Soccer Training</h2>
+      <p>Real-time analytics • AI-powered coaching • Professional insights for everyone</p>
+    </div>
+    <div class="grid-3">
+      <div class="feature-card"><h3>Real-Time Speed</h3><p>Measure kick speed with professional-grade accuracy and track your progress over time.</p></div>
+      <div class="feature-card"><h3>Spin Analysis</h3><p>Monitor RPM and spin type to perfect your curve shots and ball control.</p></div>
+      <div class="feature-card"><h3>AI Coaching</h3><p>Get instant, personalized feedback powered by advanced AI to improve faster.</p></div>
+      <div class="feature-card"><h3>Strike Quality</h3><p>Microphone-based contact analysis grades how cleanly you strike the ball.</p></div>
+      <div class="feature-card"><h3>Shot Mapping</h3><p>Visualize shot placement on an interactive soccer field to perfect accuracy.</p></div>
+      <div class="feature-card"><h3>Mobile Ready</h3><p>Works on any device with Bluetooth. Train anywhere, anytime with your phone.</p></div>
+    </div>
+    <div class="card center">
+      <h2>Ready to Get Started?</h2>
+      <p style="margin-bottom:24px;">Connect your Spin Off device and start tracking your performance instantly.</p>
+      <a href="#" onclick="switchPage('tracker');return false;" class="btn btn-primary" style="font-size:1.05em;padding:18px 44px;">Start Tracking Now</a>
+    </div>
+    <div class="card center">
+      <h3>Have feedback?</h3>
+      <p style="margin-bottom:18px;">Help us improve Spin Off by sharing your ideas.</p>
+      <a href="https://forms.gle/feNw5kNKt2TsMMKo9" target="_blank" rel="noreferrer" class="btn btn-primary">Submit Feedback</a>
+    </div>
+  </div>
+
+  <!-- ===================== LIVE TRACKER ===================== -->
+  <div id="tracker" class="page">
+    <div class="card status-section">
+      <div class="status-text">
+        <span class="status-indicator" id="statusIndicator"></span>
+        <span id="statusText">Not Connected</span>
+      </div>
+      <button id="connectBtn" class="connect-btn">Connect Device</button>
+    </div>
+
+    <div class="card">
+      <h3>Device &amp; Session Status</h3>
+      <div class="status-grid">
+        <div><strong>Connection</strong><span id="deviceStatusText">Not Connected</span></div>
+        <div><strong>Last Update</strong><span id="lastUpdateText">--</span></div>
+        <div><strong>Battery</strong><span id="batteryText">--</span></div>
+        <div><strong>Improvement Trend</strong><span id="improvementTrend">--</span></div>
+        <div><strong>Saved Sessions</strong><span id="savedSessionsCount">0</span></div>
+      </div>
+      <div class="center" style="margin-top:18px;">
+        <button class="btn" id="newSessionBtn" onclick="startNewSession()">Start New Session</button>
+        <button class="btn" id="clearHistoryBtn" onclick="clearSessionHistory()">Clear History</button>
+      </div>
+    </div>
+
+    <div id="dataDisplay" style="display:none;">
+
+      <!-- current kick + classification -->
+      <div class="card">
+        <h3>Latest Kick</h3>
+        <div class="pb-banner" id="pbBanner"></div>
+        <div class="kick-banner">
+          <div class="kick-icon" id="kickIcon">--</div>
+          <div class="kick-info">
+            <div class="kick-type" id="kickClassName">Waiting for kick…</div>
+            <div class="kick-sub" id="kickSubInfo">Kick #-- • Spin: --</div>
+          </div>
+          <div class="kick-power">
+            <div class="num" id="kickPowerScore">0</div>
+            <div class="lbl">Power Score</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- quick stats -->
+      <div class="grid-4">
+        <div class="stat-card"><div class="value" id="quickKicks">0</div><div class="label">Total Kicks</div></div>
+        <div class="stat-card"><div class="value" id="quickMaxSpeed">0</div><div class="label">Max Speed (mph)</div></div>
+        <div class="stat-card"><div class="value" id="quickAvgSpeed">0</div><div class="label">Avg Speed (mph)</div></div>
+        <div class="stat-card"><div class="value" id="quickMaxSpin">0</div><div class="label">Max Spin (RPM)</div></div>
+      </div>
+
+      <!-- gauges + strike meter -->
+      <div class="grid-3">
+        <div class="card">
+          <div class="gauge-wrap">
+            <div class="gauge-title">Consistency</div>
+            <div class="gauge" id="consistencyGauge">
+              <div class="gauge-inner"><div class="gv" id="consistencyValue">0</div><div class="gl">/ 100</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="gauge-wrap">
+            <div class="gauge-title">Power Score</div>
+            <div class="gauge" id="powerGauge">
+              <div class="gauge-inner"><div class="gv" id="powerGaugeValue">0</div><div class="gl">/ 100</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h4 style="color:var(--text);text-transform:uppercase;letter-spacing:.1em;font-size:.9em;text-align:center;">Strike Quality</h4>
+          <div class="meter">
+            <div class="meter-row"><span>Quality Score</span><span id="strikeMeterValue">0 / 100</span></div>
+            <div class="meter-track"><div class="meter-fill" id="strikeMeterFill"></div></div>
+            <div class="meter-row">
+              <span class="badge off_center" id="strikeMeterClass">--</span>
+              <span id="strikeMeterExtra">Intensity -- • Contact -- ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- live metrics -->
+      <div class="grid-3">
+        <div class="metric-card"><div class="metric-label">Speed</div><div class="metric-value" id="speedMph">--</div><div class="metric-unit">mph (<span id="speedKmh">--</span> km/h)</div></div>
+        <div class="metric-card"><div class="metric-label">Spin Rate</div><div class="metric-value" id="spin">--</div><div class="metric-unit">RPM</div><div class="metric-flag" id="spinFlag">Clipped at sensor limit</div></div>
+        <div class="metric-card"><div class="metric-label">Impact Force</div><div class="metric-value" id="impact">--</div><div class="metric-unit">G-force</div><div class="metric-flag" id="impactFlag">Clipped at 16 G</div></div>
+        <div class="metric-card"><div class="metric-label">Launch Angle</div><div class="metric-value" id="launchAngle">--</div><div class="metric-unit">degrees</div></div>
+        <div class="metric-card"><div class="metric-label">Flight Time</div><div class="metric-value" id="flightTime">--</div><div class="metric-unit">seconds</div></div>
+        <div class="metric-card"><div class="metric-label">Curl / Swerve</div><div class="metric-value" id="curl">--</div><div class="metric-unit">degrees</div></div>
+      </div>
+
+      <!-- real-time graphs -->
+      <div class="card">
+        <h3>Real-Time Performance Graphs</h3>
+        <div class="chart-grid">
+          <div class="chart-box"><h4>Speed (mph)</h4><div class="chart-canvas-wrap"><canvas id="chartSpeed"></canvas></div></div>
+          <div class="chart-box"><h4>Spin Rate (RPM)</h4><div class="chart-canvas-wrap"><canvas id="chartSpin"></canvas></div></div>
+          <div class="chart-box"><h4>Power Score</h4><div class="chart-canvas-wrap"><canvas id="chartPower"></canvas></div></div>
+          <div class="chart-box"><h4>Launch Angle (°)</h4><div class="chart-canvas-wrap"><canvas id="chartAngle"></canvas></div></div>
+          <div class="chart-box"><h4>Impact Force (G)</h4><div class="chart-canvas-wrap"><canvas id="chartImpact"></canvas></div></div>
+          <div class="chart-box"><h4>Strike Quality</h4><div class="chart-canvas-wrap"><canvas id="chartStrike"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- kick comparison -->
+      <div class="card">
+        <h3>Kick Comparison — Last 2 Kicks</h3>
+        <div class="compare-grid">
+          <div class="compare-col" id="comparePrev"><h4>Previous</h4><p class="muted center">No data yet</p></div>
+          <div class="compare-col" id="compareLast"><h4>Latest</h4><p class="muted center">No data yet</p></div>
+        </div>
+      </div>
+
+      <!-- personal bests -->
+      <div class="card">
+        <h3>Personal Bests</h3>
+        <div class="grid-4">
+          <div class="pb-card" id="pbCardSpeed"><div class="pbv" id="pbSpeed">0</div><div class="pbl">Speed (mph)</div></div>
+          <div class="pb-card" id="pbCardPower"><div class="pbv" id="pbPower">0</div><div class="pbl">Power Score</div></div>
+          <div class="pb-card" id="pbCardSpin"><div class="pbv" id="pbSpin">0</div><div class="pbl">Spin (RPM)</div></div>
+          <div class="pb-card" id="pbCardStrike"><div class="pbv" id="pbStrike">0</div><div class="pbl">Strike Quality</div></div>
+        </div>
+      </div>
+
+      <!-- training recommendations -->
+      <div class="card">
+        <h3>Training Recommendations</h3>
+        <div class="rec-list" id="recommendationsList">
+          <p class="muted">Recommendations from your device appear here after every 5 kicks.</p>
+        </div>
+      </div>
+
+      <!-- shot mapping -->
+      <div class="card">
+        <h3>Shot Mapping</h3>
+        <p style="margin-bottom:16px;">Click to mark your position, then click your target.</p>
+        <div class="center" style="margin-bottom:16px;">
+          <button class="btn" onclick="clearField()">Clear Field</button>
+          <button class="btn" onclick="exportSessionJSON()">Export JSON</button>
+          <button class="btn" onclick="exportSessionCSV()">Export CSV</button>
+          <button class="btn" onclick="shareSessionReport()">Share Report</button>
+        </div>
+        <div class="soccer-field" id="soccerField">
+          <div class="field-line halfway-line"></div>
+          <div class="center-circle"></div><div class="center-spot"></div>
+          <div class="penalty-box penalty-box-left"></div><div class="penalty-box penalty-box-right"></div>
+          <div class="goal-box goal-box-left"></div><div class="goal-box goal-box-right"></div>
+          <div class="penalty-spot penalty-spot-left"></div><div class="penalty-spot penalty-spot-right"></div>
+          <div class="corner-arc corner-arc-tl"></div><div class="corner-arc corner-arc-tr"></div>
+          <div class="corner-arc corner-arc-bl"></div><div class="corner-arc corner-arc-br"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- session history -->
+    <div class="card">
+      <h3>Saved Session History</h3>
+      <div id="historySummary" class="session-summary">
+        <div class="summary-card"><strong>Saved Sessions</strong><span>0</span></div>
+        <div class="summary-card"><strong>Best Speed</strong><span>--</span></div>
+        <div class="summary-card"><strong>Average Speed</strong><span>--</span></div>
+        <div class="summary-card"><strong>Recent Session</strong><span>--</span></div>
+      </div>
+      <div id="sessionHistory" class="session-history"></div>
+    </div>
+
+    <div id="noData" class="card center" style="padding:70px 20px;">
+      <div style="font-size:4em;margin-bottom:20px;opacity:.25;font-weight:900;color:var(--primary);">SPIN OFF</div>
+      <h2>Ready to Track</h2>
+      <p style="font-size:1.1em;">Connect your Spin Off device to start collecting data.</p>
+    </div>
+  </div>
+
+  <!-- ===================== AI COACH ===================== -->
+  <div id="ai-coach" class="page">
+    <div class="section-header"><h2>AI-Powered Coaching</h2><p>Get personalized feedback and training plans powered by advanced AI</p></div>
+    <div class="card">
+      <div class="ai-response" id="coachResponse">
+        <p class="muted">Your AI coach will analyze your performance and provide personalized feedback. Perform some kicks in the Live Tracker to get started!</p>
+      </div>
+      <div class="center">
+        <button class="btn btn-primary" onclick="getAICoaching()" id="coachBtn" style="margin:8px;">Get Coaching Feedback</button>
+        <button class="btn btn-primary" onclick="generateTrainingPlan()" id="planBtn" style="margin:8px;">Generate Training Plan</button>
+      </div>
+      <div id="trainingPlanContainer" style="display:none;margin-top:26px;">
+        <div id="trainingPlanContent" class="ai-response"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== CHAT ===================== -->
+  <div id="chat" class="page">
+    <div class="section-header"><h2>Chat with AI Coach</h2><p>Ask about your performance, training guidance, or how the Spin Off project works.</p></div>
+    <div class="card">
+      <div class="chat-container">
+        <div class="chat-messages" id="chatMessages"></div>
+        <p class="chat-help">Try asking: "How do I export my session?", "What does spin axis mean?", "How does Bluetooth connect?"</p>
+        <div class="chat-input-container">
+          <input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything about your kicks, training, or technique..." autocomplete="off">
+          <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== HOW IT WORKS ===================== -->
+  <div id="how-it-works" class="page">
+    <div class="section-header"><h2>How It Works</h2><p>The science and technology behind Spin Off</p></div>
+    <div class="timeline">
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h3>Step 1: Kick Detection</h3><p>An accelerometer and gyroscope detect the exact moment of ball contact, measuring impact force up to 16 G.</p></div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h3>Step 2: Data Collection</h3><p>Sensors continuously sample at high frequency, capturing acceleration on all three axes plus rotational velocity.</p></div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h3>Step 3: Signal Processing</h3><p>A low-pass filter removes noise while preserving critical data. Peak detection identifies maximum speed and spin.</p></div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h3>Step 4: Wireless Transmission</h3><p>Bluetooth Low Energy streams a JSON data packet to your device in real time after every kick.</p></div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h3>Step 5: AI Analysis</h3><p>The app and AI analyze your technique, track trends, and generate personalized coaching advice.</p></div></div>
+    </div>
+    <div class="card">
+      <h3>How the App Works</h3>
+      <p>Spin Off captures ball sensor data for every kick and stores each session locally in your browser. The app turns raw speed, spin and impact readings into easy-to-read analytics, lets you export CSV or JSON reports, and saves your progress so you can compare training sessions over time.</p>
+    </div>
+    <div class="card">
+      <h3>Frequently Asked Questions</h3>
+      <p><strong>Q: How do I save my session?</strong><br>The app saves sessions locally when you start a new session or export data. View saved history on the Live Tracker page.</p>
+      <p><strong>Q: What does spin axis mean?</strong><br>The device classifies rotation as topspin, backspin, sidespin or mixed based on which gyroscope axis dominates.</p>
+      <p><strong>Q: How do exports and sharing work?</strong><br>Use Export JSON / CSV to download a report. Share Report copies the summary to the clipboard or opens the browser share dialog.</p>
+      <p><strong>Q: Which browser works best?</strong><br>Chrome, Edge and Opera support Web Bluetooth and give the most reliable connection.</p>
+    </div>
+    <div class="grid-2">
+      <div class="card"><h3>Physics Behind the Metrics</h3><p><strong>Speed:</strong> Estimated from peak impact acceleration via an impulse model.<br><br><strong>Spin Rate:</strong> Gyroscope angular velocity converted from degrees/second to RPM.<br><br><strong>Launch Angle:</strong> Derived from the tilt of the impact acceleration vector.<br><br><strong>Flight Time:</strong> Estimated using projectile-motion equations.</p></div>
+      <div class="card"><h3>Sensor Technology</h3><p><strong>LSM6DS3:</strong> 6-axis IMU with ±16 g acceleration and ±2000°/s gyroscope range.<br><br><strong>PDM Microphone:</strong> Analyzes the impact sound to grade strike quality.<br><br><strong>Noise Reduction:</strong> Digital low-pass filter (alpha 0.6) removes vibration artifacts.<br><br><strong>Power Efficiency:</strong> Smart wake/sleep modes extend battery life.</p></div>
+    </div>
+  </div>
+
+  <!-- ===================== TECHNOLOGY ===================== -->
+  <div id="technology" class="page">
+    <div class="section-header"><h2>Technology Stack</h2><p>Built with cutting-edge hardware and software</p></div>
+    <div class="grid-2">
+      <div class="card"><h3>Hardware</h3><div class="rich">
+        <strong>Microcontroller:</strong> Seeed XIAO nRF52840 Sense<br>
+        <strong>Processor:</strong> Nordic nRF52840 (64 MHz ARM Cortex-M4)<br>
+        <strong>IMU:</strong> LSM6DS3TR-C 6-axis accelerometer + gyroscope<br>
+        <strong>Microphone:</strong> Built-in PDM microphone<br>
+        <strong>Wireless:</strong> Bluetooth 5.0 Low Energy<br>
+        <strong>Power:</strong> 1000mAh LiPo battery (JST 1.25mm)<br>
+        <strong>Weight:</strong> Regulation soccer ball compatible
+      </div></div>
+      <div class="card"><h3>Software</h3><div class="rich">
+        <strong>Firmware:</strong> C++ (Arduino framework, mbed-enabled core)<br>
+        <strong>Web App:</strong> HTML5, CSS3, JavaScript (ES6+)<br>
+        <strong>Charts:</strong> Chart.js for real-time data visualization<br>
+        <strong>AI Engine:</strong> AMIR AI — rule-based + machine-learning coaching<br>
+        <strong>Connectivity:</strong> Web Bluetooth API<br>
+        <strong>Data Format:</strong> JSON streamed over a single BLE characteristic<br>
+        <strong>Browser Support:</strong> Chrome, Edge, Opera (Desktop &amp; Mobile)
+      </div></div>
+    </div>
+    <div class="card">
+      <h3 class="center">Technical Specifications</h3>
+      <div class="grid-3">
+        <div class="center" style="padding:18px;"><div style="font-size:1.9em;color:var(--primary);margin-bottom:8px;">±16 G</div><div class="muted">Impact Range</div></div>
+        <div class="center" style="padding:18px;"><div style="font-size:1.9em;color:var(--primary);margin-bottom:8px;">333 RPM</div><div class="muted">Max Spin Detection</div></div>
+        <div class="center" style="padding:18px;"><div style="font-size:1.9em;color:var(--primary);margin-bottom:8px;">2000°/s</div><div class="muted">Gyroscope Range</div></div>
+        <div class="center" style="padding:18px;"><div style="font-size:1.9em;color:var(--primary);margin-bottom:8px;">416 Hz</div><div class="muted">Sample Rate</div></div>
+        <div class="center" style="padding:18px;"><div style="font-size:1.9em;color:var(--primary);margin-bottom:8px;">30 m</div><div class="muted">Bluetooth Range</div></div>
+        <div class="center" style="padding:18px;"><div style="font-size:1.9em;color:var(--primary);margin-bottom:8px;">1000 mAh</div><div class="muted">Battery Capacity</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== TEAM ===================== -->
+  <div id="team" class="page">
+    <div class="section-header"><h2>Meet the Inventors</h2><p>7th Grade Students | Invention Convention 2026</p></div>
+    <div class="grid-2">
+      <div class="team-card"><div class="team-avatar">S</div><h3>Sahil</h3><div class="team-role">Co-Inventor &amp; Software Developer</div><p>Passionate about electronics and sports technology. Led the hardware integration, sensor calibration, and Arduino programming.</p></div>
+      <div class="team-card"><div class="team-avatar">S</div><h3>Skyler</h3><div class="team-role">Co-Inventor &amp; Testing Lead</div><p>Enthusiastic about the build and led the testing. Dedicated to making professional sports analytics accessible to everyone.</p></div>
+    </div>
+    <div class="card"><h3 class="center">Our Mission</h3><p class="center">We created Spin Off because professional-level sports analytics shouldn't be limited to elite athletes with expensive equipment. Every player deserves data-driven insights to improve technique, track progress, and reach their goals. By combining affordable hardware with powerful AI, we're making sports analytics accessible to players of all levels.</p></div>
+    <div class="card"><h3 class="center">The Journey</h3><p><strong>October 2025:</strong> Initial concept — "What if we could track soccer ball data like professional teams?"<br><br><strong>November 2025:</strong> Research phase — choosing the best parts for the build.<br><br><strong>December 2025:</strong> Prototype 1 — basic Arduino setup with accelerometer readings.<br><br><strong>January 2026:</strong> Final version — added a gyroscope, microphone, web app and AI coaching.</p></div>
+  </div>
+</div>
+
+<script>
+/* ====================================================================
+   SPIN OFF WEB APP  -  matches the XIAO nRF52840 Sense firmware:
+   one BLE characteristic streaming chunked JSON terminated by '\n'.
+   ==================================================================== */
+const GROQ_API_KEY   = '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';
+const STORAGE_KEY      = 'spinoffSessionHistory';
+const CHAT_STORAGE_KEY = 'spinoffChatHistory';
+const THEME_KEY        = 'spinoffTheme';
+const SERVICE_UUID = '19b10000-e8f2-537e-4f6c-d104768a1214';
+const CHAR_UUID    = '19b10001-e8f2-537e-4f6c-d104768a1214';
+
+const KICK_TYPES = {
+  power_shot:{icon:'PWR',name:'Power Shot'},
+  curve_ball:{icon:'CRV',name:'Curve Ball'},
+  chip_shot:{icon:'CHP',name:'Chip Shot'},
+  header:{icon:'HDR',name:'Header'},
+  ground_pass:{icon:'GND',name:'Ground Pass'},
+  lob_pass:{icon:'LOB',name:'Lob Pass'}
+};
+const MAX_CHART_POINTS = 20;
+
+let device, dataChar;
+let rxBuffer = '';
+let charts = {};
+let allKicks = [];
+let shotLocation = null, shots = [];
+let chatHistory = [];
+let personalBests = {speedMph:0,powerScore:0,spinRPM:0,strikeQuality:0};
+let sessionData = freshSession();
+
+function freshSession(){
+  return {kicks:0,maxSpeed:0,avgSpeed:0,maxSpin:0,
+    speeds:[],spins:[],angles:[],flightTimes:[],impacts:[],powerScores:[],strikeQualities:[],
+    consistency:0,improvementTrend:'--',startedAt:new Date().toISOString(),lastUpdate:'--'};
+}
+
+/* ===================== NAVIGATION ===================== */
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>switchPage(btn.dataset.page));
+});
+function switchPage(page){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.page===page));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===page));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showAlert(msg,duration=3000){
+  const a=document.getElementById('alert');
+  a.textContent=msg; a.classList.add('show');
+  clearTimeout(a._t);
+  a._t=setTimeout(()=>a.classList.remove('show'),duration);
+}
+
+/* ===================== THEME ===================== */
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  document.getElementById('themeToggle').textContent = theme==='dark' ? 'Light' : 'Dark';
+  localStorage.setItem(THEME_KEY,theme);
+  Object.values(charts).forEach(applyChartTheme);
+}
+document.getElementById('themeToggle').addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  applyTheme(cur==='dark'?'light':'dark');
+});
+
+/* ===================== ANIMATION HELPERS ===================== */
+function animateValue(el,to,decimals=0,suffix=''){
+  if(!el) return;
+  to=Number(to); if(isNaN(to)) to=0;
+  const from=parseFloat(el.dataset.v||'0');
+  const t0=performance.now(),dur=600;
+  function step(t){
+    const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
+    const v=from+(to-from)*e;
+    el.textContent=v.toFixed(decimals)+suffix;
+    if(p<1) requestAnimationFrame(step); else el.dataset.v=to;
+  }
+  requestAnimationFrame(step);
+}
+function animateGauge(gaugeEl,numEl,target){
+  if(!gaugeEl) return;
+  target=Math.max(0,Math.min(100,Number(target)||0));
+  const start=parseFloat(gaugeEl.dataset.val||'0');
+  const t0=performance.now(),dur=800;
+  function step(t){
+    const p=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-p,3);
+    const v=start+(target-start)*e;
+    gaugeEl.style.setProperty('--pct',v);
+    if(numEl) numEl.textContent=Math.round(v);
+    if(p<1) requestAnimationFrame(step); else gaugeEl.dataset.val=target;
+  }
+  requestAnimationFrame(step);
+}
+
+/* ===================== CHARTS ===================== */
+function themeColors(){
+  const cs=getComputedStyle(document.documentElement);
+  return {text:cs.getPropertyValue('--text-muted').trim()||'#666',
+          grid:cs.getPropertyValue('--chart-grid').trim()||'#eee'};
+}
+function makeChart(canvasId,label,color){
+  const ctx=document.getElementById(canvasId).getContext('2d');
+  const tc=themeColors();
+  return new Chart(ctx,{
+    type:'line',
+    data:{labels:[],datasets:[{
+      label:label,data:[],borderColor:color,
+      backgroundColor:color+'22',tension:.4,borderWidth:2.5,fill:true,
+      pointBackgroundColor:color,pointBorderColor:'#fff',pointBorderWidth:1.5,pointRadius:3
+    }]},
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:{duration:600},
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true,ticks:{color:tc.text,font:{size:10}},grid:{color:tc.grid}},
+        x:{ticks:{color:tc.text,font:{size:10}},grid:{color:tc.grid}}
+      }
+    }
+  });
+}
+function applyChartTheme(chart){
+  const tc=themeColors();
+  ['x','y'].forEach(ax=>{
+    chart.options.scales[ax].ticks.color=tc.text;
+    chart.options.scales[ax].grid.color=tc.grid;
+  });
+  chart.update('none');
+}
+function initCharts(){
+  charts.speed =makeChart('chartSpeed','Speed','#8B0000');
+  charts.spin  =makeChart('chartSpin','Spin','#C6A75E');
+  charts.power =makeChart('chartPower','Power','#c0392b');
+  charts.angle =makeChart('chartAngle','Angle','#2980b9');
+  charts.impact=makeChart('chartImpact','Impact','#8e44ad');
+  charts.strike=makeChart('chartStrike','Strike','#27ae60');
+  Object.values(charts).forEach(applyChartTheme);
+}
+function pushChart(chart,label,value){
+  chart.data.labels.push(label);
+  chart.data.datasets[0].data.push(value);
+  if(chart.data.labels.length>MAX_CHART_POINTS){
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+  }
+  chart.update();
+}
+
+/* ===================== BLE CONNECTION ===================== */
+document.getElementById('connectBtn').addEventListener('click',connectDevice);
+async function connectDevice(){
+  try{
+    if(!navigator.bluetooth){
+      showAlert('Bluetooth not supported. Please use Chrome, Edge, or Opera.');return;
+    }
+    document.getElementById('statusText').textContent='Searching...';
+    document.getElementById('connectBtn').disabled=true;
+    device=await navigator.bluetooth.requestDevice({
+      filters:[{name:'SpinOff'},{name:'Spin Off'},{services:[SERVICE_UUID]}],
+      optionalServices:[SERVICE_UUID]
+    });
+    document.getElementById('statusText').textContent='Connecting...';
+    const server=await device.gatt.connect();
+    const service=await server.getPrimaryService(SERVICE_UUID);
+    dataChar=await service.getCharacteristic(CHAR_UUID);
+    await dataChar.startNotifications();
+    dataChar.addEventListener('characteristicvaluechanged',handleData);
+    rxBuffer='';
+    device.addEventListener('gattserverdisconnected',onDisconnected);
+    document.getElementById('connectBtn').disabled=false;
+    document.getElementById('dataDisplay').style.display='block';
+    document.getElementById('noData').style.display='none';
+    showAlert('Successfully connected to Spin Off!');
+    updateDeviceStatus();
+  }catch(err){
+    document.getElementById('statusText').textContent='Connection Failed';
+    document.getElementById('connectBtn').disabled=false;
+    let m='Connection failed: ';
+    if(err.name==='NotFoundError') m+='Device not found or selection cancelled. Make sure Spin Off is powered on.';
+    else if(err.name==='SecurityError') m+='Bluetooth permission denied.';
+    else m+=err.message;
+    showAlert(m,5000);
+  }
+}
+function onDisconnected(){
+  showAlert('Spin Off disconnected.');
+  updateDeviceStatus();
+  document.getElementById('dataDisplay').style.display='none';
+  document.getElementById('noData').style.display='block';
+}
+
+/* ===================== PACKET REASSEMBLY + PARSING ===================== */
+function handleData(event){
+  rxBuffer += new TextDecoder().decode(event.target.value);
+  let idx;
+  while((idx=rxBuffer.indexOf('\n'))>=0){
+    const line=rxBuffer.slice(0,idx).trim();
+    rxBuffer=rxBuffer.slice(idx+1);
+    if(line) processPacket(line);
+  }
+  if(rxBuffer.length>8000) rxBuffer='';   /* safety against runaway buffer */
+}
+function processPacket(line){
+  let json;
+  try{ json=JSON.parse(line); }
+  catch(e){ console.warn('Bad packet (ignored):',line); return; }
+
+  if(json.battery && !json.kick){          /* periodic battery-only packet */
+    updateBattery(json.battery);
+  }
+  if(json.kick){                            /* full kick packet            */
+    handleKickPacket(json);
+  }
+  sessionData.lastUpdate=new Date().toLocaleString();
+  document.getElementById('lastUpdateText').textContent=sessionData.lastUpdate;
+  updateDeviceStatus();
+}
+
+/* ===================== KICK HANDLING ===================== */
+function handleKickPacket(j){
+  const k={
+    number:j.kick.number, timestamp:j.kick.timestamp,
+    classification:j.kick.classification, powerScore:j.kick.powerScore,
+    peakG:j.impact?j.impact.peakG:0, gClipped:j.impact?j.impact.clipped:false,
+    speedMph:j.motion?j.motion.speedMph:0, speedKmh:j.motion?j.motion.speedKmh:0,
+    launchAngle:j.motion?j.motion.launchAngle:0, flightTimeMs:j.motion?j.motion.flightTimeMs:0,
+    curlDegrees:j.motion?j.motion.curlDegrees:0,
+    spinRPM:j.spin?j.spin.rateRPM:0, rpmClipped:j.spin?j.spin.clipped:false,
+    spinAxis:j.spin?j.spin.axis:'', mixedSpin:j.spin?j.spin.mixedSpin:false,
+    strikeQuality:j.strike?j.strike.quality:0, strikeClass:j.strike?j.strike.classification:'',
+    strikeIntensity:j.strike?j.strike.intensity:0, contactMs:j.strike?j.strike.contactMs:0
+  };
+  allKicks.push(k);
+
+  /* ----- session aggregates ----- */
+  sessionData.speeds.push(k.speedMph);
+  sessionData.spins.push(k.spinRPM);
+  sessionData.angles.push(k.launchAngle);
+  sessionData.flightTimes.push(k.flightTimeMs);
+  sessionData.impacts.push(k.peakG);
+  sessionData.powerScores.push(k.powerScore);
+  sessionData.strikeQualities.push(k.strikeQuality);
+  if(j.session){
+    sessionData.kicks=j.session.totalKicks;
+    sessionData.avgSpeed=Number(j.session.avgSpeedMph).toFixed(1);
+    sessionData.consistency=j.session.consistencyScore;
+    sessionData.improvementTrend=j.session.improvementTrend;
+  }else{
+    sessionData.kicks=allKicks.length;
+    sessionData.avgSpeed=avg(sessionData.speeds).toFixed(1);
+  }
+  sessionData.maxSpeed=Math.max(Number(sessionData.maxSpeed),k.speedMph).toFixed(1);
+  sessionData.maxSpin=Math.round(Math.max(Number(sessionData.maxSpin),k.spinRPM));
+
+  /* ----- UI updates ----- */
+  updateCurrentKick(k);
+  updateLiveMetrics(k);
+  updateQuickStats();
+  updateGauges(k);
+  updateStrikeMeter(k);
+  updateCharts(k);
+  updateComparison();
+  if(j.personalBests) updatePersonalBests(j.personalBests);
+  if(j.recommendations) updateRecommendations(j.recommendations);
+  if(j.battery) updateBattery(j.battery);
+  document.getElementById('improvementTrend').textContent=prettyTrend(sessionData.improvementTrend);
+}
+
+function updateCurrentKick(k){
+  const t=KICK_TYPES[k.classification]||{icon:'--',name:k.classification||'Kick'};
+  const iconEl=document.getElementById('kickIcon');
+  iconEl.textContent=t.icon;
+  iconEl.style.animation='none'; void iconEl.offsetWidth; iconEl.style.animation='popIn .5s ease';
+  document.getElementById('kickClassName').textContent=t.name;
+  document.getElementById('kickSubInfo').textContent=
+    `Kick #${k.number} • Spin: ${prettyAxis(k.spinAxis)}${k.mixedSpin?' (mixed)':''}`;
+  animateValue(document.getElementById('kickPowerScore'),k.powerScore,0);
+}
+function updateLiveMetrics(k){
+  animateValue(document.getElementById('speedMph'),k.speedMph,1);
+  document.getElementById('speedKmh').textContent=Number(k.speedKmh).toFixed(1);
+  animateValue(document.getElementById('spin'),k.spinRPM,0);
+  animateValue(document.getElementById('impact'),k.peakG,1);
+  animateValue(document.getElementById('launchAngle'),k.launchAngle,0);
+  document.getElementById('flightTime').textContent=(k.flightTimeMs/1000).toFixed(2);
+  document.getElementById('flightTime').dataset.v=(k.flightTimeMs/1000);
+  animateValue(document.getElementById('curl'),k.curlDegrees,1);
+  document.getElementById('spinFlag').classList.toggle('show',!!k.rpmClipped);
+  document.getElementById('impactFlag').classList.toggle('show',!!k.gClipped);
+}
+function updateQuickStats(){
+  animateValue(document.getElementById('quickKicks'),sessionData.kicks,0);
+  animateValue(document.getElementById('quickMaxSpeed'),sessionData.maxSpeed,1);
+  animateValue(document.getElementById('quickAvgSpeed'),sessionData.avgSpeed,1);
+  animateValue(document.getElementById('quickMaxSpin'),sessionData.maxSpin,0);
+}
+function updateGauges(k){
+  animateGauge(document.getElementById('consistencyGauge'),
+               document.getElementById('consistencyValue'),sessionData.consistency);
+  animateGauge(document.getElementById('powerGauge'),
+               document.getElementById('powerGaugeValue'),k.powerScore);
+}
+function updateStrikeMeter(k){
+  const q=Math.max(0,Math.min(100,k.strikeQuality));
+  document.getElementById('strikeMeterFill').style.width=q+'%';
+  document.getElementById('strikeMeterValue').textContent=q+' / 100';
+  const cls=k.strikeClass||'off_center';
+  const badge=document.getElementById('strikeMeterClass');
+  badge.className='badge '+cls;
+  badge.textContent=cls.replace('_',' ');
+  document.getElementById('strikeMeterExtra').textContent=
+    `Intensity ${k.strikeIntensity} • Contact ${k.contactMs} ms`;
+}
+function updateCharts(k){
+  const lbl='#'+k.number;
+  pushChart(charts.speed,lbl,Number(k.speedMph).toFixed(1));
+  pushChart(charts.spin,lbl,Math.round(k.spinRPM));
+  pushChart(charts.power,lbl,k.powerScore);
+  pushChart(charts.angle,lbl,Number(k.launchAngle).toFixed(0));
+  pushChart(charts.impact,lbl,Number(k.peakG).toFixed(1));
+  pushChart(charts.strike,lbl,k.strikeQuality);
+}
+
+/* ===================== KICK COMPARISON ===================== */
+function updateComparison(){
+  const last=allKicks[allKicks.length-1];
+  const prev=allKicks[allKicks.length-2]||null;
+  document.getElementById('compareLast').innerHTML='<h4>Latest</h4>'+kickRows(last,prev);
+  document.getElementById('comparePrev').innerHTML='<h4>Previous</h4>'+
+    (prev?kickRows(prev,null):'<p class="muted center">No data yet</p>');
+}
+function kickRows(k,baseline){
+  const rows=[
+    ['Type',(KICK_TYPES[k.classification]||{name:k.classification}).name,null],
+    ['Speed',Number(k.speedMph).toFixed(1)+' mph',baseline?k.speedMph-baseline.speedMph:null],
+    ['Spin',Math.round(k.spinRPM)+' RPM',baseline?k.spinRPM-baseline.spinRPM:null],
+    ['Power',k.powerScore,baseline?k.powerScore-baseline.powerScore:null],
+    ['Launch Angle',Number(k.launchAngle).toFixed(0)+'°',baseline?k.launchAngle-baseline.launchAngle:null],
+    ['Impact',Number(k.peakG).toFixed(1)+' G',baseline?k.peakG-baseline.peakG:null],
+    ['Strike Quality',k.strikeQuality,baseline?k.strikeQuality-baseline.strikeQuality:null]
+  ];
+  return rows.map(([key,val,diff])=>{
+    let d='';
+    if(diff!==null && Math.abs(diff)>0.05){
+      d=diff>0?`<span class="diff-up">+${Math.abs(diff).toFixed(1)}</span>`
+              :`<span class="diff-down">-${Math.abs(diff).toFixed(1)}</span>`;
+    }
+    return `<div class="compare-row"><span class="ck">${key}</span><span class="cv">${val}${d}</span></div>`;
+  }).join('');
+}
+
+/* ===================== PERSONAL BESTS ===================== */
+function updatePersonalBests(pb){
+  personalBests={speedMph:pb.speedMph,powerScore:pb.powerScore,spinRPM:pb.spinRPM,strikeQuality:pb.strikeQuality};
+  animateValue(document.getElementById('pbSpeed'),pb.speedMph,1);
+  animateValue(document.getElementById('pbPower'),pb.powerScore,0);
+  animateValue(document.getElementById('pbSpin'),pb.spinRPM,0);
+  animateValue(document.getElementById('pbStrike'),pb.strikeQuality,0);
+  const banner=document.getElementById('pbBanner');
+  if(pb.newBestBroken){
+    const map={speedMph:'Speed',powerScore:'Power Score',spinRPM:'Spin Rate',strikeQuality:'Strike Quality'};
+    banner.textContent='NEW PERSONAL BEST - '+(map[pb.whichBest]||pb.whichBest)+'!';
+    banner.classList.add('show');
+    const cardMap={speedMph:'pbCardSpeed',powerScore:'pbCardPower',spinRPM:'pbCardSpin',strikeQuality:'pbCardStrike'};
+    const card=document.getElementById(cardMap[pb.whichBest]);
+    if(card){card.classList.add('flash');setTimeout(()=>card.classList.remove('flash'),2500);}
+    showAlert('New personal best: '+(map[pb.whichBest]||pb.whichBest)+'!');
+    setTimeout(()=>banner.classList.remove('show'),6000);
+  }else{
+    banner.classList.remove('show');
+  }
+}
+
+/* ===================== RECOMMENDATIONS ===================== */
+function updateRecommendations(recs){
+  const list=document.getElementById('recommendationsList');
+  if(!recs||!recs.length){
+    list.innerHTML='<p class="muted">Recommendations from your device appear here after every 5 kicks.</p>';
+    return;
+  }
+  list.innerHTML=recs.map((r,i)=>
+    `<div class="rec-item"><div class="rec-num">${i+1}</div><span>${escapeHtml(r)}</span></div>`).join('');
+}
+
+/* ===================== BATTERY ===================== */
+function updateBattery(b){
+  const el=document.getElementById('batteryText');
+  el.textContent=b.percentage+'%';
+  el.style.color=b.lowBattery?'var(--bad)':'var(--text)';
+  if(b.lowBattery) showAlert('Spin Off battery low ('+b.percentage+'%).',4000);
+}
+
+/* ===================== DEVICE STATUS ===================== */
+function updateDeviceStatus(){
+  const connected=device&&device.gatt&&device.gatt.connected;
+  document.getElementById('deviceStatusText').textContent=connected?'Connected':'Disconnected';
+  document.getElementById('statusText').textContent=connected?'Connected to Spin Off':'Not Connected';
+  document.getElementById('savedSessionsCount').textContent=getSessionHistory().length;
+  document.getElementById('lastUpdateText').textContent=sessionData.lastUpdate||'--';
+  document.getElementById('statusIndicator').classList.toggle('connected',!!connected);
+  const btn=document.getElementById('connectBtn');
+  if(connected){btn.textContent='Connected';btn.classList.add('connected');}
+  else{btn.textContent='Connect Device';btn.classList.remove('connected');}
+}
+
+/* ===================== HELPERS ===================== */
+function avg(arr){return arr.length?arr.reduce((s,v)=>s+Number(v),0)/arr.length:0;}
+function prettyAxis(a){
+  if(!a) return '--';
+  return a.replace('_',' ').replace(/\b\w/g,c=>c.toUpperCase());
+}
+function prettyTrend(t){
+  if(t==='improving') return 'Improving';
+  if(t==='declining') return 'Declining';
+  if(t==='plateau')   return 'Plateau';
+  return '--';
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+/* ===================== SESSION HISTORY ===================== */
+function getSessionHistory(){return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}
+function saveSessionHistory(h){localStorage.setItem(STORAGE_KEY,JSON.stringify(h));updateDeviceStatus();}
+function renderSessionHistory(history){
+  const container=document.getElementById('sessionHistory');
+  const summary=document.getElementById('historySummary');
+  if(!history.length){
+    summary.innerHTML='<div class="summary-card"><strong>Saved Sessions</strong><span>0</span></div><div class="summary-card"><strong>Best Speed</strong><span>--</span></div><div class="summary-card"><strong>Average Speed</strong><span>--</span></div><div class="summary-card"><strong>Recent Session</strong><span>--</span></div>';
+    container.innerHTML='<p class="muted">No saved sessions yet. Start a session, then save or export it to build your history.</p>';
+    return;
+  }
+  const total=history.length;
+  const best=history.reduce((b,s)=>Number(s.maxSpeed||0)>Number(b.maxSpeed||0)?s:b,history[0]);
+  const avgSpeed=(history.reduce((s,x)=>s+Number(x.avgSpeed||0),0)/total).toFixed(1);
+  summary.innerHTML=`
+    <div class="summary-card"><strong>Saved Sessions</strong><span>${total}</span></div>
+    <div class="summary-card"><strong>Best Speed</strong><span>${best.maxSpeed} mph</span></div>
+    <div class="summary-card"><strong>Average Speed</strong><span>${avgSpeed} mph</span></div>
+    <div class="summary-card"><strong>Recent Session</strong><span>${new Date(history[0].sessionDate).toLocaleDateString()}</span></div>`;
+  container.innerHTML=history.map(s=>`
+    <div class="history-item">
+      <strong>${new Date(s.sessionDate).toLocaleString()}</strong>
+      <span><strong>Total kicks:</strong> ${s.kicks}</span>
+      <span><strong>Max speed:</strong> ${s.maxSpeed} mph &nbsp;•&nbsp; <strong>Avg speed:</strong> ${s.avgSpeed} mph</span>
+      <span><strong>Max spin:</strong> ${s.maxSpin} RPM &nbsp;•&nbsp; <strong>Consistency:</strong> ${s.consistency??'--'}</span>
+      <span><strong>Trend:</strong> ${prettyTrend(s.improvementTrend)}</span>
+    </div>`).join('');
+}
+function loadSessionHistory(){renderSessionHistory(getSessionHistory());updateDeviceStatus();}
+function saveCurrentSession(){
+  if(sessionData.kicks===0) return;
+  const history=getSessionHistory();
+  history.unshift({
+    sessionDate:sessionData.startedAt,
+    kicks:sessionData.kicks,maxSpeed:sessionData.maxSpeed,avgSpeed:sessionData.avgSpeed,
+    maxSpin:sessionData.maxSpin,consistency:sessionData.consistency,
+    improvementTrend:sessionData.improvementTrend,
+    lastUpdate:sessionData.lastUpdate||new Date().toLocaleString()
+  });
+  if(history.length>20) history.length=20;
+  saveSessionHistory(history);
+  renderSessionHistory(history);
+}
+function startNewSession(){
+  if(sessionData.kicks>0){saveCurrentSession();showAlert('Previous session saved. New session started.');}
+  else showAlert('New session started.');
+  resetSessionData();
+}
+function clearSessionHistory(){
+  if(confirm('Clear all saved sessions? This cannot be undone.')){
+    localStorage.removeItem(STORAGE_KEY);
+    renderSessionHistory([]);updateDeviceStatus();
+    showAlert('Session history cleared.');
+  }
+}
+function resetSessionData(){
+  sessionData=freshSession();
+  allKicks=[];
+  Object.values(charts).forEach(c=>{c.data.labels=[];c.data.datasets[0].data=[];c.update();});
+  ['speedMph','spin','impact','launchAngle','curl'].forEach(id=>{
+    const e=document.getElementById(id);e.textContent='--';e.dataset.v='0';
+  });
+  document.getElementById('speedKmh').textContent='--';
+  document.getElementById('flightTime').textContent='--';
+  ['quickKicks','quickMaxSpeed','quickAvgSpeed','quickMaxSpin','kickPowerScore'].forEach(id=>{
+    const e=document.getElementById(id);e.textContent='0';e.dataset.v='0';
+  });
+  document.getElementById('kickClassName').textContent='Waiting for kick…';
+  document.getElementById('kickSubInfo').textContent='Kick #-- • Spin: --';
+  document.getElementById('kickIcon').textContent='--';
+  animateGauge(document.getElementById('consistencyGauge'),document.getElementById('consistencyValue'),0);
+  animateGauge(document.getElementById('powerGauge'),document.getElementById('powerGaugeValue'),0);
+  document.getElementById('strikeMeterFill').style.width='0%';
+  document.getElementById('strikeMeterValue').textContent='0 / 100';
+  document.getElementById('improvementTrend').textContent='--';
+  updateComparison();
+  updateRecommendations([]);
+  clearField();
+}
+
+/* ===================== EXPORT / SHARE ===================== */
+function getSessionSummaryText(){
+  return `Spin Off session report\n\nSession date: ${new Date(sessionData.startedAt).toLocaleString()}\n`+
+    `Total kicks: ${sessionData.kicks}\nMax speed: ${sessionData.maxSpeed} mph\n`+
+    `Average speed: ${sessionData.avgSpeed} mph\nMax spin: ${sessionData.maxSpin} RPM\n`+
+    `Consistency: ${sessionData.consistency}\nTrend: ${sessionData.improvementTrend}\n`+
+    `Personal bests - speed ${personalBests.speedMph} mph, power ${personalBests.powerScore}, spin ${personalBests.spinRPM} RPM, strike ${personalBests.strikeQuality}\n`;
+}
+function exportSessionJSON(){
+  if(sessionData.kicks===0){showAlert('No session data available to export.');return;}
+  const payload={exportedAt:new Date().toISOString(),session:sessionData,personalBests,kicks:allKicks};
+  downloadBlob(JSON.stringify(payload,null,2),'application/json',`spinoff-session-${Date.now()}.json`);
+  showAlert('Session JSON exported.');
+}
+function exportSessionCSV(){
+  if(!allKicks.length){showAlert('No session data available to export.');return;}
+  const headers=['Kick','Classification','Speed (mph)','Speed (km/h)','Spin (RPM)','Power','Launch Angle','Flight Time (ms)','Curl','Impact (G)','Strike Quality','Strike Class','Contact (ms)'];
+  const rows=allKicks.map(k=>[k.number,k.classification,k.speedMph,k.speedKmh,k.spinRPM,k.powerScore,k.launchAngle,k.flightTimeMs,k.curlDegrees,k.peakG,k.strikeQuality,k.strikeClass,k.contactMs]);
+  const csv=[headers,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  downloadBlob(csv,'text/csv',`spinoff-session-${Date.now()}.csv`);
+  showAlert('Session CSV exported.');
+}
+function downloadBlob(content,type,filename){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=filename;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+function shareSessionReport(){
+  const summary=getSessionSummaryText();
+  if(navigator.share){
+    navigator.share({title:'Spin Off Session Report',text:summary})
+      .then(()=>showAlert('Report shared successfully.'))
+      .catch(()=>{copyText(summary);});
+    return;
+  }
+  copyText(summary);
+}
+function copyText(t){
+  if(navigator.clipboard){navigator.clipboard.writeText(t).then(()=>showAlert('Session summary copied to clipboard.'));}
+  else showAlert('Sharing is not available in this browser.');
+}
+
+/* ===================== SHOT MAPPING ===================== */
+document.getElementById('soccerField').addEventListener('click',e=>{
+  const field=document.getElementById('soccerField');
+  const rect=field.getBoundingClientRect();
+  const x=((e.clientX-rect.left)/rect.width*100).toFixed(1);
+  const y=((e.clientY-rect.top)/rect.height*100).toFixed(1);
+  if(!shotLocation){
+    shotLocation={x,y};
+    const m=document.createElement('div');
+    m.className='shot-marker';m.id='tempMarker';
+    m.style.left=x+'%';m.style.top=y+'%';m.style.background='#22c55e';
+    field.appendChild(m);
+  }else{
+    const m=document.createElement('div');
+    m.className='shot-marker';
+    m.style.left=x+'%';m.style.top=y+'%';
+    field.appendChild(m);
+    drawShotLine(shotLocation.x,shotLocation.y,x,y);
+    const tmp=document.getElementById('tempMarker');if(tmp)tmp.remove();
+    const dist=Math.sqrt(Math.pow(x-shotLocation.x,2)+Math.pow(y-shotLocation.y,2)).toFixed(1);
+    shots.push({location:shotLocation,target:{x,y},distance:dist});
+    shotLocation=null;
+    showAlert('Shot logged! Distance: '+dist+'%');
+  }
+});
+function drawShotLine(x1,y1,x2,y2){
+  const field=document.getElementById('soccerField');
+  const rect=field.getBoundingClientRect();
+  const dx=(x2-x1)/100*rect.width, dy=(y2-y1)/100*rect.height;
+  const len=Math.sqrt(dx*dx+dy*dy);
+  const ang=Math.atan2(dy,dx)*180/Math.PI;
+  const line=document.createElement('div');
+  line.className='shot-line';
+  line.style.left=x1+'%';line.style.top=y1+'%';
+  line.style.width=len+'px';line.style.transform=`rotate(${ang}deg)`;
+  field.appendChild(line);
+}
+function clearField(){
+  document.querySelectorAll('.shot-marker,.shot-line').forEach(el=>el.remove());
+  shots=[];shotLocation=null;
+}
+
+/* ===================== AI COACH ===================== */
+async function getAICoaching(){
+  const btn=document.getElementById('coachBtn'), res=document.getElementById('coachResponse');
+  if(sessionData.kicks===0){showAlert('No kick data available. Perform some kicks in Live Tracker first!');return;}
+  btn.disabled=true;
+  res.innerHTML='<div style="display:flex;align-items:center;gap:14px;"><div class="ai-spinner"></div><span>AI Coach is analyzing your performance...</span></div>';
+  try{
+    const prompt=`You are an expert soccer coach. Analyze this player's session and give brief, actionable advice.\n\n`+
+      `Total kicks: ${sessionData.kicks}\nMax speed: ${sessionData.maxSpeed} mph\nAvg speed: ${sessionData.avgSpeed} mph\n`+
+      `Max spin: ${sessionData.maxSpin} RPM\nConsistency: ${sessionData.consistency}/100\nTrend: ${sessionData.improvementTrend}\n`+
+      `Recent speeds: ${sessionData.speeds.slice(-5).map(s=>Number(s).toFixed(1)).join(', ')} mph\n\n`+
+      `Provide: 1) a 2-sentence assessment, 2) top 3 improvement tips, 3) one drill. Be encouraging.`;
+    res.innerHTML='<span>'+(await groqChat([{role:'user',content:prompt}],500)).replace(/\n/g,'<br>')+'</span>';
+  }catch(err){
+    res.innerHTML=`<p style="color:var(--bad);">Error: ${escapeHtml(err.message)}</p>`+
+      `<p style="margin-top:12px;">Quick analysis: your average speed of ${sessionData.avgSpeed} mph shows `+
+      `${sessionData.avgSpeed>40?'excellent':sessionData.avgSpeed>30?'good':'developing'} power.</p>`;
+  }
+  btn.disabled=false;
+}
+async function generateTrainingPlan(){
+  const btn=document.getElementById('planBtn');
+  const container=document.getElementById('trainingPlanContainer');
+  const content=document.getElementById('trainingPlanContent');
+  if(sessionData.kicks===0){showAlert('No performance data available. Complete a session first!');return;}
+  btn.disabled=true;container.style.display='block';
+  content.innerHTML='<div style="display:flex;align-items:center;gap:14px;"><div class="ai-spinner"></div><span>Generating personalized training plan...</span></div>';
+  try{
+    const lvl=sessionData.avgSpeed<25?'Beginner':sessionData.avgSpeed<40?'Intermediate':'Advanced';
+    const prompt=`Create a progressive 4-week soccer training plan for a ${lvl} player. `+
+      `Max speed ${sessionData.maxSpeed} mph, avg ${sessionData.avgSpeed} mph, max spin ${sessionData.maxSpin} RPM, `+
+      `consistency ${sessionData.consistency}/100. Use clear week headers and specific daily drills.`;
+    content.innerHTML='<span>'+(await groqChat([{role:'user',content:prompt}],1000)).replace(/\n/g,'<br>')+'</span>';
+  }catch(err){
+    content.innerHTML=`<p style="color:var(--bad);">Error: ${escapeHtml(err.message)}</p>`;
+  }
+  btn.disabled=false;
+}
+async function groqChat(messages,maxTokens){
+  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+    method:'POST',
+    headers:{'Authorization':`Bearer ${GROQ_API_KEY}`,'Content-Type':'application/json'},
+    body:JSON.stringify({model:'llama-3.3-70b-versatile',messages,temperature:0.7,max_tokens:maxTokens})
+  });
+  const data=await r.json();
+  if(data.error) throw new Error(data.error.message);
+  return data.choices[0].message.content;
+}
+
+/* ===================== CHAT ===================== */
+function saveChatHistory(){localStorage.setItem(CHAT_STORAGE_KEY,JSON.stringify(chatHistory));}
+function loadChatHistory(){
+  const saved=JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY)||'[]');
+  chatHistory=Array.isArray(saved)?saved:[];
+  renderChatHistory();
+}
+function renderChatHistory(){
+  const c=document.getElementById('chatMessages');c.innerHTML='';
+  if(!chatHistory.length){
+    addChatMessage("Hi! I'm your AI Soccer Coach. Ask me about your performance, training tips, the Spin Off app, or how this project works!",false);
+    return;
+  }
+  chatHistory.forEach(e=>addChatMessage(e.content,e.role==='user'));
+}
+function addChatMessage(text,isUser=false){
+  const c=document.getElementById('chatMessages');
+  const m=document.createElement('div');m.className='chat-message '+(isUser?'user':'ai');
+  const b=document.createElement('div');b.className='chat-bubble';b.textContent=text;
+  m.appendChild(b);c.appendChild(m);c.scrollTop=c.scrollHeight;
+}
+function showChatLoading(){
+  const c=document.getElementById('chatMessages');
+  const m=document.createElement('div');m.className='chat-message ai';m.id='loadingMessage';
+  m.innerHTML='<div class="chat-bubble"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
+  c.appendChild(m);c.scrollTop=c.scrollHeight;
+}
+function removeChatLoading(){const l=document.getElementById('loadingMessage');if(l)l.remove();}
+async function sendChatMessage(){
+  const input=document.getElementById('chatInput');
+  const btn=document.getElementById('chatSendBtn');
+  const msg=input.value.trim();
+  if(!msg) return;
+  addChatMessage(msg,true);
+  chatHistory.push({role:'user',content:msg});saveChatHistory();
+  input.value='';input.focus();btn.disabled=true;
+  showChatLoading();
+  try{
+    const sys=`You are an expert soccer coach named AMIR for Spin Off, a smart soccer ball tracking system `+
+      `created by Sahil and Skyler. The ball uses a Seeed XIAO nRF52840 Sense with an LSM6DS3 IMU and PDM mic, `+
+      `streaming JSON over Bluetooth. You know about speed, spin, strike quality, personal bests, recommendations, `+
+      `session history, exports and sharing. If asked personal questions about the inventors' decisions, tell the `+
+      `user to ask the inventors at the booth. For how the ball works, point them to the Technology tab. `+
+      `Current stats: Max speed ${sessionData.maxSpeed} mph, Avg ${sessionData.avgSpeed} mph, `+
+      `Max spin ${sessionData.maxSpin} RPM, Total kicks ${sessionData.kicks}, Consistency ${sessionData.consistency}. `+
+      `Be encouraging, specific and concise.`;
+    const reply=await groqChat([{role:'system',content:sys},...chatHistory],500);
+    removeChatLoading();
+    addChatMessage(reply,false);
+    chatHistory.push({role:'assistant',content:reply});
+    if(chatHistory.length>20) chatHistory=chatHistory.slice(-20);
+    saveChatHistory();
+  }catch(err){
+    removeChatLoading();
+    addChatMessage('Sorry, I encountered an error: '+err.message+'. Please try again.',false);
+  }
+  btn.disabled=false;
+}
+document.getElementById('chatInput').addEventListener('keypress',e=>{if(e.key==='Enter')sendChatMessage();});
+
+/* ===================== INIT ===================== */
+window.addEventListener('load',()=>{
+  applyTheme(localStorage.getItem(THEME_KEY)||'light');
+  initCharts();
+  resetSessionData();
+  loadSessionHistory();
+  loadChatHistory();
+  updateDeviceStatus();
+});
+</script>
+</body>
+</html>
