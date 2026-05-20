@@ -40,6 +40,7 @@ body{
 .hero h1{
   font-size:clamp(2.5em,8vw,5em); font-weight:900; color:var(--primary);
   text-transform:uppercase; letter-spacing:.15em; margin-bottom:18px;
+  cursor:pointer; user-select:none;
 }
 .hero-subtitle{font-size:clamp(1em,3vw,1.4em); color:var(--text-muted); font-weight:300; margin-bottom:12px;}
 .hero-tagline{font-size:clamp(.85em,2vw,1.05em); color:var(--primary); font-weight:700; text-transform:uppercase; letter-spacing:.15em;}
@@ -69,9 +70,13 @@ body{
 .page.active{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
 .section-header{text-align:center; margin-bottom:42px;}
-.section-header h2{font-size:clamp(1.8em,5vw,2.8em); color:var(--primary); margin-bottom:12px;}
-.section-header h2::after{content:'';width:80px;height:3px;background:var(--gold);display:block;margin:14px auto 0;}
-.section-header p{color:var(--text-muted); font-size:1.05em;}
+.section-header h2{font-size:clamp(1.8em,5vw,2.8em); color:var(--primary); margin-bottom:12px; cursor:pointer;}
+.section-header h2::after{content:'';width:80px;height:3px;background:var(--gold);display:block;margin:14px auto 0;transition:all .3s;}
+.section-header h2.ball-underline::after{
+  content:'⚽';width:auto;height:auto;background:transparent;font-size:1.2em;
+  animation:spinBall .6s linear infinite;
+}
+@keyframes spinBall{from{transform:rotate(0);}to{transform:rotate(360deg);}}
 .card{
   background:var(--bg-card); border:1px solid var(--border); border-top:4px solid var(--gold);
   border-radius:14px; padding:32px; margin-bottom:26px;
@@ -248,6 +253,16 @@ body{
   background:linear-gradient(135deg,var(--primary),var(--primary-light));
   margin:0 auto 18px;display:flex;align-items:center;justify-content:center;
   font-size:2.8em;font-weight:900;color:#fff;
+  cursor:pointer;user-select:none;transition:transform .3s;
+}
+.team-avatar.celebrate{animation:avatarParty .9s ease;}
+@keyframes avatarParty{
+  0%{transform:scale(1) rotate(0);}
+  20%{transform:scale(1.25) rotate(-15deg);}
+  40%{transform:scale(.9) rotate(15deg);}
+  60%{transform:scale(1.3) rotate(-20deg);box-shadow:0 0 35px var(--gold);}
+  80%{transform:scale(1.05) rotate(10deg);}
+  100%{transform:scale(1) rotate(0);}
 }
 .team-role{color:var(--primary);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:.85em;margin-bottom:12px;}
 /* ============================ AI / CHAT ============================ */
@@ -262,7 +277,7 @@ body{
 .chat-message{display:flex;gap:10px;animation:slideIn .3s ease;}
 @keyframes slideIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 .chat-message.user{justify-content:flex-end;}
-.chat-bubble{max-width:78%;padding:14px 18px;border-radius:12px;line-height:1.5;word-wrap:break-word;}
+.chat-bubble{max-width:78%;padding:14px 18px;border-radius:12px;line-height:1.5;word-wrap:break-word;white-space:pre-wrap;}
 .chat-message.user .chat-bubble{background:var(--primary);color:#fff;border-bottom-right-radius:3px;}
 .chat-message.ai .chat-bubble{background:var(--border);color:var(--text);border-bottom-left-radius:3px;}
 .chat-help{color:var(--text-muted);font-size:.9em;line-height:1.6;margin:0 18px 16px;}
@@ -313,6 +328,178 @@ body{
 .corner-arc-br{bottom:0;right:0;border-radius:100% 0 0 0;border-bottom:none;border-right:none;}
 .shot-marker{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--primary);border:3px solid var(--gold);transform:translate(-50%,-50%);z-index:60;}
 .shot-line{position:absolute;height:4px;background:linear-gradient(90deg,#ffdd00,#ff8800);transform-origin:0 0;z-index:50;}
+
+/* ============================ EASTER EGG EFFECTS ============================ */
+.falling-ball{
+  position:fixed;top:-50px;font-size:2em;z-index:9998;pointer-events:none;
+  animation:ballFall linear forwards;
+}
+@keyframes ballFall{
+  0%{transform:translateY(0) rotate(0);opacity:1;}
+  100%{transform:translateY(110vh) rotate(720deg);opacity:.85;}
+}
+.secret-toast{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.5);
+  background:linear-gradient(135deg,var(--gold),var(--primary));
+  color:#fff;padding:22px 38px;border-radius:18px;font-weight:900;
+  font-size:1.4em;text-transform:uppercase;letter-spacing:.1em;
+  box-shadow:0 12px 50px rgba(0,0,0,.5);z-index:9999;
+  opacity:0;transition:all .4s cubic-bezier(.2,1.4,.4,1);text-align:center;
+}
+.secret-toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+.floating-msg{
+  position:fixed;background:linear-gradient(135deg,var(--primary),var(--gold));
+  color:#fff;padding:14px 26px;border-radius:50px;font-weight:800;
+  letter-spacing:.08em;text-transform:uppercase;font-size:.95em;
+  box-shadow:0 8px 30px rgba(0,0,0,.4);z-index:9999;pointer-events:none;
+  animation:floatUp 2.4s ease forwards;
+}
+@keyframes floatUp{
+  0%{opacity:0;transform:translateY(20px) scale(.7);}
+  20%{opacity:1;transform:translateY(0) scale(1);}
+  80%{opacity:1;transform:translateY(-30px) scale(1);}
+  100%{opacity:0;transform:translateY(-60px) scale(.9);}
+}
+.idle-ball{
+  position:fixed;bottom:30px;left:-80px;font-size:3em;z-index:50;
+  pointer-events:none;animation:idleBounce 14s linear forwards;
+}
+@keyframes idleBounce{
+  0%{left:-80px;bottom:30px;transform:rotate(0);}
+  10%{bottom:120px;}
+  20%{bottom:30px;}
+  30%{bottom:140px;}
+  40%{bottom:30px;}
+  50%{bottom:130px;}
+  60%{bottom:30px;}
+  70%{bottom:120px;}
+  80%{bottom:30px;}
+  90%{bottom:110px;}
+  100%{left:110vw;bottom:30px;transform:rotate(1800deg);}
+}
+
+/* ============================ DARK MODE GLOW EFFECTS ============================ */
+[data-theme="dark"] .hero h1{
+  text-shadow:0 0 25px rgba(224,86,74,.6),0 0 55px rgba(224,86,74,.35);
+}
+[data-theme="dark"] .hero-tagline{
+  text-shadow:0 0 12px rgba(224,86,74,.5);
+}
+[data-theme="dark"] .nav-btn.active{
+  box-shadow:0 0 22px rgba(224,86,74,.55),0 4px 15px var(--shadow);
+}
+[data-theme="dark"] .nav-btn:hover{
+  box-shadow:0 0 14px rgba(224,86,74,.35);
+}
+[data-theme="dark"] .theme-toggle{
+  box-shadow:0 0 14px rgba(212,185,120,.4);
+}
+[data-theme="dark"] .section-header h2{
+  text-shadow:0 0 18px rgba(224,86,74,.45);
+}
+[data-theme="dark"] .section-header h2::after{
+  box-shadow:0 0 12px var(--gold),0 0 24px rgba(212,185,120,.4);
+}
+[data-theme="dark"] .card{
+  box-shadow:0 10px 30px var(--shadow),0 0 0 1px rgba(212,185,120,.08);
+}
+[data-theme="dark"] .card:hover{
+  box-shadow:0 16px 40px var(--shadow),0 0 22px rgba(224,86,74,.18);
+}
+[data-theme="dark"] .stat-card .value,
+[data-theme="dark"] .card h3,
+[data-theme="dark"] .card h2{
+  text-shadow:0 0 15px rgba(224,86,74,.45);
+}
+[data-theme="dark"] .stat-card:hover{
+  box-shadow:0 0 22px rgba(224,86,74,.35);
+}
+[data-theme="dark"] .metric-value{
+  filter:drop-shadow(0 0 14px rgba(224,86,74,.55));
+}
+[data-theme="dark"] .metric-card:hover{
+  box-shadow:0 0 22px rgba(224,86,74,.3);
+}
+[data-theme="dark"] .gauge{
+  box-shadow:0 0 30px rgba(224,86,74,.35);
+}
+[data-theme="dark"] .gauge-inner .gv{
+  text-shadow:0 0 14px rgba(224,86,74,.55);
+}
+[data-theme="dark"] .kick-icon{
+  box-shadow:0 0 30px rgba(212,185,120,.45);
+}
+[data-theme="dark"] .kick-info .kick-type{
+  text-shadow:0 0 16px rgba(224,86,74,.5);
+}
+[data-theme="dark"] .kick-power .num{
+  text-shadow:0 0 18px rgba(212,185,120,.6);
+}
+[data-theme="dark"] .pb-card .pbv{
+  text-shadow:0 0 14px rgba(212,185,120,.55);
+}
+[data-theme="dark"] .pb-card.flash{
+  box-shadow:0 0 35px var(--gold),0 0 65px rgba(212,185,120,.5);
+}
+[data-theme="dark"] .pb-banner.show{
+  box-shadow:0 0 30px rgba(212,185,120,.5);
+}
+[data-theme="dark"] .connect-btn{
+  box-shadow:0 0 22px rgba(224,86,74,.45),0 5px 20px var(--shadow);
+}
+[data-theme="dark"] .connect-btn:hover:not(:disabled){
+  box-shadow:0 0 32px rgba(224,86,74,.65),0 8px 30px var(--shadow);
+}
+[data-theme="dark"] .connect-btn.connected{
+  box-shadow:0 0 25px rgba(52,211,153,.55);
+}
+[data-theme="dark"] .btn:hover{
+  box-shadow:0 0 18px rgba(212,185,120,.5);
+}
+[data-theme="dark"] .btn-primary{
+  box-shadow:0 0 14px rgba(224,86,74,.35);
+}
+[data-theme="dark"] .btn-primary:hover{
+  box-shadow:0 0 22px rgba(224,86,74,.6);
+}
+[data-theme="dark"] .status-indicator{
+  box-shadow:0 0 10px var(--bad),0 0 18px rgba(248,113,113,.5);
+}
+[data-theme="dark"] .status-indicator.connected{
+  box-shadow:0 0 12px var(--good),0 0 22px rgba(52,211,153,.6);
+}
+[data-theme="dark"] .meter-fill{
+  box-shadow:0 0 14px rgba(34,197,94,.55);
+}
+[data-theme="dark"] .badge.clean{box-shadow:0 0 12px rgba(52,211,153,.4);}
+[data-theme="dark"] .badge.off_center{box-shadow:0 0 12px rgba(251,191,36,.4);}
+[data-theme="dark"] .badge.mishit{box-shadow:0 0 12px rgba(248,113,113,.4);}
+[data-theme="dark"] .team-avatar{
+  box-shadow:0 0 28px rgba(224,86,74,.55);
+}
+[data-theme="dark"] .timeline-dot{
+  box-shadow:0 0 16px var(--primary),0 0 28px rgba(224,86,74,.5);
+}
+[data-theme="dark"] .feature-card:hover,
+[data-theme="dark"] .team-card:hover{
+  box-shadow:0 0 28px rgba(224,86,74,.35);
+}
+[data-theme="dark"] .alert.show{
+  box-shadow:0 0 30px rgba(224,86,74,.55);
+}
+[data-theme="dark"] .chat-message.user .chat-bubble{
+  box-shadow:0 0 14px rgba(224,86,74,.4);
+}
+[data-theme="dark"] .ai-spinner{
+  box-shadow:0 0 14px rgba(224,86,74,.5);
+}
+[data-theme="dark"] .ai-response{
+  box-shadow:inset 0 0 18px rgba(224,86,74,.12);
+}
+[data-theme="dark"] .shot-marker{
+  box-shadow:0 0 14px var(--gold),0 0 24px rgba(212,185,120,.5);
+}
+
 /* ============================ MOBILE ============================ */
 @media(max-width:768px){
   .hero{padding:60px 16px 46px;}
@@ -333,7 +520,7 @@ body{
 </head>
 <body>
 <div class="hero">
-  <h1>SPIN OFF</h1>
+  <h1 id="heroTitle">SPIN OFF</h1>
   <p class="hero-subtitle">Professional Soccer Ball Analytics System</p>
   <p class="hero-tagline">Powered by AI • Built by Skyler and Sahil</p>
 </div>
@@ -652,13 +839,15 @@ body{
   <div id="team" class="page">
     <div class="section-header"><h2>Meet the Inventors</h2><p>7th Grade Students | Invention Convention 2026</p></div>
     <div class="grid-2">
-      <div class="team-card"><div class="team-avatar">S</div><h3>Sahil</h3><div class="team-role">Co-Inventor &amp; Software Developer</div><p>Passionate about electronics and sports technology. Led the hardware integration, sensor calibration, and Arduino programming.</p></div>
-      <div class="team-card"><div class="team-avatar">S</div><h3>Skyler</h3><div class="team-role">Co-Inventor &amp; Testing Lead</div><p>Enthusiastic about the build and led the testing. Dedicated to making professional sports analytics accessible to everyone.</p></div>
+      <div class="team-card"><div class="team-avatar" data-name="Sahil">S</div><h3>Sahil</h3><div class="team-role">Co-Inventor &amp; Software Developer</div><p>Passionate about electronics and sports technology. Led the hardware integration, sensor calibration, and Arduino programming.</p></div>
+      <div class="team-card"><div class="team-avatar" data-name="Skyler">S</div><h3>Skyler</h3><div class="team-role">Co-Inventor &amp; Testing Lead</div><p>Enthusiastic about the build and led the testing. Dedicated to making professional sports analytics accessible to everyone.</p></div>
     </div>
     <div class="card"><h3 class="center">Our Mission</h3><p class="center">We created Spin Off because professional-level sports analytics shouldn't be limited to elite athletes with expensive equipment. Every player deserves data-driven insights to improve technique, track progress, and reach their goals. By combining affordable hardware with powerful AI, we're making sports analytics accessible to players of all levels.</p></div>
     <div class="card"><h3 class="center">The Journey</h3><p><strong>October 2025:</strong> Initial concept — "What if we could track soccer ball data like professional teams?"<br><br><strong>November 2025:</strong> Research phase — choosing the best parts for the build.<br><br><strong>December 2025:</strong> Prototype 1 — basic Arduino setup with accelerometer readings.<br><br><strong>January 2026:</strong> Final version — added a gyroscope, microphone, web app and AI coaching.</p></div>
   </div>
 </div>
+
+<div id="secretToast" class="secret-toast"></div>
 
 <script>
 /* ====================================================================
@@ -859,19 +1048,14 @@ function handleData(event){
     rxBuffer=rxBuffer.slice(idx+1);
     if(line) processPacket(line);
   }
-  if(rxBuffer.length>8000) rxBuffer='';   /* safety against runaway buffer */
+  if(rxBuffer.length>8000) rxBuffer='';
 }
 function processPacket(line){
   let json;
   try{ json=JSON.parse(line); }
   catch(e){ console.warn('Bad packet (ignored):',line); return; }
-
-  if(json.battery && !json.kick){          /* periodic battery-only packet */
-    updateBattery(json.battery);
-  }
-  if(json.kick){                            /* full kick packet            */
-    handleKickPacket(json);
-  }
+  if(json.battery && !json.kick){ updateBattery(json.battery); }
+  if(json.kick){ handleKickPacket(json); }
   sessionData.lastUpdate=new Date().toLocaleString();
   document.getElementById('lastUpdateText').textContent=sessionData.lastUpdate;
   updateDeviceStatus();
@@ -893,7 +1077,6 @@ function handleKickPacket(j){
   };
   allKicks.push(k);
 
-  /* ----- session aggregates ----- */
   sessionData.speeds.push(k.speedMph);
   sessionData.spins.push(k.spinRPM);
   sessionData.angles.push(k.launchAngle);
@@ -913,7 +1096,6 @@ function handleKickPacket(j){
   sessionData.maxSpeed=Math.max(Number(sessionData.maxSpeed),k.speedMph).toFixed(1);
   sessionData.maxSpin=Math.round(Math.max(Number(sessionData.maxSpin),k.spinRPM));
 
-  /* ----- UI updates ----- */
   updateCurrentKick(k);
   updateLiveMetrics(k);
   updateQuickStats();
@@ -1330,6 +1512,58 @@ async function sendChatMessage(){
   addChatMessage(msg,true);
   chatHistory.push({role:'user',content:msg});saveChatHistory();
   input.value='';input.focus();btn.disabled=true;
+
+  /* -------- EASTER EGG: secret chat commands -------- */
+  const lower=msg.toLowerCase().trim();
+  if(lower==='who made this'||lower.includes('who built this')||lower.includes('who created this')){
+    setTimeout(()=>{
+      const reply="Sahil and Skyler made this! They're 7th-grade inventors who built Spin Off "+
+        "for Invention Convention 2026 — Sahil led the hardware, sensor calibration, and firmware, "+
+        "while Skyler led the build and testing. Pretty proud of them honestly. 🌟⚽";
+      addChatMessage(reply,false);
+      chatHistory.push({role:'assistant',content:reply});saveChatHistory();
+      btn.disabled=false;
+      ballRain(30);
+    },600);
+    return;
+  }
+  if(lower==='godmode'||lower==='god mode'||lower==='/godmode'){
+    setTimeout(()=>{
+      const reply="GODMODE activated. Firing 8 legendary kicks at the live tracker… "+
+        "head over to the Live Tracker tab to watch the carnage. ⚡⚽";
+      addChatMessage(reply,false);
+      chatHistory.push({role:'assistant',content:reply});saveChatHistory();
+      btn.disabled=false;
+      showSecretToast('⚡ GODMODE ACTIVATED ⚡');
+      activateGodmode();
+    },500);
+    return;
+  }
+  if(lower==='roast me'||lower==='/roast'){
+    showChatLoading();
+    try{
+      const sys=`You are a sassy but genuinely encouraging soccer coach for Spin Off. The player asked to be roasted. `+
+        `Give them ONE funny, light-hearted, playful roast (2-3 sentences) about their stats, then end with a `+
+        `genuine encouraging line. Keep it school-appropriate, silly, and warm — no mean-spirited comments. `+
+        `Stats: Max speed ${sessionData.maxSpeed} mph, Avg ${sessionData.avgSpeed} mph, Max spin ${sessionData.maxSpin} RPM, `+
+        `Total kicks ${sessionData.kicks}, Consistency ${sessionData.consistency}.`;
+      const reply=await groqChat([{role:'system',content:sys},{role:'user',content:'Roast me!'}],300);
+      removeChatLoading();
+      addChatMessage(reply,false);
+      chatHistory.push({role:'assistant',content:reply});saveChatHistory();
+    }catch(err){
+      removeChatLoading();
+      const fallback=sessionData.kicks===0
+        ? "Zero kicks logged? Bold strategy — roasting an empty session is like grading a blank test. Go kick the ball, champ! ⚽"
+        : `${sessionData.avgSpeed} mph average? My grandma's garden sprinkler has more zip. Just kidding — keep grinding, you're getting there! 💪`;
+      addChatMessage(fallback,false);
+      chatHistory.push({role:'assistant',content:fallback});saveChatHistory();
+    }
+    btn.disabled=false;
+    return;
+  }
+  /* -------- end easter eggs -------- */
+
   showChatLoading();
   try{
     const sys=`You are an expert soccer coach named AMIR for Spin Off, a smart soccer ball tracking system `+
@@ -1353,6 +1587,197 @@ async function sendChatMessage(){
   btn.disabled=false;
 }
 document.getElementById('chatInput').addEventListener('keypress',e=>{if(e.key==='Enter')sendChatMessage();});
+
+/* ============================================================
+   ===================== EASTER EGGS ==========================
+   ============================================================ */
+
+/* ---------- Triple-click SPIN OFF title → ball rain ---------- */
+(function(){
+  const heroTitle=document.getElementById('heroTitle');
+  let clicks=0,timer;
+  heroTitle.addEventListener('click',()=>{
+    clicks++;
+    clearTimeout(timer);
+    timer=setTimeout(()=>clicks=0,600);
+    if(clicks>=3){
+      clicks=0;
+      ballRain(45);
+      showSecretToast('⚽ GOOOOAL ⚽');
+    }
+  });
+})();
+
+function ballRain(count){
+  const balls=['⚽','⚽','⚽','🥅','⭐'];
+  for(let i=0;i<count;i++){
+    const b=document.createElement('div');
+    b.className='falling-ball';
+    b.textContent=balls[Math.floor(Math.random()*balls.length)];
+    b.style.left=Math.random()*100+'vw';
+    const dur=2.5+Math.random()*2.5;
+    b.style.animationDuration=dur+'s';
+    b.style.fontSize=(1.4+Math.random()*1.6)+'em';
+    b.style.animationDelay=Math.random()*1.2+'s';
+    document.body.appendChild(b);
+    setTimeout(()=>b.remove(),(dur+1.5)*1000);
+  }
+}
+
+/* ---------- Click team avatars 5 times → celebration ---------- */
+(function(){
+  const avatars=document.querySelectorAll('.team-avatar');
+  const counts=new WeakMap();
+  avatars.forEach(av=>{
+    counts.set(av,0);
+    let resetTimer;
+    av.addEventListener('click',()=>{
+      const n=(counts.get(av)||0)+1;
+      counts.set(av,n);
+      clearTimeout(resetTimer);
+      resetTimer=setTimeout(()=>counts.set(av,0),1500);
+      av.classList.remove('celebrate');
+      void av.offsetWidth;
+      av.classList.add('celebrate');
+      if(n>=5){
+        counts.set(av,0);
+        showSecretToast('🇮🇳 Tibet × India Collab 🇹🇧');
+        ballRain(20);
+      }
+    });
+  });
+})();
+
+/* ---------- Click section header → underline becomes spinning ball ---------- */
+(function(){
+  document.querySelectorAll('.section-header h2').forEach(h=>{
+    h.addEventListener('click',()=>{
+      h.classList.add('ball-underline');
+      setTimeout(()=>h.classList.remove('ball-underline'),2400);
+    });
+  });
+})();
+
+/* ---------- Type 'sahil' or 'skyler' anywhere → floating message ---------- */
+(function(){
+  let buffer='';
+  document.addEventListener('keydown',(e)=>{
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+    if(e.key.length===1) buffer+=e.key.toLowerCase();
+    if(buffer.length>20) buffer=buffer.slice(-20);
+    if(buffer.endsWith('sahil')){
+      floatingMessage('🌟 Co-inventor Sahil detected!');
+      buffer='';
+    }else if(buffer.endsWith('skyler')){
+      floatingMessage('🌟 Co-inventor Skyler detected!');
+      buffer='';
+    }
+  });
+})();
+
+function floatingMessage(text){
+  const m=document.createElement('div');
+  m.className='floating-msg';
+  m.textContent=text;
+  m.style.left=(20+Math.random()*60)+'vw';
+  m.style.top=(30+Math.random()*30)+'vh';
+  document.body.appendChild(m);
+  setTimeout(()=>m.remove(),2500);
+}
+
+function showSecretToast(text){
+  const t=document.getElementById('secretToast');
+  t.textContent=text;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+/* ---------- Idle 60s → bouncing ball across screen ---------- */
+(function(){
+  let idleTimer;
+  function resetIdle(){
+    clearTimeout(idleTimer);
+    idleTimer=setTimeout(launchIdleBall,60000);
+  }
+  function launchIdleBall(){
+    const b=document.createElement('div');
+    b.className='idle-ball';
+    b.textContent='⚽';
+    document.body.appendChild(b);
+    setTimeout(()=>b.remove(),14500);
+    resetIdle();
+  }
+  ['mousemove','keydown','click','scroll','touchstart'].forEach(ev=>{
+    document.addEventListener(ev,resetIdle,{passive:true});
+  });
+  resetIdle();
+})();
+
+/* ---------- Midnight auto dark mode ---------- */
+(function(){
+  function checkMidnight(){
+    const h=new Date().getHours();
+    if(h===0 && localStorage.getItem('midnightTriggered')!==todayKey()){
+      localStorage.setItem('midnightTriggered',todayKey());
+      applyTheme('dark');
+      showSecretToast('🌙 Night Training Mode Activated 🌙');
+    }
+  }
+  function todayKey(){const d=new Date();return d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();}
+  checkMidnight();
+  setInterval(checkMidnight,60000);
+})();
+
+/* ---------- GODMODE simulated kicks ---------- */
+function activateGodmode(){
+  document.getElementById('dataDisplay').style.display='block';
+  document.getElementById('noData').style.display='none';
+  switchPage('tracker');
+  const classes=['power_shot','curve_ball','power_shot','power_shot','curve_ball','chip_shot','power_shot','header'];
+  const axes=['topspin','sidespin_left','topspin','sidespin_right','topspin','backspin','topspin','topspin'];
+  let i=0;
+  const fire=()=>{
+    if(i>=8) return;
+    const baseSpeed=70+Math.random()*30;
+    const baseSpin=280+Math.random()*60;
+    const power=88+Math.floor(Math.random()*12);
+    const strike=90+Math.floor(Math.random()*10);
+    const fakePacket={
+      kick:{number:(allKicks.length+1),timestamp:Date.now(),
+            classification:classes[i],powerScore:power},
+      impact:{peakG:14+Math.random()*2,clipped:Math.random()>.5},
+      motion:{speedMph:baseSpeed,speedKmh:baseSpeed*1.609,
+              launchAngle:18+Math.random()*20,flightTimeMs:1200+Math.random()*900,
+              curlDegrees:5+Math.random()*15},
+      spin:{rateRPM:baseSpin,clipped:false,axis:axes[i],mixedSpin:Math.random()>.7},
+      strike:{quality:strike,classification:'clean',
+              intensity:80+Math.floor(Math.random()*20),contactMs:6+Math.floor(Math.random()*5)},
+      session:{totalKicks:allKicks.length+1,
+               avgSpeedMph:((allKicks.reduce((s,k)=>s+k.speedMph,0)+baseSpeed)/(allKicks.length+1)),
+               consistencyScore:85+Math.floor(Math.random()*15),
+               improvementTrend:'improving'},
+      personalBests:{
+        speedMph:Math.max(personalBests.speedMph,baseSpeed).toFixed(1),
+        powerScore:Math.max(personalBests.powerScore,power),
+        spinRPM:Math.round(Math.max(personalBests.spinRPM,baseSpin)),
+        strikeQuality:Math.max(personalBests.strikeQuality,strike),
+        newBestBroken:i===0||i===3||i===6,
+        whichBest:['speedMph','powerScore','spinRPM','strikeQuality'][i%4]
+      },
+      recommendations:i===4?[
+        'GODMODE detected: technique flawless ⚡',
+        'Maintain superhuman consistency.',
+        'Consider turning pro. Today.'
+      ]:null
+    };
+    handleKickPacket(fakePacket);
+    if((i+1)%2===0) ballRain(15);
+    i++;
+    setTimeout(fire,900);
+  };
+  setTimeout(fire,600);
+}
 
 /* ===================== INIT ===================== */
 window.addEventListener('load',()=>{
