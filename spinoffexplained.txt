@@ -1,349 +1,2371 @@
-// Welcome to the 2026 Invention Convention. Here is the code for the Arduino inside the ball that is collecting all the data. We have made an effort to make the text easy to read by including comments that describe the function of each line. Have fun!
-//IF you have any questions about what each line does more specifially, feel free to ask!
+// ============================================================================
+//  SPIN OFF — Arduino Firmware v2.1
+//  Created by Sahil & Skyler | 7th Grade | Invention Convention 2026
+//
+//  Welcome! This is the code that runs inside the soccer ball.
+//  Every line has a comment explaining what it does in plain English.
+//  You do not need to know how to code to follow along — just read the
+//  comments (the green text that starts with //) and they will walk you
+//  through exactly how Spin Off works from the inside.
+// ============================================================================
 
-#include <Arduino_BMI270_BMM150.h>  // Library for reading accelerometer & gyroscope
-#include <ArduinoBLE.h>             // Library to handle Bluetooth Low Energy (BLE)
+
+// ---- LIBRARIES (pre-built toolboxes we plug into our code) -----------------
+
+#include <Wire.h>
+// Wire lets the Arduino talk to other chips using two wires (called I2C).
+// We use it to communicate with the motion sensor inside the ball.
+
+#include "LSM6DS3.h"
+// This is the driver for our specific motion sensor — the LSM6DS3.
+// It gives us ready-made functions to read acceleration and rotation.
+
+#include <ArduinoBLE.h>
+// BLE = Bluetooth Low Energy. This library lets the Arduino send data
+// wirelessly to a phone or computer without draining the battery quickly.
+
+#include <PDM.h>
+// PDM = Pulse Density Modulation — the type of microphone built into the board.
+// This library lets us read sound data from the microphone inside the ball.
+
+#include <math.h>
+// A standard math library. Gives us functions like square root (sqrt),
+// sine (sin), and arctangent (atan2) that we need for physics calculations.
 
 
-// -------------------- BLE Setup --------------------
-BLEService spinOffService("19b10000-e8f2-537e-4f6c-d104768a1214"); // Create a BLE service
-BLECharacteristic speedChar("19b10001-e8f2-537e-4f6c-d104768a1214", BLERead | BLENotify, 50);  // BLE for speed
-BLECharacteristic spinChar("19b10002-e8f2-537e-4f6c-d104768a1214", BLERead | BLENotify, 50);   // BLE for spin
-BLECharacteristic statsChar("19b10003-e8f2-537e-4f6c-d104768a1214", BLERead | BLENotify, 100); // BLE for stats
-BLECharacteristic modeChar("19b10004-e8f2-537e-4f6c-d104768a1214", BLERead | BLEWrite | BLENotify, 20); // BLE for mode
+// ---- FLASH MEMORY (saving personal bests between sessions) -----------------
 
-// -------------------- IMU Variables --------------------
-float accelX, accelY, accelZ;   // Raw accelerometer readings (X, Y, Z axis)
-float gyroX, gyroY, gyroZ;      // Raw gyroscope readings (rotation rates X, Y, Z)
-float velocityX = 0, velocityY = 0, velocityZ = 0; // Integrated velocities (simple physics)
-float speed = 0;                // Combined speed magnitude
-float spinRate = 0;             // Spin of ball in RPM
-float maxSpeedDuringKick = 0;   // Max speed during current kick
-float maxSpinDuringKick = 0;    // Max spin during current kick
+#define ENABLE_PERSISTENCE 0
+// This is a switch: 0 = OFF, 1 = ON.
+// When ON, the ball saves your personal bests to the Arduino's built-in
+// flash memory so they survive when the ball is turned off and back on.
+// We keep it OFF for now because the flash write code is extra complexity.
 
-unsigned long lastTime = 0;     // Timestamp of last loop iteration
-float deltaTime = 0;            // Time difference in seconds
+#if ENABLE_PERSISTENCE
+  #include "FlashIAP.h"
+  // FlashIAP is the library that lets us write data to the Arduino's
+  // long-term storage (like a tiny hard drive soldered onto the chip).
+  #define FLASH_STORE_ADDR 0xC0000UL
+  // This is the specific address in memory where we store personal bests.
+  // Think of it like a locker number — the data goes in locker 0xC0000.
+#endif
 
-// -------------------- Kick Detection Variables --------------------
-float prevAccelMag = 9.81;      // Previous acceleration magnitude (used to detect CHANGE)
-const float kickChangeThreshold = 3.0; // Acceleration change threshold for detecting a kick
-bool kickDetected = false;      // Flag to track if a kick is currently detected
-unsigned long kickTime = 0;     // Time when kick was detected
 
-const float movementThreshold = 0.5; // Threshold to determine if ball is still moving
-unsigned long lastMovementTime = 0;  // Time of last detected movement
-const unsigned long stoppedDuration = 1000; // How long to wait before considering ball stopped (ms)
-bool ballStopped = false;       // Flag for if ball has stopped
-bool dataAlreadySent = false;   // Flag to prevent sending the same kick multiple times
+// ---- STATE MACHINE (the ball's "mode" at any given moment) -----------------
 
-// -------------------- Flight Variables --------------------
-bool inFlight = false;           // Is the ball in the air?
-unsigned long flightStartTime = 0; // When ball left the ground
-unsigned long flightDuration = 0;  // How long the ball was in the air
+enum State {
+  // An "enum" is just a list of named numbers. Instead of remembering
+  // that state 0 = waiting and state 3 = measuring spin, we give each
+  // state a clear name so the code reads like plain English.
 
-// -------------------- Stats Tracking --------------------
-int kickCount = 0;               // Number of kicks recorded
-float maxSpeed = 0;              // Max speed across all kicks
-float totalSpeed = 0;            // Sum of all speeds (for calculating average)
-float avgSpeed = 0;              // Average speed
-float maxSpin = 0;               // Max spin across all kicks
-float impactForce = 0;           // Impact acceleration at kick
-float launchAngle = 0;           // Estimated launch angle
+  S_IDLE,
+  // IDLE: The ball is sitting still, waiting for someone to kick it.
+  // In this mode it constantly re-calibrates gravity and temperature.
 
-// -------------------- BLE & Mode --------------------
-String currentMode = "PRACTICE"; // Default mode
-bool isConnected = false;        // BLE connection status
-unsigned long lastKickTime = 0;  // Time of last kick
-const unsigned long kickCooldown = 2000; // Minimum time between kicks (ms)
+  S_DETECTING,
+  // DETECTING: The ball felt something above 5G of force — it might be a kick.
+  // The firmware is now watching carefully for 160 milliseconds to decide
+  // if this was really a kick or just someone picking the ball up.
 
-// -------------------- Setup Function --------------------
+  S_KICK_DETECTED,
+  // KICK DETECTED: The firmware confirmed this was a real kick.
+  // It is now waiting for the microphone capture window to finish
+  // before moving on to spin measurement.
+
+  S_SPIN_SAMPLING,
+  // SPIN SAMPLING: The ball is in the air (or just left the foot).
+  // We wait 20ms for vibrations to settle, then sample the gyroscope
+  // for 60ms to get an accurate spin reading.
+
+  S_ANALYZING,
+  // ANALYZING: All raw data has been collected. The firmware now runs
+  // the physics and AI calculations to turn numbers into meaningful stats.
+
+  S_SENDING
+  // SENDING: The results have been calculated. The firmware is now
+  // transmitting the data over Bluetooth to the web app.
+};
+
+
+// ---- TUNING CONSTANTS (values we tested and dialed in on the field) --------
+// These are not random numbers — each one was chosen after real testing.
+// Changing them would affect how the ball detects and measures kicks.
+
+#define ALPHA_IDLE      0.35f
+// The "smoothing strength" of our noise filter when the ball is sitting still.
+// 0.35 means each new reading is 35% new data and 65% the running average.
+// This heavily smooths out tiny vibrations when the ball isn't moving.
+
+#define ALPHA_IMPACT    0.85f
+// The smoothing strength during a kick.
+// 0.85 means 85% new data — the filter is almost transparent so we
+// capture the true peak force of the kick without missing it.
+
+#define ALPHA_SPIN      0.50f
+// The smoothing strength while measuring spin after the kick.
+// 0.50 is a middle-ground that reduces noise while still tracking spin well.
+
+#define ACCEL_RANGE_G        16
+// The accelerometer is set to measure up to ±16G of force.
+// (1G = the force of gravity. A hard soccer kick can exceed 10G briefly.)
+
+#define GYRO_RANGE_DPS       2000
+// The gyroscope measures rotation up to ±2000 degrees per second.
+// A ball with heavy spin can rotate several hundred degrees per second.
+
+#define RPM_HARDWARE_LIMIT   333.0f
+// At 2000 degrees/second, the maximum RPM the gyroscope can measure is 333.
+// If we read anything at or above this, we flag it as "clipped" (maxed out).
+
+#define G_CLIP_LIMIT         15.0f
+// If the accelerometer reads above 15G, we consider it clipped/maxed out
+// and flag the reading so the user knows the true peak may have been higher.
+
+#define KICK_ENTER_G         5.0f
+// The ball needs to feel at least 5G of force before it even considers
+// that a kick might be happening. Light touches won't trigger anything.
+
+#define KICK_CONFIRM_G       7.0f
+// To actually confirm a kick, the peak must reach 7G during the detection
+// window. This is the "second hurdle" that filters out gentle bumps.
+
+#define KICK_GYRO_CONFIRM    150.0f
+// A kick also needs at least 150 degrees/second of rotation to be confirmed.
+// A real kick spins the ball; picking it up or dropping it does not.
+
+#define KICK_RELEASE_G       2.5f
+// After spiking above KICK_ENTER_G, the acceleration must drop back below
+// 2.5G before we start counting threshold crossings again.
+
+#define KICK_SETTLE_G        3.0f
+// By the end of the 160ms detection window, the acceleration must be below
+// 3G — meaning the kick event is over and the ball is travelling freely.
+
+#define KICK_MAX_CROSSINGS   1
+// A real clean kick crosses the KICK_ENTER_G threshold exactly once
+// (up, then down). Bouncing or shaking the ball causes multiple crossings.
+// We reject anything with more than 1 crossing to avoid false detections.
+
+#define DETECT_WINDOW_MS     160UL
+// After the ball first feels 5G, we observe for 160 milliseconds before
+// deciding if it was a real kick. 160ms is long enough to capture the full
+// impact but short enough that we don't delay the measurement.
+
+#define STRIKE_WINDOW_MS     70UL
+// The microphone records sound for 70 milliseconds starting at kick detection.
+// Foot-to-ball contact typically lasts 8–15ms, so 70ms captures the full
+// acoustic signature plus a small buffer on each side.
+
+#define REFRACTORY_MS        600UL
+// After a kick is processed, the ball ignores new kicks for 600 milliseconds.
+// This prevents one kick from being counted twice as the ball bounces away.
+
+#define SPIN_SETTLE_MS       20UL
+// We wait 20 milliseconds after the kick before measuring spin.
+// This lets the vibration from the impact die down so we read the true
+// free-spinning rotation of the ball in the air.
+
+#define SPIN_SAMPLE_MS       60UL
+// After the 20ms settle, we average the gyroscope over 60ms.
+// Averaging many readings gives a more accurate spin rate than one snapshot.
+
+#define SPEED_MAX_MPH        70.0f
+// The maximum speed we will ever report is 70 mph.
+// This caps obviously wrong values from sensor noise or clipping.
+
+#define SPEED_GAIN           1.15f
+// A 15% calibration multiplier applied to the integrated speed.
+// Real-world testing showed our integration slightly underestimates
+// the actual ball speed, so we scale it up by this factor.
+
+#define K_IMPULSE            4.0f
+// A backup speed estimate based on peak G-force × this constant.
+// Used only as a small secondary input when the main integration is limited.
+
+#define SPEED_BLEND          1.0f
+// How much of the final speed comes from the integration method vs impulse.
+// 1.0 = 100% integration, 0% impulse. We trust the integration fully.
+
+#define MS_TO_MPH            2.2369362920544f
+// Converts meters-per-second to miles-per-hour.
+// (1 m/s × 2.237 = 2.237 mph)
+
+#define REST_ACCEL_TOL       0.35f
+// When the ball is still, the measured acceleration should equal exactly 1G
+// (just gravity). If it's within 0.35G of that, we consider the ball at rest
+// and use the reading to slowly improve our gravity estimate.
+
+#define REST_GYRO_TOL        20.0f
+// If the gyroscope reads less than 20 degrees/second, the ball is not rotating.
+// Combined with REST_ACCEL_TOL, both conditions must be true to trigger
+// the live re-calibration.
+
+#define REST_ADAPT           0.03f
+// The speed at which the live calibration updates. 0.03 = 3% per sample.
+// Small enough to be stable, big enough to track slow changes like temperature.
+
+#define GYRO_OFFSET_TC       0.010f
+// Gyroscopes drift slightly as they warm up. This temperature coefficient
+// (TC) lets us correct the gyro bias based on the current temperature.
+
+#define TEMP_READ_MS         5000UL
+// Read the IMU's built-in temperature sensor every 5 seconds to keep the
+// temperature-based gyro correction accurate throughout a session.
+
+#define BATTERY_LOW_PCT      20
+// If the battery drops to 20% or below, set a low-battery flag so the
+// web app can warn the user.
+
+#define BATTERY_SEND_MS      60000UL
+// Send a battery update over Bluetooth every 60 seconds so the app can
+// keep its battery indicator current without us spamming the connection.
+
+#define RECOMMEND_EVERY      5
+// Generate new training recommendations after every 5 kicks.
+// This gives AMIR enough data to spot patterns before giving advice.
+
+#define MAX_TRACK            80
+// Keep a rolling history of the last 80 kicks for session analysis.
+// This lets us calculate consistency scores and improvement trends.
+
+#define BLE_CHUNK_SIZE       160
+// Bluetooth Low Energy has a limit on how much data fits in one packet.
+// We break our JSON data into 160-byte chunks and send them one at a time.
+
+#define BLE_CHUNK_GAP_MS     20UL
+// Wait 20 milliseconds between each chunk.
+// This gives the receiving device time to process each piece before
+// the next one arrives, preventing data loss.
+
+#define CONTACT_THRESH_MIN   200
+// The microphone threshold is never set below this value.
+// Prevents the calibration from making the mic too sensitive (false triggers).
+
+#define CONTACT_THRESH_MAX   2000
+// The microphone threshold is never set above this value.
+// Prevents it from being set so high that real kicks are missed.
+
+#define ZCR_HYST_AMP         150
+// Hysteresis amplitude for zero-crossing counting in the audio signal.
+// Only counts a crossing if the signal was meaningfully above/below zero
+// (not just tiny noise fluctuations). This makes strike quality more accurate.
+
+// ---- BATTERY PIN SETUP (how we read the battery voltage) ------------------
+
+#if defined(PIN_VBAT)
+  static const int BATTERY_ADC_PIN = PIN_VBAT;
+  // If this Arduino board has a dedicated battery voltage pin (PIN_VBAT),
+  // use it. This is the case for the Arduino Nano 33 BLE Sense.
+#else
+  static const int BATTERY_ADC_PIN = A0;
+  // Otherwise fall back to analog pin A0 as the battery measurement pin.
+#endif
+
+#if defined(VBAT_ENABLE)
+  static const int BATTERY_ENABLE_PIN = VBAT_ENABLE;
+  // Some boards need a special pin pulled LOW to enable battery reading.
+#else
+  static const int BATTERY_ENABLE_PIN = -1;
+  // -1 means "no enable pin needed" — skip that step.
+#endif
+
+#define BATTERY_DIVIDER      2.961f
+// The battery voltage is divided down by a resistor network before
+// the ADC pin reads it. We multiply the ADC reading back up by 2.961
+// to recover the true battery voltage.
+
+#define ADC_REF_V            3.6f
+// The ADC (analog-to-digital converter) reference voltage is 3.6V.
+// This is the maximum voltage the ADC can measure.
+
+#define ADC_MAX              4095.0f
+// The ADC gives a number between 0 and 4095 (12-bit resolution).
+// 4095 = full scale = ADC_REF_V volts.
+
+#define VBAT_FULL_V          4.20f
+// A fully charged LiPo battery reads 4.20 volts. This is 100%.
+
+#define VBAT_EMPTY_V         3.30f
+// A LiPo battery should not be discharged below 3.30 volts. This is 0%.
+
+
+// ---- BLE SERVICE & CHARACTERISTIC (our Bluetooth "channel") ---------------
+
+#define SVC_UUID  "19B10000-E8F2-537E-4F6C-D104768A1214"
+// A UUID (Universally Unique Identifier) is like a serial number.
+// This one identifies our Bluetooth service — the web app looks for this
+// exact UUID to know it found a Spin Off ball and not some other device.
+
+#define CHR_UUID  "19B10001-E8F2-537E-4F6C-D104768A1214"
+// This UUID identifies the specific data channel (characteristic)
+// over which we send kick data. The web app subscribes to this channel.
+
+BLEService        spinOffService(SVC_UUID);
+// Create the Bluetooth service using the UUID above.
+
+BLECharacteristic dataChar(CHR_UUID, BLERead | BLENotify, BLE_CHUNK_SIZE);
+// Create the data channel. BLERead = the app can read it.
+// BLENotify = the ball automatically pushes new data to the app.
+// BLE_CHUNK_SIZE = each update is up to 160 bytes.
+
+BLEDevice         central;
+// "central" is the connected device (phone or computer).
+// BLE uses the terms "central" (the phone) and "peripheral" (the ball).
+
+
+// ---- IMU OBJECT (our motion sensor) ---------------------------------------
+
+LSM6DS3 imu(I2C_MODE, 0x6A);
+// Create an object to talk to the LSM6DS3 motion sensor.
+// I2C_MODE = using the two-wire I2C protocol.
+// 0x6A = the sensor's address on that I2C bus (like a house number).
+
+bool imuOK = false;
+// A flag that we set to true once the sensor starts up successfully.
+// If setup fails, we skip all the sensor code rather than crash.
+
+
+// ---- MICROPHONE VARIABLES (for strike quality measurement) -----------------
+
+#define PDM_SAMPLE_RATE 16000
+// Record audio at 16,000 samples per second (16 kHz).
+// This is the same quality as voice calls — plenty for detecting kick sounds.
+
+short pdmBuffer[256];
+// A buffer (temporary storage) that holds the latest microphone readings.
+// Each "short" is a 16-bit audio sample. 256 samples at 16kHz = 16ms of audio.
+
+short pdmWorkBuf[256];
+// A working copy of the microphone buffer.
+// We copy data here outside the interrupt so we can process it safely
+// without the interrupt overwriting it mid-calculation.
+
+volatile int  pdmSamplesReady = 0;
+// How many new audio samples are ready to process.
+// "volatile" means this variable can change at any moment (inside the interrupt).
+
+volatile bool pdmGotData = false;
+// A flag that goes true when new audio data is ready.
+// Set to true inside the interrupt, checked inside the main loop.
+
+bool micOK = false;
+// True if the microphone started up successfully.
+
+int contactThreshold = 600;
+// The amplitude a microphone sample must exceed to be counted as "contact" sound.
+// Calibrated at startup based on the ambient noise level — louder room = higher threshold.
+
+
+// ---- MICROPHONE INTERRUPT (runs automatically when audio data is ready) ----
+
+void onPDMdata() {
+  // This function is called automatically by the hardware every time
+  // the microphone has new audio data ready. It runs in the background
+  // (as an "interrupt") so the main loop doesn't have to wait for it.
+
+  int bytes = PDM.available();
+  // Ask the microphone library how many bytes of audio data are ready.
+
+  if (bytes > (int)sizeof(pdmBuffer)) bytes = sizeof(pdmBuffer);
+  // Make sure we don't try to read more data than our buffer can hold.
+  // sizeof(pdmBuffer) = 512 bytes (256 samples × 2 bytes each).
+
+  PDM.read(pdmBuffer, bytes);
+  // Read the audio data into our buffer.
+
+  pdmSamplesReady = bytes / 2;
+  // Convert bytes to samples (each sample is 2 bytes, so divide by 2).
+
+  pdmGotData = true;
+  // Tell the main loop that fresh audio data is waiting to be processed.
+}
+
+
+// ---- FLASH MEMORY OBJECT --------------------------------------------------
+
+bool persistenceOK = false;
+// True if the flash memory initialized correctly and can store personal bests.
+
+#if ENABLE_PERSISTENCE
+mbed::FlashIAP flashIAP;
+// The FlashIAP object handles writing to and reading from the Arduino's
+// internal flash memory — the same type of memory that stores the code itself,
+// but a reserved area we can safely use for our own data.
+#endif
+
+
+// ---- DATA STRUCTURES (organized containers for our data) ------------------
+// A "struct" is like a labeled box with multiple compartments.
+// Instead of juggling 20 separate variables, we group related data together.
+
+struct PersonalBests {
+  // Stores the player's best-ever stats across all sessions.
+  uint32_t magic;
+  // A secret number (0x5350494E = "SPIN" in ASCII) that we write here
+  // so we can verify the flash memory contains valid Spin Off data
+  // and not leftover garbage from a different program.
+
+  float speedMph, powerScore, spinRPM, strikeQuality;
+  // The four personal bests we track:
+  // - speedMph:      fastest kick ever recorded in miles per hour
+  // - powerScore:    highest power score (0–100 composite rating)
+  // - spinRPM:       highest spin rate in rotations per minute
+  // - strikeQuality: best strike quality score (0–100, based on microphone)
+};
+#define PB_MAGIC 0x5350494E
+// The magic number value. Spells "SPIN" if you read the hex as ASCII.
+
+PersonalBests bests;
+// The actual variable that holds the current personal bests in memory.
+
+
+struct KickResult {
+  // Everything we know about a single kick, filled in after analysis.
+
+  uint32_t number;
+  // Which kick this is in the session (1st, 2nd, 3rd…).
+
+  uint32_t timestamp;
+  // How many milliseconds had passed since the Arduino turned on when
+  // this kick happened. Used for the timeline in the web app.
+
+  float peakG;
+  // The peak acceleration felt during the kick, in units of G (gravity).
+  // A light kick might be 7G; a hard kick can exceed 13G.
+
+  bool gClipped;
+  // True if the peak acceleration hit the sensor's maximum range (15G+).
+  // Means the real peak was at least that high but we couldn't measure further.
+
+  float speedMph;
+  // Ball speed in miles per hour, calculated from velocity integration.
+
+  float speedKmh;
+  // Same speed converted to kilometers per hour.
+
+  float launchAngle;
+  // The angle the ball left at, in degrees above horizontal.
+  // 0° = completely flat. 45° = ideal range shot. 90° = straight up.
+  // Calculated from the velocity vector, not flight time.
+
+  float flightTimeMs;
+  // Estimated time the ball is in the air, in milliseconds.
+  // Calculated from the launch angle and speed using projectile motion.
+
+  float curlDegrees;
+  // How much the ball will curve due to sidespin, estimated in degrees.
+  // Derived from the side-axis gyroscope reading and estimated flight time.
+
+  float spinRPM;
+  // How fast the ball is spinning, in rotations per minute.
+  // Measured from the gyroscope during the free-spin window after the kick.
+
+  bool rpmClipped;
+  // True if the spin rate hit the gyroscope's maximum range (333 RPM).
+
+  char spinAxis[16];
+  // Which way the ball is spinning: "topspin", "backspin",
+  // "sidespin_left", "sidespin_right", or "mixed".
+
+  bool mixedSpin;
+  // True if the spin is spread across multiple axes (no single dominant spin).
+
+  int strikeQuality;
+  // How clean the contact was, scored 0–100 using the microphone.
+  // 100 = perfect clean strike. Lower = mishit or off-center contact.
+
+  char strikeClass[12];
+  // Text version of strike quality: "clean", "off_center", or "mishit".
+
+  int strikeIntensity;
+  // How loud the kick sounded (0–100). Relates to how hard the kick was.
+
+  int contactMs;
+  // How long the foot was in contact with the ball, in milliseconds.
+  // Typical range: 6–20ms. Longer contact = more of a push than a strike.
+
+  int powerScore;
+  // A 0–100 composite score combining speed, peak G, and spin.
+  // The headline "how good was that kick" number shown in the app.
+
+  char classification[14];
+  // What type of kick this was, determined by the combination of speed,
+  // spin, and angle. Possible values: "power_shot", "curve_ball",
+  // "chip_shot", "lob_pass", "ground_pass", "header".
+};
+
+KickResult kick;
+// The variable that holds the results for the kick currently being processed.
+
+
+// ---- SESSION ACCUMULATORS (running totals across all kicks this session) ---
+
+uint32_t sessionKicks = 0;
+// Counter for how many kicks have been recorded this session.
+
+float sumSpeed=0, sumPower=0, sumSpin=0, sumQuality=0, sumAngle=0;
+// Running totals for each metric, used to calculate session averages.
+// Example: sumSpeed / sessionKicks = average speed this session.
+
+float peakSpeed=0, peakPower=0, peakSpin=0, peakQuality=0;
+// The highest value seen this session for each metric.
+
+int      bestKickPower = 0;
+uint32_t bestKickNumber = 0;
+// Track which kick number had the highest power score this session.
+
+float histSpeed[MAX_TRACK], histPower[MAX_TRACK], histSpin[MAX_TRACK];
+// Rolling history arrays storing the last 80 kick values for each metric.
+// Used to calculate consistency score and improvement trend.
+
+int histCount = 0;
+// How many entries are currently in the history (starts at 0, caps at 80).
+
+int histHead = 0;
+// The index of the next slot to write in the history array.
+// Acts like the hand on a clock — wraps around from 79 back to 0.
+
+bool newBestBroken = false;
+// Set to true if this kick beat any personal best.
+// Included in the JSON packet so the app can show a celebration.
+
+char whichBest[20] = "";
+// If a personal best was broken, this stores which one: "speedMph",
+// "powerScore", "spinRPM", or "strikeQuality".
+
+#define MAX_RECS 3
+String recommendations[MAX_RECS];
+// Up to 3 training recommendations generated by AMIR's on-device engine.
+// Generated every 5 kicks and sent to the app inside the JSON packet.
+
+int recCount = 0;
+// How many recommendations were generated this cycle (0 to 3).
+
+
+// ---- STATE MACHINE VARIABLES ----------------------------------------------
+
+State    state          = S_IDLE;
+// The current state of the ball. Starts in IDLE (waiting for a kick).
+
+uint32_t stateEnteredMs = 0;
+// The timestamp (in milliseconds) when we entered the current state.
+// Used to time how long we've been in each state.
+
+uint32_t refractoryUntil = 0;
+// The timestamp until which we ignore new kick signals.
+// Prevents one kick from registering multiple times.
+
+
+// ---- FILTERED SENSOR VALUES (smoothed, ready-to-use sensor readings) ------
+
+float fAx=0, fAy=0, fAz=1;
+// Filtered accelerometer values for the X, Y, and Z axes.
+// "f" prefix = filtered. Start at (0, 0, 1) representing gravity pointing down.
+
+float fGx=0, fGy=0, fGz=0;
+// Filtered gyroscope values for the X, Y, and Z axes (in degrees/second).
+
+float rawAx=0, rawAy=0, rawAz=0;
+// The most recent raw (unfiltered) accelerometer readings.
+// We need both filtered and raw during the kick — raw for peak detection,
+// filtered for state transitions.
+
+bool filtersPrimed = false;
+// The filter needs one reading to initialize before it produces valid output.
+// This flag is false until the very first sample has been processed.
+
+
+// ---- CALIBRATION VARIABLES (learned values unique to this ball) -----------
+
+float gyroBiasX=0, gyroBiasY=0, gyroBiasZ=0;
+// The gyroscope reads a small non-zero value even when perfectly still.
+// This "bias" (also called offset or drift) is measured at startup and
+// subtracted from every future reading to correct for it.
+
+float gravityBaseline = 1.0f;
+// The exact magnitude of gravity as measured by this specific sensor.
+// Should be close to 1.0G but every sensor is slightly different.
+
+float gravRestX=0, gravRestY=0, gravRestZ=1;
+// The direction gravity is pointing when the ball is at rest.
+// We use this as the starting point for the rotation-tracking gravity vector.
+
+float accelScale = 1.0f;
+// A multiplier that corrects for slight manufacturing variation in the sensor.
+// If the sensor reads 1.03G when the ball is still, accelScale = 1/1.03 = 0.97
+// so that after scaling, it reads exactly 1.0G.
+
+bool restValid = false;
+// True once we have successfully calibrated the ball at rest.
+// We only use the calibration data once this is confirmed.
+
+float calTempC   = 25.0f;
+// The temperature (in Celsius) at the time of startup calibration.
+// Used as a reference to correct gyro drift if the temperature changes.
+
+float imuTempC   = 25.0f;
+// The current temperature inside the IMU chip, updated every 5 seconds.
+
+uint32_t lastTempMs = 0;
+// Timestamp of the last temperature reading, so we know when to read again.
+
+
+// ---- PER-KICK CAPTURE VARIABLES (reset at the start of each kick) ---------
+
+float capPeakG = 0;
+// The highest G-force reading captured so far during this kick event.
+
+float capPeakGx=0, capPeakGy=0, capPeakGz=0;
+// The peak gyroscope readings on each axis during this kick.
+// Used to determine which axis the ball is spinning around.
+
+float capPeakGyroMag = 0;
+// The peak total rotation speed (magnitude of all three gyro axes combined).
+// Used in kick confirmation — a real kick spins the ball.
+
+float capAxAtPeak=0, capAyAtPeak=0, capAzAtPeak=0;
+// The accelerometer values at the exact moment peak G was reached.
+// Helps us determine the direction the kick force was applied.
+
+float capRawMag = 0;
+// The raw (unfiltered) total acceleration magnitude at the current sample.
+
+int kickCrossCount = 0;
+// How many times the acceleration has crossed above KICK_ENTER_G (5G)
+// during the detection window. A clean kick = exactly 1 crossing.
+
+bool kickAbove = false;
+// Tracks whether we are currently above the KICK_ENTER_G threshold.
+// Flips between true/false to count threshold crossings accurately.
+
+
+// ---- VELOCITY INTEGRATION VARIABLES (for speed and angle calculation) -----
+
+float velX=0, velY=0, velZ=0;
+// The ball's current velocity in three directions (in meters/second).
+// Calculated by adding up (integrating) tiny acceleration contributions
+// over time during the kick impact window.
+
+float capPeakSpeedMs = 0;
+// The highest total speed (all three axes combined) reached during the kick.
+// This becomes the basis for the reported MPH value.
+
+float gravKx=0, gravKy=0, gravKz=1;
+// The current estimated direction of gravity, updated continuously using
+// the gyroscope. As the ball rotates during the kick, gravity appears to
+// rotate in the sensor's frame — this vector tracks that rotation so we
+// can subtract it accurately from the accelerometer reading.
+
+uint32_t lastIntegrateUs = 0;
+// Timestamp in microseconds of the last integration step.
+// We need microsecond precision because the kick lasts only ~30ms.
+
+bool impactOver = false;
+// Set to true once the acceleration drops below KICK_SETTLE_G (3G),
+// indicating the foot has left the ball and impact is finished.
+
+float freezeVelX=0, freezeVelY=0, freezeVelZ=0;
+// The velocity at the moment impact ended, frozen for analysis.
+// We use this for launch angle calculation — it represents the ball's
+// departure direction off the foot.
+
+bool velFrozen = false;
+// True once we've taken the velocity snapshot (freezeVel values).
+
+
+// ---- POST-KICK SPIN SAMPLING VARIABLES ------------------------------------
+
+float postSpinGxAcc=0, postSpinGyAcc=0, postSpinGzAcc=0;
+// Accumulators for averaging the gyroscope during the spin sampling window.
+// We add many readings together, then divide by the count for an average.
+
+int postSpinCount = 0;
+// How many gyroscope samples we have collected during the spin window.
+
+bool spinSettleDone = false;
+// True once the 20ms vibration-settle period has passed and we can
+// start collecting accurate spin readings.
+
+float postSpinRPM = 0;
+// The final spin rate in RPM, calculated from the averaged gyro readings.
+
+
+// ---- STRIKE QUALITY VARIABLES (microphone-based contact analysis) ---------
+
+uint32_t strikeWindowEnd = 0;
+// The timestamp when the 70ms microphone recording window closes.
+
+double strikeEnergyAcc = 0;
+// Running sum of (amplitude²) for all microphone samples during the strike.
+// Dividing by sample count then taking the square root gives us RMS energy.
+
+uint32_t strikeSampleCount = 0;
+// How many microphone samples we have processed in the strike window.
+
+uint32_t strikeAboveCount = 0;
+// How many samples exceeded the contact threshold (contactThreshold).
+// More samples above threshold = longer contact with the ball = more of a push.
+
+uint32_t strikeZeroCross = 0;
+// How many times the audio waveform crossed zero (went from positive to negative
+// or vice versa). Higher zero-crossing rate = sharper, cleaner contact sound.
+
+short strikePrevSample = 0;
+// The previous microphone sample — needed to detect zero crossings by
+// comparing sign of current sample vs previous sample.
+
+int strikePeakAmp = 0;
+// The single loudest microphone sample during the strike window.
+
+
+// ---- BLE TRANSMISSION VARIABLES (for chunked JSON sending) ----------------
+
+String txBuffer = "";
+// The full JSON string we want to send over Bluetooth.
+// For a typical kick this is about 600–800 characters.
+
+int txIndex = 0;
+// How many characters we have already sent. We move through the buffer
+// 160 bytes at a time until txIndex reaches the end of txBuffer.
+
+bool txActive = false;
+// True while we are in the middle of sending a JSON packet.
+
+uint32_t txLastChunkMs = 0;
+// Timestamp of the last chunk we sent, so we can space chunks 20ms apart.
+
+
+// ---- BATTERY VARIABLES ----------------------------------------------------
+
+int batteryPct = 100;
+// Current battery level as a percentage (0–100).
+
+bool batteryLow = false;
+// True if batteryPct is at or below BATTERY_LOW_PCT (20%).
+
+uint32_t lastBatterySendMs = 0;
+// Timestamp of the last time we sent a battery update over Bluetooth.
+
+
+// ---- FORWARD DECLARATIONS -------------------------------------------------
+// In C++, a function must be declared before it can be called.
+// These three are used inside other functions that appear earlier in the file,
+// so we declare them here to avoid "function not found" errors.
+
+float constrainf(float v, float lo, float hi);
+// Clamps a value between a minimum and maximum. Example: constrainf(150, 0, 100) = 100.
+
+String jsonEscape(const String &in);
+// Escapes special characters in a string so it is valid inside JSON.
+// Example: a quote character " becomes \" so it doesn't break the JSON format.
+
+String f1(float v);
+// Formats a floating-point number to 1 decimal place as a String.
+// Example: f1(38.471) returns "38.5"
+
+
+// ---- ADAPTIVE FILTER ALPHA (returns the right smoothing strength by state) -
+
+float currentAlpha() {
+  // This function checks which state the ball is in and returns the
+  // appropriate filter coefficient (alpha) for that moment.
+
+  switch (state) {
+    case S_DETECTING:
+    case S_KICK_DETECTED: return ALPHA_IMPACT;
+    // During impact, use the fast filter (0.85) so we don't miss the peak.
+
+    case S_SPIN_SAMPLING: return ALPHA_SPIN;
+    // During spin measurement, use medium filtering (0.50) for clean RPM data.
+
+    default:              return ALPHA_IDLE;
+    // All other states (idle, analyzing, sending) use heavy filtering (0.35)
+    // to suppress noise while the ball is at rest or not in a time-critical state.
+  }
+}
+
+
+// ---- HISTORY INDEX HELPER -------------------------------------------------
+
+static inline int histIdx(int i) {
+  // The history arrays are circular (ring buffers). When they fill up,
+  // new data overwrites the oldest entry. This function converts a logical
+  // position (0 = oldest, histCount-1 = newest) into the actual array index.
+
+  if (histCount < MAX_TRACK) return i;
+  // If the history isn't full yet, the logical and actual positions match.
+
+  return (histHead + i) % MAX_TRACK;
+  // Once full, the oldest entry is at histHead, so we offset and wrap around.
+}
+
+
+// ============================================================================
+//  SETUP — runs once when the Arduino powers on
+// ============================================================================
+
 void setup() {
-  Serial.begin(115200);          // Start serial communication for debugging
-  delay(2000);                   // Wait for Arduino to initialize
+  Serial.begin(115200);
+  // Open a connection to the computer over USB at 115,200 baud.
+  // This lets us print debug messages to the Arduino Serial Monitor
+  // so we can see what the ball is doing while we test it.
 
-  // -------------------- Setup LEDs --------------------
-  pinMode(LED_BUILTIN, OUTPUT);  // Internal board LED
-  pinMode(LEDR, OUTPUT);         // External red LED
-  pinMode(LEDG, OUTPUT);         // External green LED
-  pinMode(LEDB, OUTPUT);         // External blue LED
+  uint32_t sw = millis();
+  while (!Serial && (millis() - sw < 1500)) {}
+  // Wait up to 1.5 seconds for the Serial connection to open.
+  // On some computers, Serial takes a moment to initialize.
+  // millis() returns how many milliseconds have passed since boot.
 
-  // Turn LEDs off initially
-  digitalWrite(LEDR, HIGH);
-  digitalWrite(LEDG, HIGH);
-  digitalWrite(LEDB, HIGH);
-  digitalWrite(LED_BUILTIN, LOW);
+  Serial.println(F("=== SPIN OFF v2.1 booting ==="));
+  // Print a startup message. F() keeps the string in flash memory
+  // instead of RAM to save the Arduino's limited working memory.
 
-  // Print startup banner
-  Serial.println("\n\n=================================");
-  Serial.println("      SPIN OFF      ");
-  Serial.println("=================================");
+  analogReadResolution(12);
+  // Set the analog-to-digital converter to 12-bit resolution.
+  // This gives us 4096 levels (0–4095) instead of the default 1024,
+  // making our battery voltage readings more precise.
 
-  // Blink LEDs 3 times to show setup is running
-  for(int i=0; i<3; i++) {
-    digitalWrite(LEDR, LOW);
-    digitalWrite(LEDB, LOW);
-    delay(100);
-    digitalWrite(LEDR, HIGH);
-    digitalWrite(LEDB, HIGH);
-    delay(100);
+  if (BATTERY_ENABLE_PIN >= 0) {
+    pinMode(BATTERY_ENABLE_PIN, OUTPUT);
+    digitalWrite(BATTERY_ENABLE_PIN, LOW);
+    // Some boards need a pin held LOW to connect the battery to the ADC.
+    // If this board has such a pin, configure it as an output and set it LOW.
   }
 
-  // -------------------- Initialize IMU --------------------
-  if (!IMU.begin()) {  // Start accelerometer/gyro
-    Serial.println("IMU FAILED!");
-    while (1) {         // If IMU fails, blink red forever
-      digitalWrite(LEDR, LOW);
-      delay(200);
-      digitalWrite(LEDR, HIGH);
-      delay(200);
-    }
-  }
-  Serial.println("IMU OK!");
+  initIMU();        // Start up the motion sensor (see initIMU below).
+  initMic();        // Start up the microphone (see initMic below).
+  initPersistence();// Set up flash memory for personal bests.
+  initBLE();        // Start Bluetooth advertising.
 
-  // -------------------- Initialize BLE --------------------
-  if (!BLE.begin()) {
-    Serial.println("BLE FAILED!");
-    while (1);  // Stop program if BLE fails
-  }
+  calibrateSensors();   // Measure gravity and gyro bias while ball is still.
+  calibratePDMNoise();  // Measure the ambient noise level to set mic threshold.
+  readBattery();        // Get the initial battery level.
 
-  // Configure BLE service and characteristics
-  BLE.setLocalName("Spin Off");  // Name of BLE device
-  BLE.setAdvertisedService(spinOffService);
-  spinOffService.addCharacteristic(speedChar);
-  spinOffService.addCharacteristic(spinChar);
-  spinOffService.addCharacteristic(statsChar);
-  spinOffService.addCharacteristic(modeChar);
-  BLE.addService(spinOffService);
-  BLE.advertise();               // Start advertising BLE
+  Serial.println(F("=== Ready. State: IDLE ==="));
+  // Everything initialized successfully. Print confirmation.
 
-  // Set default mode value
-  modeChar.writeValue(currentMode.c_str());
-  modeChar.setEventHandler(BLEWritten, modeCharacteristicWritten); // Handle mode changes
-
-  Serial.println("BLE OK!");
-  Serial.println("\nDETECTION METHOD:");
-  Serial.println("  Detects CHANGE in accel");
-  Serial.println("  Change threshold: 3.0 m/s");
-  Serial.println("  Ignores gravity!");
-  Serial.println("\nLEDs:");
-  Serial.println("  Orange: Connected");
-  Serial.println("  Purple: 1=recorded, 3=sent");
-  Serial.println("\nReady!");
-  Serial.println("=================================\n");
-
-  lastTime = millis(); // Save start time
+  enterState(S_IDLE);
+  // Put the ball into the IDLE state — it will now wait for a kick.
 }
 
-// -------------------- Handle Mode Changes --------------------
-void modeCharacteristicWritten(BLEDevice central, BLECharacteristic characteristic) {
-  if (characteristic.valueLength() > 0) {
-    char buffer[20];
-    characteristic.readValue(buffer, sizeof(buffer)); // Read value sent by app
-    currentMode = String(buffer);                     // Store as string
-    Serial.print("Mode: ");
-    Serial.println(currentMode);                      // Print new mode
-  }
-}
 
-// -------------------- Update Statistics --------------------
-void updateStats() {
-  avgSpeed = (kickCount > 0) ? (totalSpeed / kickCount) : 0; // Calculate average
-  char statsData[100];
-  snprintf(statsData, sizeof(statsData), 
-           "KICKS:%d|MAX:%.1f|AVG:%.1f|MSPIN:%.0f",
-           kickCount, maxSpeed, avgSpeed, maxSpin);   // Format stats as string
-  statsChar.writeValue(statsData);                      // Send via BLE
-}
+// ============================================================================
+//  MAIN LOOP — runs over and over, thousands of times per second
+// ============================================================================
 
-// -------------------- Send Kick Data via BLE --------------------
-void sendKickData() {
-  if (dataAlreadySent) return; // Prevent sending twice
-
-  // Update stats
-  kickCount++;
-  totalSpeed += maxSpeedDuringKick;
-  if(maxSpeedDuringKick > maxSpeed) maxSpeed = maxSpeedDuringKick;
-  if(maxSpinDuringKick > maxSpin) maxSpin = maxSpinDuringKick;
-
-  // Calculate launch angle if ball was in flight
-  if(flightDuration > 0 && maxSpeedDuringKick > 0) {
-    float t_seconds = flightDuration / 1000.0;
-    float sin_theta = (t_seconds * 9.81) / (2.0 * maxSpeedDuringKick);
-    if(sin_theta >= -1.0 && sin_theta <= 1.0) {
-      launchAngle = asin(sin_theta) * 180.0 / PI;
-    } else {
-      launchAngle = 0;
-    }
-  }
-
-  // Print kick info to Serial for debugging
-  Serial.println("\n========================================");
-  Serial.print("KICK #");
-  Serial.println(kickCount);
-  Serial.println("========================================");
-  Serial.print("Speed: ");
-  Serial.print(maxSpeedDuringKick);
-  Serial.println(" m/s");
-  Serial.print("       ");
-  Serial.print(maxSpeedDuringKick * 3.6);
-  Serial.println(" km/h");
-  Serial.print("Spin:  ");
-  Serial.print(maxSpinDuringKick);
-  Serial.println(" RPM");
-  Serial.print("Flight: ");
-  Serial.print(flightDuration);
-  Serial.println(" ms");
-  Serial.print("Angle: ");
-  Serial.print(launchAngle);
-  Serial.println(" deg");
-  Serial.print("Impact: ");
-  Serial.print(impactForce);
-  Serial.println(" m/s");
-  Serial.println("========================================\n");
-
-  // Prepare BLE strings
-  char speedData[50];
-  char spinData[50];
-  char statsData[100];
-
-  snprintf(speedData, sizeof(speedData), "SPD:%.1f|KMH:%.1f|ANG:%.0f", 
-           maxSpeedDuringKick, maxSpeedDuringKick*3.6, launchAngle);
-  snprintf(spinData, sizeof(spinData), "SPIN:%.0f|FLT:%lu|IMP:%.0f", 
-           maxSpinDuringKick, flightDuration, impactForce);
-  snprintf(statsData, sizeof(statsData), 
-           "KICKS:%d|MAX:%.1f|AVG:%.1f|MSPIN:%.0f",
-           kickCount, maxSpeed, avgSpeed, maxSpin);
-
-  Serial.println("SENDING BLE:");
-  Serial.println(speedData);
-  Serial.println(spinData);
-  Serial.println(statsData);
-
-  // Blink LEDs 3 times to indicate data sent
-  for(int i=0; i<3; i++) {
-    digitalWrite(LEDR, LOW);
-    digitalWrite(LEDB, LOW);
-    delay(100);
-    digitalWrite(LEDR, HIGH);
-    digitalWrite(LEDB, HIGH);
-    delay(100);
-  }
-
-  // Send BLE data
-  speedChar.writeValue(speedData);
-  delay(50);
-  spinChar.writeValue(spinData);
-  delay(50);
-  statsChar.writeValue(statsData);
-
-  Serial.println("SENT!\n");
-  updateStats();           // Update stats characteristic
-  dataAlreadySent = true;  // Prevent re-sending
-}
-
-// -------------------- Main Loop --------------------
 void loop() {
-  BLEDevice central = BLE.central(); // Check if a device is connected
+  // This function is the heartbeat of the firmware. The Arduino runs it
+  // continuously, as fast as it possibly can (thousands of times per second).
+  // Each pass through the loop checks sensors, updates state, and handles BLE.
 
-  // -------------------- Handle BLE connection --------------------
-  if (central && central.connected() && !isConnected) {
-    Serial.println("\nCONNECTED!\n");
-    digitalWrite(LED_BUILTIN, HIGH); // Turn on built-in LED
-    isConnected = true;
-  } else if ((!central || !central.connected()) && isConnected) {
-    Serial.println("\nDISCONNECTED\n");
-    digitalWrite(LED_BUILTIN, LOW); // Turn off built-in LED
-    isConnected = false;
+  bool critical = (state == S_DETECTING    ||
+                   state == S_KICK_DETECTED ||
+                   state == S_SPIN_SAMPLING);
+  // During a kick event (detecting, kick confirmed, measuring spin),
+  // timing is critical — we need to sample sensors as fast as possible.
+  // We flag these states as "critical" to skip the slower BLE polling.
+
+  if (!critical) { BLE.poll(); updateCentral(); }
+  // When NOT in a critical state, check for Bluetooth connection events
+  // (new connections, disconnections) and update the central device object.
+  // We skip this during critical states to avoid timing delays.
+
+  if (imuOK) sampleAndFilterIMU();
+  // Read the accelerometer and gyroscope and run them through the filter.
+  // Only do this if the IMU started up successfully.
+
+  serviceStrikeCapture();
+  // Process any new microphone samples waiting in the buffer.
+  // This needs to run every loop to avoid missing audio data.
+
+  switch (state) {
+    case S_IDLE:          stateIdle();          break;
+    case S_DETECTING:     stateDetecting();     break;
+    case S_KICK_DETECTED: stateKickDetected();  break;
+    case S_SPIN_SAMPLING: stateSpinSampling();  break;
+    case S_ANALYZING:     stateAnalyzing();     break;
+    case S_SENDING:       stateSending();       break;
   }
+  // Call the function for whichever state we are currently in.
+  // Each function handles one specific phase of the kick measurement process.
 
-  // -------------------- Read IMU --------------------
-  if (IMU.accelerationAvailable() && IMU.gyroscopeAvailable()) {
-    IMU.readAcceleration(accelX, accelY, accelZ); // Read acceleration
-    IMU.readGyroscope(gyroX, gyroY, gyroZ);      // Read rotation
-
-    // Convert g to m/s²
-    accelX *= 9.81;
-    accelY *= 9.81;
-    accelZ *= 9.81;
-
-    // Calculate deltaTime
-    unsigned long currentTime = millis();
-    deltaTime = (currentTime - lastTime) / 1000.0;
-    if(deltaTime == 0) deltaTime = 0.01; // Avoid division by zero
-    lastTime = currentTime;
-
-    // -------------------- Kick Detection --------------------
-    float accelMagnitude = sqrt(accelX*accelX + accelY*accelY + accelZ*accelZ); // Total accel
-    float accelChange = abs(accelMagnitude - prevAccelMag);                     // Change since last loop
-
-    if (!kickDetected && (currentTime - lastKickTime) > kickCooldown) {
-      if (accelChange > kickChangeThreshold) {  // Detect significant change
-        kickDetected = true;
-        lastKickTime = currentTime;
-        velocityX = velocityY = velocityZ = 0;
-        flightDuration = 0;
-        impactForce = accelMagnitude;
-        maxSpeedDuringKick = 0;
-        maxSpinDuringKick = 0;
-        inFlight = false;
-        ballStopped = false;
-        dataAlreadySent = false;
-        lastMovementTime = currentTime;
-
-        Serial.println("\nKICK DETECTED!");
-        Serial.print("Change: ");
-        Serial.print(accelChange);
-        Serial.println(" m/s");
-        Serial.println("Tracking...\n");
-      }
-    }
-
-    prevAccelMag = accelMagnitude; // Save for next loop
-
-    // -------------------- Track movement & speed --------------------
-    if(kickDetected) {
-      velocityX += accelX * deltaTime; // Integrate acceleration to velocity
-      velocityY += accelY * deltaTime;
-      velocityZ += accelZ * deltaTime;
-
-      speed = sqrt(velocityX*velocityX + velocityY*velocityY + velocityZ*velocityZ);
-      spinRate = sqrt(gyroX*gyroX + gyroY*gyroY + gyroZ*gyroZ) * 60.0 / 360.0;
-
-      if(speed > maxSpeedDuringKick) maxSpeedDuringKick = speed;
-      if(spinRate > maxSpinDuringKick) maxSpinDuringKick = spinRate;
-
-      // -------------------- Detect stop --------------------
-      float accelDeviation = abs(accelMagnitude - 9.81); // How close to gravity?
-
-      if(accelDeviation > movementThreshold) {
-        lastMovementTime = currentTime;
-        ballStopped = false; // Ball still moving
-      } else {
-        if(!ballStopped && (currentTime - lastMovementTime) > stoppedDuration) {
-          ballStopped = true;
-          Serial.println("STOPPED!");
-
-          // Blink purple LED once
-          digitalWrite(LEDR, LOW);
-          digitalWrite(LEDB, LOW);
-          delay(100);
-          digitalWrite(LEDR, HIGH);
-          digitalWrite(LEDB, HIGH);
-
-          // Send data if BLE connected
-          if (central && central.connected()) {
-            sendKickData();
-          } else {
-            Serial.println("Not connected\n");
-          }
-
-          kickDetected = false; // Reset for next kick
-          velocityX = velocityY = velocityZ = 0;
-        }
-      }
-    }
-  }
-
-  delay(10); // Small delay to avoid overloading CPU
+  if (!critical) servicePeriodicBattery();
+  // Check if it is time to send a battery update. Skipped during kicks
+  // for the same timing reasons as BLE polling above.
 }
 
+
+// ============================================================================
+//  INITIALISATION FUNCTIONS
+// ============================================================================
+
+void initIMU() {
+  // Configure and start the LSM6DS3 motion sensor.
+
+  imu.settings.accelEnabled    = 1;
+  // Turn the accelerometer on (1 = on, 0 = off).
+
+  imu.settings.accelRange      = ACCEL_RANGE_G;
+  // Set the measurement range to ±16G.
+
+  imu.settings.accelSampleRate = 1660;
+  // Sample the accelerometer 1,660 times per second (1.66 kHz).
+  // At this rate, even a kick lasting only 10ms gets ~16 samples.
+
+  imu.settings.accelBandWidth  = 400;
+  // Anti-aliasing filter bandwidth of 400 Hz.
+  // Removes extremely high-frequency noise before it reaches our code.
+
+  imu.settings.gyroEnabled     = 1;
+  // Turn the gyroscope on.
+
+  imu.settings.gyroRange       = GYRO_RANGE_DPS;
+  // Set the gyroscope range to ±2000 degrees/second.
+
+  imu.settings.gyroSampleRate  = 1660;
+  // Sample the gyroscope 1,660 times per second, same as the accelerometer.
+  // Matching rates simplifies our timestamping math.
+
+  imu.settings.tempEnabled     = 1;
+  // Turn on the built-in temperature sensor.
+  // Used to compensate for gyro drift as the board warms up during play.
+
+  if (imu.begin() != 0) {
+    imuOK = false;
+    Serial.println(F("[ERR] LSM6DS3 init FAILED"));
+    // imu.begin() returns 0 on success. Any other value = failure.
+    // If the sensor didn't start, print an error and set imuOK = false
+    // so the rest of the code knows to skip sensor operations.
+  } else {
+    imuOK = true;
+    Serial.println(F("[OK ] LSM6DS3 ready (+/-16g, 2000dps, 1.66kHz, temp ON)"));
+    // Sensor started successfully. Confirm in the serial monitor.
+  }
+}
+
+
+void initMic() {
+  // Configure and start the PDM microphone.
+
+  PDM.onReceive(onPDMdata);
+  // Tell the PDM library which function to call when new audio data is ready.
+  // onPDMdata (defined earlier) will be called automatically by the hardware.
+
+  PDM.setBufferSize(sizeof(pdmBuffer));
+  // Tell the library how large our audio buffer is so it doesn't overfill it.
+
+  if (!PDM.begin(1, PDM_SAMPLE_RATE)) {
+    micOK = false;
+    Serial.println(F("[ERR] PDM mic FAILED"));
+    // PDM.begin(channels, sampleRate). 1 = mono (one channel), 16000 = 16kHz.
+    // If it returns false, the mic didn't start.
+  } else {
+    micOK = true;
+    PDM.setGain(40);
+    // Set the microphone amplification to 40 (on a scale of 0–80).
+    // This is loud enough to hear a kick clearly from inside the ball.
+    Serial.println(F("[OK ] PDM microphone ready"));
+  }
+}
+
+
+void calibratePDMNoise() {
+  // Measure the background noise level and set an appropriate threshold.
+  // This means the ball automatically adapts to whether it is in a quiet
+  // room or a noisy gymnasium.
+
+  if (!micOK) return;
+  // Skip if the microphone didn't start up correctly.
+
+  Serial.println(F("Calibrating mic ambient noise (0.5 s)..."));
+
+  double   energyAcc = 0;
+  int32_t  smpCount  = 0;
+  uint32_t start     = millis();
+
+  while (millis() - start < 500) {
+    // Listen to the ambient noise for 500 milliseconds (half a second).
+
+    BLE.poll();
+    // Keep Bluetooth alive during the calibration pause.
+
+    if (!pdmGotData) continue;
+    // If no new audio data is ready yet, skip to the next loop iteration.
+
+    noInterrupts();
+    // Temporarily disable interrupts so the audio interrupt can't fire
+    // and overwrite the buffer while we are copying it.
+
+    int  cnt = pdmSamplesReady;
+    bool got = pdmGotData;
+    pdmGotData = false;
+    if (got && cnt > 0) memcpy(pdmWorkBuf, pdmBuffer, (size_t)cnt * 2);
+    // Copy the buffer into our working copy. memcpy = memory copy.
+
+    interrupts();
+    // Re-enable interrupts now that the copy is safe.
+
+    if (!got || cnt <= 0) continue;
+
+    for (int i = 0; i < cnt; i++) {
+      double s = pdmWorkBuf[i];
+      energyAcc += s * s;
+      // Accumulate the square of each sample (for RMS energy calculation).
+      smpCount++;
+    }
+  }
+
+  if (smpCount > 0) {
+    double rms = sqrt(energyAcc / smpCount);
+    // RMS = Root Mean Square. The standard way to measure audio loudness.
+    // sqrt(average of all the squared samples) = average loudness.
+
+    int thr = (int)(3.0 * rms);
+    // Set the threshold to 3× the ambient RMS. A kick will be many times
+    // louder than the ambient noise, so this cleanly separates signal from noise.
+
+    if (thr < CONTACT_THRESH_MIN) thr = CONTACT_THRESH_MIN;
+    if (thr > CONTACT_THRESH_MAX) thr = CONTACT_THRESH_MAX;
+    // Keep the threshold within safe bounds regardless of ambient noise level.
+
+    contactThreshold = thr;
+    Serial.print(F("[MIC] ambient RMS="));  Serial.print((float)rms, 1);
+    Serial.print(F("  contact thr="));      Serial.println(contactThreshold);
+    // Print the results so we can see them during testing.
+  } else {
+    Serial.println(F("[MIC] ambient cal failed - using default 600"));
+    // If no audio data arrived during the 500ms window, use the default of 600.
+  }
+}
+
+
+void initPersistence() {
+  // Set up flash memory for saving personal bests.
+
+#if ENABLE_PERSISTENCE
+  if (flashIAP.init() == 0) {
+    persistenceOK = true;
+    loadBests();
+    Serial.println(F("[OK ] FlashIAP ready"));
+    // Flash memory initialized. Load any previously saved personal bests.
+  } else {
+    Serial.println(F("[ERR] FlashIAP failed - RAM-only"));
+    // Flash init failed. Personal bests will only last until power off.
+  }
+#else
+  Serial.println(F("[INFO] Persistence disabled - RAM-only"));
+  // Persistence is disabled by the ENABLE_PERSISTENCE = 0 setting above.
+  // Personal bests will reset each time the ball is powered off.
+#endif
+
+  if (!persistenceOK && bests.magic != PB_MAGIC) resetBests();
+  // If we have no flash memory AND the bests variable has never been
+  // initialized (magic number is wrong), set everything to zero.
+}
+
+
+void initBLE() {
+  // Start the Bluetooth Low Energy radio and begin advertising.
+
+  if (!BLE.begin()) { Serial.println(F("[ERR] BLE init FAILED")); return; }
+  // BLE.begin() starts the Bluetooth hardware. If it fails, skip setup.
+
+  BLE.setDeviceName("SpinOff");
+  BLE.setLocalName("SpinOff");
+  // Set the name that appears when scanning for Bluetooth devices.
+  // You will see "SpinOff" in your phone's Bluetooth list.
+
+  BLE.setAdvertisedService(spinOffService);
+  // Announce that we offer the Spin Off service (identified by SVC_UUID).
+  // The web app scans for this UUID to find Spin Off balls automatically.
+
+  spinOffService.addCharacteristic(dataChar);
+  // Add the data channel to the service.
+
+  BLE.addService(spinOffService);
+  // Register the complete service with the Bluetooth stack.
+
+  dataChar.writeValue("{\"status\":\"ready\"}");
+  // Write an initial value to the characteristic so the app knows
+  // the ball is ready before any kick data has been sent.
+
+  BLE.advertise();
+  // Start broadcasting the Bluetooth advertisement packet.
+  // The ball is now visible to the web app.
+
+  Serial.println(F("[OK ] BLE advertising as 'SpinOff'"));
+}
+
+
+// ============================================================================
+//  STARTUP CALIBRATION — measures gravity and gyro bias while ball is still
+// ============================================================================
+
+void calibrateSensors() {
+  if (!imuOK) {
+    Serial.println(F("[WARN] Skipping calibration - IMU unavailable"));
+    return;
+    // Can't calibrate without a working sensor.
+  }
+  Serial.println(F("Calibrating - keep ball still (2.5 s)..."));
+  // The ball should be sitting completely still on a flat surface for this.
+
+  double bx=0, by=0, bz=0, ax_s=0, ay_s=0, az_s=0;
+  uint32_t n = 0;
+  uint32_t start = millis();
+
+  while (millis() - start < 2500) {
+    // Read the sensors continuously for 2.5 seconds.
+
+    float gx=imu.readFloatGyroX(), gy=imu.readFloatGyroY(), gz=imu.readFloatGyroZ();
+    float ax=imu.readFloatAccelX(), ay=imu.readFloatAccelY(), az=imu.readFloatAccelZ();
+    // Read raw accelerometer (ax, ay, az) and gyroscope (gx, gy, gz) values.
+
+    float aMag = sqrtf(ax*ax + ay*ay + az*az);
+    // Calculate the total acceleration magnitude (Pythagorean theorem in 3D).
+    // When still, this should be very close to 1.0G (just gravity).
+
+    float gMag = sqrtf(gx*gx + gy*gy + gz*gz);
+    // Calculate the total rotation rate. When still, this should be near 0.
+
+    if (fabsf(aMag - 1.0f) < 0.30f && gMag < 30.0f) {
+      // Only use this reading if the ball is genuinely still:
+      // acceleration is within 0.3G of 1G, AND rotation is below 30 deg/s.
+      // This filters out bumps or movements during the calibration window.
+
+      bx+=gx; by+=gy; bz+=gz;
+      ax_s+=ax; ay_s+=ay; az_s+=az;
+      n++;
+      // Accumulate valid readings. We will average them after the loop.
+    }
+    BLE.poll();
+    // Keep Bluetooth alive during the calibration pause.
+  }
+
+  if (n > 50) {
+    // Only accept the calibration if we collected at least 50 valid readings.
+    // Fewer samples mean the ball was moving too much during calibration.
+
+    gyroBiasX = (float)(bx / n);
+    gyroBiasY = (float)(by / n);
+    gyroBiasZ = (float)(bz / n);
+    // The average gyroscope reading when perfectly still is the bias.
+    // We will subtract this from every future gyro reading.
+
+    float gxr=(float)(ax_s/n), gyr=(float)(ay_s/n), gzr=(float)(az_s/n);
+    // Average accelerometer readings during the still period.
+
+    float restMag = sqrtf(gxr*gxr + gyr*gyr + gzr*gzr);
+    if (restMag > 0.7f && restMag < 1.3f) accelScale = 1.0f / restMag;
+    else                                   accelScale = 1.0f;
+    // If the measured gravity is reasonable (0.7–1.3G), calculate a scale
+    // factor to normalize it to exactly 1.0G. Else don't scale at all.
+
+    gravRestX = gxr * accelScale;
+    gravRestY = gyr * accelScale;
+    gravRestZ = gzr * accelScale;
+    // Store the calibrated gravity direction vector.
+
+    gravityBaseline = sqrtf(gravRestX*gravRestX + gravRestY*gravRestY + gravRestZ*gravRestZ);
+    // Should be very close to 1.0 after scaling.
+
+    restValid = true;
+    calTempC = imu.readTempC();
+    imuTempC = calTempC;
+    // Record the temperature at calibration time. Any future temperature
+    // difference will be used to compensate for gyro drift.
+
+    Serial.print(F("Cal temp = ")); Serial.print(calTempC, 1); Serial.println(F(" C"));
+  } else {
+    Serial.println(F("[WARN] Ball not still - using defaults"));
+    // Not enough good samples — the ball was probably moved during calibration.
+    // We will use default values (0 bias, 1.0 scale) and continue anyway.
+  }
+
+  filtersPrimed = false;
+  // Reset the filter so it re-initializes cleanly with the calibrated values.
+
+  Serial.print(F("Gyro bias X=")); Serial.print(gyroBiasX, 2);
+  Serial.print(F(" Y="));          Serial.print(gyroBiasY, 2);
+  Serial.print(F(" Z="));          Serial.println(gyroBiasZ, 2);
+  Serial.print(F("Gravity baseline = ")); Serial.println(gravityBaseline, 3);
+  Serial.print(F("Accel scale      = ")); Serial.println(accelScale, 4);
+  // Print all calibration results to the serial monitor.
+}
+
+
+// ============================================================================
+//  CONTINUOUS IMU SAMPLING + ADAPTIVE FILTER
+//  Called every loop iteration to read fresh sensor data
+// ============================================================================
+
+void sampleAndFilterIMU() {
+  float ax = imu.readFloatAccelX() * accelScale;
+  float ay = imu.readFloatAccelY() * accelScale;
+  float az = imu.readFloatAccelZ() * accelScale;
+  // Read the three accelerometer axes and apply the calibration scale factor.
+
+  float tcCorr = GYRO_OFFSET_TC * (imuTempC - calTempC);
+  // Calculate a temperature-based correction for the gyroscope bias.
+  // If the board has warmed up since calibration, the gyro drifts slightly.
+  // We correct for that by scaling the temperature difference.
+
+  float gx = imu.readFloatGyroX() - gyroBiasX - tcCorr;
+  float gy = imu.readFloatGyroY() - gyroBiasY - tcCorr;
+  float gz = imu.readFloatGyroZ() - gyroBiasZ - tcCorr;
+  // Read the three gyroscope axes, then subtract the calibrated bias
+  // and the temperature correction. This gives us accurate rotation rates.
+
+  rawAx = ax; rawAy = ay; rawAz = az;
+  capRawMag = sqrtf(ax*ax + ay*ay + az*az);
+  // Save the raw (pre-filter) accelerometer values. We use raw values for
+  // kick detection (to catch the true peak) and filtered values for state
+  // decisions (smooth behavior).
+
+  if (!filtersPrimed) {
+    fAx=ax; fAy=ay; fAz=az; fGx=gx; fGy=gy; fGz=gz;
+    filtersPrimed = true;
+    return;
+    // On the very first sample, initialize the filter with the raw values.
+    // There is no previous reading to blend with yet.
+  }
+
+  float a = currentAlpha(), b = 1.0f - a;
+  // a = the weight given to the new reading.
+  // b = the weight given to the previous filtered value.
+  // They always add up to 1.0 (100%).
+
+  fAx=a*ax+b*fAx; fAy=a*ay+b*fAy; fAz=a*az+b*fAz;
+  fGx=a*gx+b*fGx; fGy=a*gy+b*fGy; fGz=a*gz+b*fGz;
+  // Apply the low-pass filter to both accelerometer and gyroscope.
+  // New filtered value = (alpha × new reading) + ((1-alpha) × old filtered value).
+  // This blends new data with the running average, smoothing out noise.
+}
+
+float accelMagFiltered() { return sqrtf(fAx*fAx + fAy*fAy + fAz*fAz); }
+// Helper: returns the total filtered acceleration magnitude (all three axes combined).
+// Equal to 1G when still. Greater than 1G when moving or during impact.
+
+float gyroMagFiltered()  { return sqrtf(fGx*fGx + fGy*fGy + fGz*fGz); }
+// Helper: returns the total filtered rotation speed (all three axes combined).
+// Near 0 when still. High when the ball is spinning.
+
+
+// ============================================================================
+//  LIVE REST RE-CALIBRATION
+//  Continuously improves calibration accuracy while the ball sits still
+// ============================================================================
+
+void recalibrateRest() {
+  if (!filtersPrimed) return;
+  // Don't recalibrate before the filter has been initialized.
+
+  float dev  = fabsf(accelMagFiltered() - gravityBaseline);
+  float gmag = gyroMagFiltered();
+  // dev = how far the current acceleration is from our gravity baseline.
+  // gmag = current rotation speed.
+
+  if (dev < REST_ACCEL_TOL && gmag < REST_GYRO_TOL) {
+    // The ball is confirmed at rest: acceleration is close to gravity baseline
+    // AND rotation is very low. Safe to update our calibration values.
+
+    gravRestX += REST_ADAPT * (fAx - gravRestX);
+    gravRestY += REST_ADAPT * (fAy - gravRestY);
+    gravRestZ += REST_ADAPT * (fAz - gravRestZ);
+    // Nudge the gravity direction vector 3% toward the current reading.
+    // This slowly tracks if the ball is tilted differently from startup.
+
+    gravityBaseline = sqrtf(gravRestX*gravRestX + gravRestY*gravRestY + gravRestZ*gravRestZ);
+    // Recalculate the magnitude of the updated gravity vector.
+
+    accelScale += REST_ADAPT * accelScale * (1.0f - gravityBaseline);
+    if (accelScale < 0.85f) accelScale = 0.85f;
+    if (accelScale > 1.15f) accelScale = 1.15f;
+    // Adjust the scale factor to keep the gravity magnitude at exactly 1.0.
+    // Clamp it to ±15% so a bad reading can't break the calibration.
+
+    gyroBiasX += REST_ADAPT * fGx;
+    gyroBiasY += REST_ADAPT * fGy;
+    gyroBiasZ += REST_ADAPT * fGz;
+    // Nudge the gyroscope bias estimate 3% toward the current filtered value.
+    // This compensates for slow drift that happens as the chip warms up.
+
+    restValid = true;
+    // Mark calibration as valid now that we have rest-state data.
+  }
+}
+
+
+// ============================================================================
+//  STATE MACHINE FUNCTIONS — one function per state
+// ============================================================================
+
+void enterState(State s) { state = s; stateEnteredMs = millis(); }
+// Switches the ball to a new state and records the time of entry.
+// stateEnteredMs is used later to time how long we have been in each state.
+
+
+// ---- IDLE STATE ------------------------------------------------------------
+
+void stateIdle() {
+  if (!imuOK) return;
+  // Don't do anything if the sensor isn't working.
+
+  recalibrateRest();
+  // Use this quiet time to slowly refine our gravity and gyro bias estimates.
+
+  if (millis() - lastTempMs >= TEMP_READ_MS) {
+    lastTempMs = millis();
+    imuTempC = imu.readTempC();
+    // Every 5 seconds, update the temperature reading for gyro compensation.
+  }
+
+  if (millis() < refractoryUntil) return;
+  // If we are still in the cooldown period after a kick, do nothing yet.
+
+  if (accelMagFiltered() >= KICK_ENTER_G) {
+    // Something above 5G was detected — this might be a kick.
+    // Reset all the kick capture variables to start fresh.
+
+    capPeakG       = 0;
+    capPeakGx      = capPeakGy = capPeakGz = 0;
+    capPeakGyroMag = 0;
+    capAxAtPeak    = capAyAtPeak = capAzAtPeak = 0;
+    kickCrossCount = 1;
+    kickAbove      = true;
+    // We are starting above 5G, so the crossing count begins at 1.
+
+    gravKx = gravRestX; gravKy = gravRestY; gravKz = gravRestZ;
+    // Initialize the rotating gravity vector to the current rest gravity direction.
+    // This will be rotated by the gyroscope as the ball moves during the kick.
+
+    velX = velY = velZ = 0;
+    capPeakSpeedMs = 0;
+    impactOver     = false;
+    velFrozen      = false;
+    lastIntegrateUs = micros();
+    // Reset the velocity integration variables. micros() gives the current
+    // time in microseconds for precise integration timing.
+
+    beginStrikeCapture();
+    // Start the 70ms microphone recording window simultaneously with detection.
+
+    enterState(S_DETECTING);
+    // Move to the DETECTING state for the 160ms confirmation window.
+  }
+}
+
+
+// ---- DETECTING STATE -------------------------------------------------------
+
+void stateDetecting() {
+  float magF   = accelMagFiltered();
+  // Current filtered acceleration magnitude.
+
+  float rawMag = capRawMag;
+  // Current raw (unfiltered) acceleration magnitude.
+
+  if (rawMag > capPeakG) {
+    capPeakG    = rawMag;
+    capAxAtPeak = fAx; capAyAtPeak = fAy; capAzAtPeak = fAz;
+    // Track the highest raw acceleration seen so far this kick.
+    // Save the filtered sensor values at that peak moment.
+  }
+
+  float gMag = gyroMagFiltered();
+  if (gMag > capPeakGyroMag) capPeakGyroMag = gMag;
+  if (fabsf(fGx) > fabsf(capPeakGx)) capPeakGx = fGx;
+  if (fabsf(fGy) > fabsf(capPeakGy)) capPeakGy = fGy;
+  if (fabsf(fGz) > fabsf(capPeakGz)) capPeakGz = fGz;
+  // Track the peak gyroscope values on each axis. We need these to
+  // determine which direction the ball was spinning.
+
+  if (!impactOver) {
+    // While the impact is still happening, integrate acceleration into velocity.
+
+    uint32_t nowUs = micros();
+    float dt = (float)(nowUs - lastIntegrateUs) * 1e-6f;
+    lastIntegrateUs = nowUs;
+    // dt = time since last integration step, in seconds.
+    // 1e-6f converts microseconds to seconds (1 microsecond = 0.000001 seconds).
+
+    if (dt > 0.05f) dt = 0.05f;
+    // Cap dt at 50ms to prevent massive velocity jumps if the loop
+    // was somehow delayed (e.g., by a BLE event).
+
+    float omX = fGx * 0.01745329f;
+    float omY = fGy * 0.01745329f;
+    float omZ = fGz * 0.01745329f;
+    // Convert gyroscope readings from degrees/second to radians/second.
+    // (Multiply by π/180 = 0.01745329). Radians are needed for the math below.
+
+    float dGx = (omY * gravKz - omZ * gravKy) * dt;
+    float dGy = (omZ * gravKx - omX * gravKz) * dt;
+    float dGz = (omX * gravKy - omY * gravKx) * dt;
+    gravKx += dGx; gravKy += dGy; gravKz += dGz;
+    // Rotate the gravity tracking vector using the cross-product formula.
+    // This is the same math used in aerospace navigation (Euler integration).
+    // As the ball spins during the kick, gravity appears to rotate in the
+    // sensor's frame — we track that rotation so we can subtract it correctly.
+
+    float gn = sqrtf(gravKx*gravKx + gravKy*gravKy + gravKz*gravKz);
+    if (gn > 0.01f) { gravKx/=gn; gravKy/=gn; gravKz/=gn; }
+    // Normalize the gravity vector back to length 1.0 after each rotation step.
+    // Small numerical errors would otherwise cause it to grow or shrink over time.
+
+    float linAx = (rawAx - gravKx) * 9.81f;
+    float linAy = (rawAy - gravKy) * 9.81f;
+    float linAz = (rawAz - gravKz) * 9.81f;
+    // Subtract the tracked gravity from the raw accelerometer reading.
+    // What remains is the linear acceleration due to the kick force only.
+    // Multiply by 9.81 to convert from G units to m/s².
+
+    velX += linAx * dt; velY += linAy * dt; velZ += linAz * dt;
+    // Integrate: add (acceleration × time) to velocity.
+    // This is basic physics: velocity = velocity + (acceleration × time step).
+
+    float spdMs = sqrtf(velX*velX + velY*velY + velZ*velZ);
+    if (spdMs > capPeakSpeedMs) capPeakSpeedMs = spdMs;
+    // Track the peak speed (in m/s) reached during integration.
+
+    if (millis() - stateEnteredMs > 35 && rawMag < KICK_SETTLE_G) {
+      impactOver = true;
+      freezeVelX = velX; freezeVelY = velY; freezeVelZ = velZ;
+      velFrozen  = true;
+      // Once the acceleration drops below 3G (foot has left the ball) AND
+      // at least 35ms have passed (to avoid freezing on the initial rise),
+      // mark the impact as over and snapshot the velocity vector.
+      // This velocity snapshot tells us the ball's departure speed and direction.
+    }
+  }
+
+  if (kickAbove) {
+    if (magF < KICK_RELEASE_G) kickAbove = false;
+    // We were above 5G, and now we're below 2.5G — threshold released.
+  } else {
+    if (magF > KICK_ENTER_G) { kickAbove = true; kickCrossCount++; }
+    // We came back up above 5G — that's another threshold crossing.
+    // Real kicks cross once. Bouncing or shaking causes multiple crossings.
+  }
+
+  if (millis() - stateEnteredMs >= DETECT_WINDOW_MS) {
+    // The 160ms observation window has ended. Make the kick/no-kick decision.
+
+    if (!velFrozen) {
+      freezeVelX = velX; freezeVelY = velY; freezeVelZ = velZ;
+      velFrozen  = true;
+      // If impact never settled (very brief kick), snapshot velocity now.
+    }
+
+    bool strong  = (capPeakG >= KICK_CONFIRM_G) &&
+                   (capPeakG >= 9.0f || capPeakGyroMag >= KICK_GYRO_CONFIRM);
+    // "strong" = peak was at least 7G AND (either above 9G, OR the ball
+    // was spinning at 150+ deg/s). The rotation check prevents a hard drop
+    // from being mistaken for a kick (drops don't spin the ball).
+
+    bool single  = (kickCrossCount <= KICK_MAX_CROSSINGS);
+    // "single" = the threshold was only crossed once (one clean kick).
+
+    bool settled = (magF < KICK_SETTLE_G);
+    // "settled" = the ball has calmed down below 3G by window end.
+
+    if (strong && single && settled) {
+      Serial.println(F("[KICK] confirmed"));
+      enterState(S_KICK_DETECTED);
+      // All three conditions met — this is a real kick. Move forward.
+    } else {
+      Serial.print(F("[KICK] rejected ("));
+      if (!strong)      Serial.print(F("too weak"));
+      else if (!single) Serial.print(F("oscillation/shake"));
+      else              Serial.print(F("still moving"));
+      Serial.println(F(")"));
+      // Print which condition failed so we can diagnose false reads during testing.
+
+      refractoryUntil = millis() + (REFRACTORY_MS / 2);
+      enterState(S_IDLE);
+      // Not a kick. Return to IDLE with a 300ms cooldown.
+    }
+  }
+}
+
+
+// ---- KICK DETECTED STATE ---------------------------------------------------
+
+void stateKickDetected() {
+  if (millis() >= strikeWindowEnd) {
+    // Wait here until the 70ms microphone window has finished recording.
+    // We don't want to process the audio before it's all captured.
+
+    postSpinGxAcc = 0; postSpinGyAcc = 0; postSpinGzAcc = 0;
+    postSpinCount = 0; spinSettleDone = false; postSpinRPM = 0;
+    // Reset the spin sampling accumulators before moving to spin measurement.
+
+    enterState(S_SPIN_SAMPLING);
+    // Ready to measure the free-spin rotation of the ball.
+  }
+}
+
+
+// ---- SPIN SAMPLING STATE ---------------------------------------------------
+
+void stateSpinSampling() {
+  uint32_t elapsed = millis() - stateEnteredMs;
+  // How long we have been in this state.
+
+  if (!spinSettleDone) {
+    if (elapsed >= SPIN_SETTLE_MS) spinSettleDone = true;
+    return;
+    // For the first 20ms, just wait. The ball is still vibrating from the
+    // kick impact. We don't want to sample spin while vibrations are present.
+  }
+
+  postSpinGxAcc += fGx; postSpinGyAcc += fGy; postSpinGzAcc += fGz;
+  postSpinCount++;
+  // Accumulate gyroscope readings over the 60ms sampling window.
+  // We will average them for a stable spin measurement.
+
+  if (elapsed >= SPIN_SETTLE_MS + SPIN_SAMPLE_MS) {
+    // The full window (20ms settle + 60ms sample) has passed.
+
+    if (postSpinCount > 0) {
+      float avgX = postSpinGxAcc / postSpinCount;
+      float avgY = postSpinGyAcc / postSpinCount;
+      float avgZ = postSpinGzAcc / postSpinCount;
+      capPeakGx = avgX; capPeakGy = avgY; capPeakGz = avgZ;
+      // Average the accumulated samples to get a smooth rotation vector.
+
+      postSpinRPM = sqrtf(avgX*avgX + avgY*avgY + avgZ*avgZ) / 6.0f;
+      // Convert from degrees/second to RPM.
+      // 1 rotation = 360 degrees. 1 minute = 60 seconds.
+      // RPM = (deg/s) / (360 deg/rotation) × (60 s/min) = (deg/s) / 6.
+    }
+
+    Serial.print(F("[SPIN] free-ball RPM=")); Serial.println(postSpinRPM, 1);
+    // Print the measured spin for monitoring during testing.
+
+    enterState(S_ANALYZING);
+    // Spin measurement complete. Move to analysis.
+  }
+}
+
+
+// ---- ANALYZING STATE -------------------------------------------------------
+
+void stateAnalyzing() {
+  analyzeKick();
+  // Run all the physics and classification calculations (see analyzeKick below).
+
+  updateSession();
+  // Add this kick's results to the session totals and history.
+
+  updatePersonalBests();
+  // Check if any personal best was beaten.
+
+  if (sessionKicks % RECOMMEND_EVERY == 0) generateRecommendations();
+  // Every 5 kicks, generate new training recommendations using AMIR.
+  // The "%" operator gives the remainder of division — it equals 0 every
+  // 5 kicks (5%5=0, 10%5=0, 15%5=0, etc.).
+
+  txBuffer = buildKickJson();
+  txBuffer += "\n";
+  // Build the complete JSON string that will be sent over Bluetooth.
+  // Add a newline at the end so the receiving app knows the packet is complete.
+
+  txIndex = 0; txActive = true;
+  // Reset the send position and flag the transmission as active.
+
+  enterState(S_SENDING);
+  // Move to the sending state to transmit the data.
+}
+
+
+// ---- SENDING STATE ---------------------------------------------------------
+
+void stateSending() {
+  if (!txActive) { finishSending(); return; }
+  // Nothing left to send — wrap up.
+
+  if (!(central && central.connected())) {
+    Serial.println(F("[BLE] no central - data dropped"));
+    txActive = false; finishSending(); return;
+    // If no phone is connected, we can't send. Drop this kick's data
+    // and return to IDLE. (Data from unconnected kicks is lost.)
+  }
+
+  if (millis() - txLastChunkMs < BLE_CHUNK_GAP_MS) return;
+  // If we sent a chunk less than 20ms ago, wait. Don't flood the connection.
+
+  txLastChunkMs = millis();
+  int remaining = txBuffer.length() - txIndex;
+  // How many characters of JSON are still waiting to be sent.
+
+  if (remaining <= 0) { txActive = false; finishSending(); return; }
+  // All data has been sent. Finish up.
+
+  int n = remaining < BLE_CHUNK_SIZE ? remaining : BLE_CHUNK_SIZE;
+  // Send either 160 bytes or whatever is left — whichever is smaller.
+
+  dataChar.writeValue((const uint8_t *)(txBuffer.c_str() + txIndex), n);
+  // Write the next chunk to the BLE characteristic.
+  // txBuffer.c_str() gets a pointer to the raw string data.
+  // + txIndex offsets to where we left off in the previous chunk.
+
+  txIndex += n;
+  // Advance our position in the buffer by however many bytes we just sent.
+}
+
+void finishSending() {
+  refractoryUntil = millis() + REFRACTORY_MS;
+  // Block new kick detection for 600ms after completing a transmission.
+  // Prevents the ball from immediately re-triggering as it decelerates.
+
+  filtersPrimed = false;
+  // Reset the sensor filter so it re-initializes cleanly in IDLE.
+
+  enterState(S_IDLE);
+  // Return to waiting for the next kick.
+}
+
+
+// ============================================================================
+//  STRIKE QUALITY — microphone-based contact analysis
+// ============================================================================
+
+void beginStrikeCapture() {
+  // Reset all microphone measurement variables for a fresh capture.
+
+  strikeWindowEnd   = millis() + STRIKE_WINDOW_MS;
+  // Set the window to close 70ms from now.
+
+  strikeEnergyAcc   = 0; strikeSampleCount = 0;
+  // Reset energy accumulator and sample counter.
+
+  strikeAboveCount  = 0; strikeZeroCross   = 0;
+  // Reset contact-time counter and zero-crossing counter.
+
+  strikePeakAmp     = 0; strikePrevSample  = 0;
+  // Reset peak amplitude and the previous-sample memory for crossing detection.
+}
+
+
+void serviceStrikeCapture() {
+  // Process any microphone data that arrived since the last loop iteration.
+  // This runs every loop regardless of state so no audio data is missed.
+
+  if (!micOK || !pdmGotData) return;
+  // Skip if the mic isn't working or no new data is ready.
+
+  noInterrupts();
+  int  cnt = pdmSamplesReady;
+  bool got = pdmGotData;
+  pdmGotData = false;
+  if (got && cnt > 0) memcpy(pdmWorkBuf, pdmBuffer, (size_t)cnt * 2);
+  interrupts();
+  // Safely copy the audio buffer (disable interrupts during copy to prevent
+  // the mic interrupt from overwriting the buffer mid-copy).
+
+  if (!got || cnt <= 0 || millis() > strikeWindowEnd) return;
+  // Don't process audio if the capture window has already closed.
+
+  for (int i = 0; i < cnt; i++) {
+    short s   = pdmWorkBuf[i];
+    // One audio sample — a 16-bit signed number representing air pressure.
+
+    int   amp = abs(s);
+    // Amplitude = absolute value (how far from zero, ignoring + or -).
+
+    strikeEnergyAcc += (double)amp * (double)amp;
+    // Square the amplitude and add to the energy accumulator.
+    // Energy = sum of (amplitude²) — the foundation of RMS calculation.
+
+    if (amp > strikePeakAmp) strikePeakAmp = amp;
+    // Track the single loudest sample in the window.
+
+    if (amp > contactThreshold) strikeAboveCount++;
+    // Count how many samples exceeded the contact threshold.
+    // More time above threshold = longer physical foot-to-ball contact.
+
+    if ((abs(s) > ZCR_HYST_AMP || abs(strikePrevSample) > ZCR_HYST_AMP) &&
+        ((s >= 0) != (strikePrevSample >= 0))) {
+      strikeZeroCross++;
+      // Count zero crossings (signal going from + to - or - to +).
+      // The hysteresis condition (at least one sample above ZCR_HYST_AMP)
+      // prevents tiny noise fluctuations from inflating the count.
+    }
+
+    strikePrevSample = s;
+    // Save this sample so the next iteration can compare against it.
+    strikeSampleCount++;
+    // Count total samples processed.
+  }
+}
+
+
+void computeStrikeMetrics(int &qualityOut, char *classOut,
+                          int &intensityOut, int &contactMsOut) {
+  // Calculate the final strike quality score from the microphone data.
+  // Results are written into the output variables (passed by reference with &).
+
+  if (!micOK || strikeSampleCount == 0) {
+    qualityOut=50; intensityOut=0; contactMsOut=0;
+    strcpy(classOut, "off_center"); return;
+    // No microphone data available — use neutral defaults.
+  }
+
+  double rms = sqrt(strikeEnergyAcc / (double)strikeSampleCount);
+  // RMS energy = sqrt(average of squared amplitudes).
+  // Higher RMS = louder kick = more energy transferred to the ball.
+
+  int intensity = (int)(rms / 90.0);
+  if (intensity > 100) intensity = 100;
+  if (intensity < 0)   intensity = 0;
+  // Scale RMS to a 0–100 intensity score. Clamped to valid range.
+
+  float contactMs = (float)strikeAboveCount * 1000.0f / (float)PDM_SAMPLE_RATE;
+  // Convert "number of samples above threshold" to milliseconds.
+  // Samples above threshold ÷ samples per second × 1000 = milliseconds.
+
+  float zcr = (float)strikeZeroCross / (float)strikeSampleCount;
+  // Zero-crossing rate = proportion of samples that crossed zero.
+  // Higher ZCR = sharper, more percussive sound = cleaner strike.
+
+  float qSharp   = constrainf(zcr * 320.0f, 0, 100);
+  // Score from 0–100 based on ZCR. A clean kick has a high ZCR.
+
+  float qPunch   = constrainf((float)intensity * 1.1f, 0, 100);
+  // Score from 0–100 based on intensity (raw power of the kick sound).
+
+  float qContact = constrainf(100.0f - (contactMs - 8.0f) * 6.0f, 0, 100);
+  // Shorter contact time = cleaner strike.
+  // Ideal contact is around 8ms. Longer than that loses points.
+  // Formula: start at 100, subtract 6 points for every ms over 8.
+
+  float quality = 0.45f * qSharp + 0.30f * qContact + 0.25f * qPunch;
+  // Final quality score: weighted blend of the three components.
+  // 45% sharpness + 30% contact time + 25% power = quality score.
+
+  int q = (int)(quality + 0.5f);
+  if (q > 100) q = 100;
+  if (q < 0)   q = 0;
+  // Round to nearest integer and clamp to 0–100.
+
+  qualityOut = q; intensityOut = intensity;
+  contactMsOut = (int)(contactMs + 0.5f);
+
+  if      (q >= 78) strcpy(classOut, "clean");
+  else if (q >= 50) strcpy(classOut, "off_center");
+  else              strcpy(classOut, "mishit");
+  // Assign a text classification based on the score:
+  // 78–100 = "clean", 50–77 = "off_center", 0–49 = "mishit"
+}
+
+
+// ============================================================================
+//  KICK ANALYSIS — turns raw sensor data into meaningful stats
+// ============================================================================
+
+void analyzeKick() {
+  sessionKicks++;
+  kick.number    = sessionKicks;
+  kick.timestamp = millis();
+  // Number this kick and record when it happened.
+
+  kick.peakG    = capPeakG;
+  kick.gClipped = (capPeakG >= G_CLIP_LIMIT);
+  if (kick.gClipped) kick.peakG = (float)ACCEL_RANGE_G;
+  // Store the peak G-force. If it hit the sensor's ceiling (15G),
+  // flag it as clipped and cap the reported value at 16G.
+
+  // ---- SPEED CALCULATION --------------------------------------------------
+  float speedIntegrated = capPeakSpeedMs * MS_TO_MPH * SPEED_GAIN;
+  // Convert the peak speed from the integration (in m/s) to mph,
+  // then apply the 15% calibration gain.
+  // capPeakSpeedMs (m/s) × 2.237 (m/s→mph) × 1.15 (gain) = speedMph.
+
+  float netG = capPeakG - gravityBaseline;
+  if (netG < 0) netG = 0;
+  float speedImpulse = netG * K_IMPULSE;
+  // Backup speed estimate using peak G × constant.
+  // netG removes the 1G gravity baseline so we only use the kick's G-force.
+  // Useful as a cross-check but not as accurate as integration.
+
+  kick.speedMph = constrainf(
+    SPEED_BLEND * speedIntegrated + (1.0f - SPEED_BLEND) * speedImpulse,
+    0, SPEED_MAX_MPH);
+  // Blend the two speed estimates. SPEED_BLEND = 1.0 means 100% integration.
+  // constrainf() caps the result between 0 and 70 mph.
+
+  kick.speedKmh = kick.speedMph * 1.60934f;
+  // Convert mph to km/h by multiplying by 1.60934.
+
+  Serial.print(F("[SPEED] integ=")); Serial.print(speedIntegrated, 1);
+  Serial.print(F(" impulse="));      Serial.print(speedImpulse, 1);
+  Serial.print(F(" blend="));        Serial.println(kick.speedMph, 1);
+  // Print both speed estimates and the final blended result for diagnostics.
+
+  // ---- SPIN RATE ----------------------------------------------------------
+  float rpm = postSpinRPM;
+  kick.rpmClipped = (rpm >= RPM_HARDWARE_LIMIT) ||
+                    (capPeakGyroMag >= (float)GYRO_RANGE_DPS - 20.0f);
+  if (rpm > RPM_HARDWARE_LIMIT) rpm = RPM_HARDWARE_LIMIT;
+  kick.spinRPM = rpm;
+  // Store the spin rate. Flag it as clipped if it hit the hardware ceiling.
+
+  classifySpin();
+  // Determine the spin axis (topspin, backspin, sidespin, mixed).
+
+  // ---- LAUNCH ANGLE -------------------------------------------------------
+  float vHoriz = sqrtf(freezeVelX*freezeVelX + freezeVelY*freezeVelY);
+  float ang = 0.0f;
+  if (vHoriz > 0.01f || fabsf(freezeVelZ) > 0.01f)
+    ang = atan2f(fabsf(freezeVelZ), vHoriz) * 57.2958f;
+  kick.launchAngle = constrainf(ang, 0, 90);
+  // Launch angle = the angle between the horizontal velocity and the total velocity.
+  // atan2f gives the angle in radians; multiply by 57.2958 to get degrees.
+  // (57.2958 = 180/π, the conversion factor from radians to degrees.)
+  // freezeVelZ is the vertical component; vHoriz is the horizontal component.
+
+  // ---- FLIGHT TIME (estimated from physics) --------------------------------
+  float vms = kick.speedMph * 0.44704f;
+  // Convert mph back to m/s for the physics formula.
+
+  float t = (2.0f * vms * sinf(kick.launchAngle * 0.0174533f)) / 9.81f;
+  kick.flightTimeMs = constrainf(t * 1000.0f, 0, 10000);
+  // Standard projectile motion formula: t = (2 × v × sin(θ)) / g
+  // where v = speed, θ = launch angle, g = 9.81 m/s² (gravity).
+  // This gives flight time in seconds; multiply by 1000 for milliseconds.
+
+  // ---- CURL ESTIMATE -------------------------------------------------------
+  float flightS = kick.flightTimeMs * 0.001f;
+  float sideDps = fabsf(capPeakGz);
+  kick.curlDegrees = constrainf(sideDps * flightS * 0.008f, 0, 45);
+  // Estimate how much the ball will curve based on side-axis spin and flight time.
+  // More sidespin + longer flight = more curl. The 0.008 coefficient was
+  // derived from field testing and aerodynamics of a soccer ball.
+
+  // ---- STRIKE QUALITY (from microphone) ------------------------------------
+  computeStrikeMetrics(kick.strikeQuality, kick.strikeClass,
+                       kick.strikeIntensity, kick.contactMs);
+
+  // ---- POWER SCORE (composite 0–100 rating) --------------------------------
+  float sNorm = constrainf(kick.speedMph / 70.0f * 100.0f, 0, 100);
+  float iNorm = constrainf(kick.peakG    / 16.0f * 100.0f, 0, 100);
+  float rNorm = constrainf(kick.spinRPM  / RPM_HARDWARE_LIMIT * 100.0f, 0, 100);
+  // Normalize each component to 0–100:
+  // sNorm = speed as percentage of max speed (70 mph).
+  // iNorm = peak G as percentage of sensor maximum (16G).
+  // rNorm = spin as percentage of sensor maximum (333 RPM).
+
+  kick.powerScore = (int)(0.5f*sNorm + 0.3f*iNorm + 0.2f*rNorm + 0.5f);
+  if (kick.powerScore > 100) kick.powerScore = 100;
+  if (kick.powerScore < 0)   kick.powerScore = 0;
+  // Weighted blend: 50% speed + 30% impact force + 20% spin = power score.
+  // Adding 0.5f before casting to int is standard rounding (rounds to nearest).
+
+  classifyKick();
+  // Determine the kick type (power shot, curve ball, chip shot, etc.).
+
+  Serial.print(F("[ANALYZE] #")); Serial.print(kick.number);
+  Serial.print(F(" "));          Serial.print(kick.classification);
+  Serial.print(F("  spd="));     Serial.print(kick.speedMph, 1);
+  Serial.print(F("mph  spin=")); Serial.print(kick.spinRPM, 0);
+  Serial.print(F("rpm  pwr="));  Serial.println(kick.powerScore);
+  // Print a summary of the kick results to the serial monitor.
+}
+
+
+void classifySpin() {
+  float gx = fabsf(capPeakGx), gy = fabsf(capPeakGy), gz = fabsf(capPeakGz);
+  // Take the absolute value of each axis's peak gyroscope reading.
+  // (Ignore positive vs. negative — we check the sign separately below.)
+
+  float total = gx + gy + gz + 0.001f;
+  // Sum of all three axes. The +0.001f prevents division by zero if all are 0.
+
+  float dominant = max(gx, max(gy, gz));
+  // Find the largest axis value. max() returns the bigger of two numbers.
+
+  kick.mixedSpin = (dominant / total) < 0.55f;
+  // If no single axis accounts for more than 55% of the total spin,
+  // the spin is "mixed" — spread across multiple axes.
+
+  if (kick.mixedSpin) { strcpy(kick.spinAxis, "mixed"); return; }
+  // Mixed spin doesn't map to one axis label — just call it "mixed".
+
+  if (gx >= gz && gx >= gy)
+    strcpy(kick.spinAxis, capPeakGx >= 0 ? "topspin" : "backspin");
+  // The X-axis is dominant. Positive X = topspin (ball rolls forward).
+  // Negative X = backspin (ball rolls backward — like a backspin shot).
+
+  else if (gz >= gy)
+    strcpy(kick.spinAxis, capPeakGz >= 0 ? "sidespin_right" : "sidespin_left");
+  // The Z-axis is dominant. Determines which way the ball will curve.
+
+  else { strcpy(kick.spinAxis, "mixed"); kick.mixedSpin = true; }
+  // Y-axis dominant falls back to "mixed" (unusual — Y is typically minimal).
+}
+
+
+void classifyKick() {
+  float spd=kick.speedMph, ang=kick.launchAngle, rpm=kick.spinRPM;
+  // Shorthand local variables for readability.
+
+  if      (kick.peakG>=13.0f && ang<25.0f && rpm<120.0f && spd>=35.0f)
+    strcpy(kick.classification, "power_shot");
+  // POWER SHOT: very high impact force (13G+), low angle, not spinny, fast.
+  // This is a hard driven shot, typically aimed at goal on the ground.
+
+  else if (rpm>=160.0f && ang>=15.0f)
+    strcpy(kick.classification, "curve_ball");
+  // CURVE BALL: high spin rate and enough launch angle to put curve on it.
+
+  else if (ang>=50.0f && spd<30.0f)
+    strcpy(kick.classification, "chip_shot");
+  // CHIP SHOT: steep angle, low speed — a lofted ball over a defender.
+
+  else if (ang>=35.0f && spd>=25.0f)
+    strcpy(kick.classification, "lob_pass");
+  // LOB PASS: high angle with reasonable pace — a ball played over the top.
+
+  else if (ang<18.0f && spd<28.0f)
+    strcpy(kick.classification, "ground_pass");
+  // GROUND PASS: flat and not too fast — a simple pass along the ground.
+
+  else if (kick.contactMs>=18 && rpm<100.0f && ang>=20.0f)
+    strcpy(kick.classification, "header");
+  // HEADER: long contact time (head contact lasts longer than foot),
+  // low spin, and some upward angle.
+
+  else
+    strcpy(kick.classification, "ground_pass");
+  // Default: if nothing else matches, call it a ground pass.
+}
+
+
+// ============================================================================
+//  SESSION ANALYTICS — tracks trends across all kicks this session
+// ============================================================================
+
+void updateSession() {
+  sumSpeed+=kick.speedMph; sumPower+=kick.powerScore;
+  sumSpin+=kick.spinRPM;   sumQuality+=kick.strikeQuality;
+  sumAngle+=kick.launchAngle;
+  // Add this kick's values to the running totals.
+
+  if (kick.speedMph      > peakSpeed)   peakSpeed   = kick.speedMph;
+  if (kick.powerScore    > peakPower)   peakPower   = kick.powerScore;
+  if (kick.spinRPM       > peakSpin)    peakSpin    = kick.spinRPM;
+  if (kick.strikeQuality > peakQuality) peakQuality = kick.strikeQuality;
+  // Update session peaks (highest values seen so far this session).
+
+  if (kick.powerScore > bestKickPower) {
+    bestKickPower = kick.powerScore; bestKickNumber = kick.number;
+    // Track which specific kick was the best this session.
+  }
+
+  histSpeed[histHead] = kick.speedMph;
+  histPower[histHead] = kick.powerScore;
+  histSpin[histHead]  = kick.spinRPM;
+  histHead = (histHead + 1) % MAX_TRACK;
+  if (histCount < MAX_TRACK) histCount++;
+  // Write this kick's data into the circular history buffer.
+  // histHead moves forward one slot, wrapping from 79 back to 0.
+  // histCount grows until it reaches MAX_TRACK (80), then stays there.
+}
+
+float avgSpeedMph() { return sessionKicks ? sumSpeed   / sessionKicks : 0; }
+float avgPower()    { return sessionKicks ? sumPower   / sessionKicks : 0; }
+float avgSpin()     { return sessionKicks ? sumSpin    / sessionKicks : 0; }
+float avgQuality()  { return sessionKicks ? sumQuality / sessionKicks : 0; }
+float avgAngle()    { return sessionKicks ? sumAngle   / sessionKicks : 0; }
+// Helper functions that return session averages.
+// The "? ... : 0" part prevents dividing by zero if no kicks have been recorded.
+
+
+int consistencyScore() {
+  if (histCount < 2) return 100;
+  // Need at least 2 kicks to measure consistency. Return 100 (perfect) if not.
+
+  float mean = 0;
+  for (int i = 0; i < histCount; i++) mean += histSpeed[histIdx(i)];
+  mean /= histCount;
+  // Calculate the average (mean) speed across all history entries.
+
+  if (mean < 0.001f) return 100;
+  // Avoid division by zero if all recorded speeds are essentially zero.
+
+  float var = 0;
+  for (int i = 0; i < histCount; i++) {
+    float d = histSpeed[histIdx(i)] - mean; var += d*d;
+  }
+  var /= histCount;
+  // Variance = average of (each value - mean)².
+  // High variance = speeds are all over the place = inconsistent.
+
+  int score = (int)(100.0f - sqrtf(var) / mean * 220.0f);
+  if (score > 100) score = 100;
+  if (score < 0)   score = 0;
+  return score;
+  // Consistency score = 100 minus the coefficient of variation × 220.
+  // Coefficient of variation = (standard deviation / mean).
+  // The 220 factor scales it so that a "normal" level of variation in
+  // youth soccer gives a score in the 50–80 range.
+}
+
+
+const char *improvementTrend() {
+  if (histCount < 6) return "plateau";
+  // Need at least 6 kicks to detect a trend. Return "plateau" otherwise.
+
+  int half = histCount / 2;
+  float early=0, late=0;
+  for (int i=0;    i<half;      i++) early += histPower[histIdx(i)];
+  for (int i=half; i<histCount; i++) late  += histPower[histIdx(i)];
+  early /= half; late /= (histCount - half);
+  // Split the history into two halves (oldest and newest).
+  // Calculate the average power score for each half.
+
+  float diff = late - early;
+  if (diff >  4.0f) return "improving";
+  if (diff < -4.0f) return "declining";
+  return "plateau";
+  // If recent kicks average more than 4 power points higher = improving.
+  // If more than 4 points lower = declining. Otherwise = plateau.
+}
+
+
+// ============================================================================
+//  PERSONAL BESTS — tracks all-time records
+// ============================================================================
+
+void resetBests() {
+  bests.magic = PB_MAGIC;
+  bests.speedMph = bests.powerScore = bests.spinRPM = bests.strikeQuality = 0;
+  // Set everything to zero and write the magic number to mark the data as valid.
+}
+
+void loadBests() {
+#if ENABLE_PERSISTENCE
+  if (!persistenceOK) { resetBests(); return; }
+  PersonalBests tmp;
+  int rc = flashIAP.read(&tmp, FLASH_STORE_ADDR, sizeof(tmp));
+  // Read the stored personal bests from flash memory into a temporary variable.
+
+  if (rc != 0 || tmp.magic != PB_MAGIC) {
+    resetBests(); saveBests();
+    Serial.println(F("[PB ] fresh personal bests"));
+    // If the read failed OR the magic number is wrong, the stored data is
+    // corrupted or empty. Start fresh and save the clean zeros.
+  } else {
+    bests = tmp; Serial.println(F("[PB ] loaded from flash"));
+    // Data looks valid — load it as our current personal bests.
+  }
+#else
+  resetBests();
+  // Persistence is off — always start from zero.
+#endif
+}
+
+void saveBests() {
+#if ENABLE_PERSISTENCE
+  if (!persistenceOK) return;
+  uint32_t sectorSize = flashIAP.get_sector_size(FLASH_STORE_ADDR);
+  if (flashIAP.erase(FLASH_STORE_ADDR, sectorSize) != 0) {
+    Serial.println(F("[ERR] flash erase failed")); return;
+    // Flash must be erased before it can be written. If erase fails, abort.
+  }
+  uint8_t buf[256];
+  memset(buf, 0xFF, sizeof(buf));
+  memcpy(buf, &bests, sizeof(bests));
+  if (flashIAP.program(buf, FLASH_STORE_ADDR, sizeof(buf)) != 0)
+    Serial.println(F("[ERR] flash program failed"));
+  // Fill a 256-byte buffer with 0xFF (the erased state of flash memory),
+  // then copy our bests struct into the start of it, and write the whole
+  // buffer to flash. Flash memory requires full sector writes.
+#endif
+}
+
+void updatePersonalBests() {
+  newBestBroken = false; whichBest[0] = '\0';
+  // Assume no best was broken. '\0' = empty string.
+
+  if (kick.speedMph      > bests.speedMph)      { bests.speedMph      = kick.speedMph;      newBestBroken=true; strcpy(whichBest,"speedMph");      }
+  if (kick.powerScore    > bests.powerScore)     { bests.powerScore    = kick.powerScore;    newBestBroken=true; strcpy(whichBest,"powerScore");     }
+  if (kick.spinRPM       > bests.spinRPM)        { bests.spinRPM       = kick.spinRPM;       newBestBroken=true; strcpy(whichBest,"spinRPM");        }
+  if (kick.strikeQuality > bests.strikeQuality)  { bests.strikeQuality = kick.strikeQuality; newBestBroken=true; strcpy(whichBest,"strikeQuality");  }
+  // Check each metric. If this kick exceeded the stored best, update it.
+
+  if (newBestBroken) {
+    saveBests();
+    // Write the new best to flash memory so it survives power cycles.
+    Serial.print(F("[PB ] NEW BEST: ")); Serial.println(whichBest);
+  }
+}
+
+
+// ============================================================================
+//  TRAINING RECOMMENDATIONS — AMIR's on-device coaching engine
+// ============================================================================
+
+void generateRecommendations() {
+  // Analyze the session data and generate up to 3 targeted training tips.
+  // These fire every 5 kicks and are based on the same logic we derived
+  // from interviewing real coaches.
+
+  recCount = 0;
+  // Start with an empty list.
+
+  float aSpeed=avgSpeedMph(), aAngle=avgAngle();
+  int   cons=consistencyScore();
+  // Gather the session averages we need for the rules.
+
+  float spinMean=avgSpin(), spinVar=0;
+  if (histCount > 1) {
+    for (int i=0; i<histCount; i++) {
+      float d = histSpin[histIdx(i)] - spinMean; spinVar += d*d;
+    }
+    spinVar /= histCount;
+  }
+  float spinSd = sqrtf(spinVar);
+  // Calculate the standard deviation of spin rate (how much it varies).
+  // High standard deviation = spin rate is inconsistent kick to kick.
+
+  // ---- RECOMMENDATION RULES -----------------------------------------------
+
+  if (cons < 60 && recCount < MAX_RECS)
+    recommendations[recCount++] = "Your strike consistency is low - plant your standing foot the same way each kick";
+  // If consistency score is below 60, the player's speed is all over the place.
+  // The most common cause: inconsistent plant foot position.
+
+  if (spinSd > 80.0f && recCount < MAX_RECS)
+    recommendations[recCount++] = "Your spin rate is inconsistent - focus on a repeatable foot contact point";
+  // If spin varies by more than 80 RPM on average, the contact point is moving.
+
+  if (aAngle < 18.0f && recCount < MAX_RECS)
+    recommendations[recCount++] = "Launch angle too low for curve shots - aim higher on the ball";
+  // Average angle below 18° means shots are flying very flat.
+  // For curve shots especially, some height is needed to let the curl work.
+
+  if (aAngle > 55.0f && recCount < MAX_RECS)
+    recommendations[recCount++] = "Launch angle very high - strike through the centre for more drive";
+  // Average angle above 55° means too many shots are going over the crossbar height.
+
+  if (spinMean < 80.0f && aSpeed > 40.0f && recCount < MAX_RECS)
+    recommendations[recCount++] = "Speed is your strongest stat - work on adding spin for curve and dip";
+  // Player is fast but not putting spin on the ball — leaving curve potential unused.
+
+  if (aSpeed < 25.0f && recCount < MAX_RECS)
+    recommendations[recCount++] = "Generate more speed - follow through fully and accelerate the kicking leg";
+  // Average speed below 25 mph suggests a mechanics issue, not just lack of strength.
+
+  if (recCount == 0)
+    recommendations[recCount++] = "Solid all-round session - keep repeating your technique to lock it in";
+  // If no issues were detected, give positive reinforcement.
+}
+
+
+// ============================================================================
+//  BATTERY MONITORING
+// ============================================================================
+
+void readBattery() {
+  if (BATTERY_ENABLE_PIN >= 0) digitalWrite(BATTERY_ENABLE_PIN, LOW);
+  // Enable the battery measurement circuit if required by the board.
+
+  int   raw  = analogRead(BATTERY_ADC_PIN);
+  // Read the raw ADC value (0–4095) from the battery voltage pin.
+
+  float vAdc = (raw / ADC_MAX) * ADC_REF_V;
+  // Convert the raw value to the voltage actually at the ADC pin.
+  // (raw / 4095) gives the fraction of full scale, × 3.6V = actual voltage.
+
+  float vBat = vAdc * BATTERY_DIVIDER;
+  // Multiply by the resistor divider ratio to get the true battery voltage.
+
+  int pct = (int)((vBat - VBAT_EMPTY_V) / (VBAT_FULL_V - VBAT_EMPTY_V) * 100.0f);
+  if (pct > 100) pct = 100;
+  if (pct < 0)   pct = 0;
+  // Convert voltage to a percentage: 0% at 3.3V, 100% at 4.2V.
+  // Clamp to the valid 0–100 range.
+
+  batteryPct = pct; batteryLow = (pct <= BATTERY_LOW_PCT);
+  if (batteryLow) Serial.println(F("[WARN] Battery low (<=20%)"));
+}
+
+void servicePeriodicBattery() {
+  if (millis() - lastBatterySendMs < BATTERY_SEND_MS) return;
+  // Only run this every 60 seconds.
+
+  lastBatterySendMs = millis();
+  readBattery();
+  // Update the battery reading.
+
+  if (state != S_IDLE) return;
+  if (!(central && central.connected())) return;
+  // Only send a battery update when idle and connected.
+  // We don't want to interrupt a kick transmission.
+
+  String j = "{\"battery\":{\"percentage\":";
+  j += batteryPct; j += ",\"lowBattery\":";
+  j += batteryLow ? "true" : "false"; j += "}}\n";
+  dataChar.writeValue((const uint8_t *)j.c_str(), j.length());
+  // Build a small JSON string with just the battery info and send it.
+
+  Serial.print(F("[BLE] battery ")); Serial.print(batteryPct); Serial.println(F("%"));
+}
+
+
+// ============================================================================
+//  BLUETOOTH CONNECTION MANAGEMENT
+// ============================================================================
+
+void updateCentral() {
+  BLEDevice c = BLE.central();
+  // Check if any Bluetooth device is currently connected.
+
+  if (c) {
+    if (!central || !central.connected()) {
+      Serial.print(F("[BLE] connected: ")); Serial.println(c.address());
+      // A new device just connected. Print its Bluetooth address.
+    }
+    central = c;
+    // Store the connected device so we can send data to it.
+  } else {
+    if (central && !central.connected()) {
+      Serial.println(F("[BLE] disconnected - re-advertising"));
+      central = BLEDevice(); BLE.advertise();
+      // The connected device disconnected. Clear the reference and
+      // start advertising again so a new connection can be made.
+    }
+  }
+}
+
+
+// ============================================================================
+//  JSON BUILDER — formats all kick data into one structured text message
+// ============================================================================
+
+String f1(float v) { char b[16]; snprintf(b, sizeof(b), "%.1f", v); return String(b); }
+// Format a number to 1 decimal place. Example: 38.471 → "38.5"
+// snprintf writes the formatted string into buffer b.
+
+String buildKickJson() {
+  // Build the complete JSON object that gets sent to the web app.
+  // JSON is a standard text format for data exchange — the app reads this
+  // and uses it to update all the charts and stats displayed on screen.
+
+  String j; j.reserve(900);
+  // Reserve 900 characters of memory upfront. This avoids the string
+  // having to repeatedly reallocate memory as it grows, improving performance.
+
+  j  = "{\"kick\":{";
+  j +=   "\"number\":";            j += kick.number;
+  j +=   ",\"timestamp\":";        j += kick.timestamp;
+  j +=   ",\"classification\":\""; j += kick.classification; j += "\"";
+  j +=   ",\"powerScore\":";       j += kick.powerScore;
+  j += "},";
+  // Kick identity section: which kick, when, what type, power score.
+
+  j += "\"impact\":{";
+  j +=   "\"peakG\":";             j += f1(kick.peakG);
+  j +=   ",\"clipped\":";          j += kick.gClipped ? "true" : "false";
+  j += "},";
+  // Impact section: peak G-force and whether the sensor maxed out.
+
+  j += "\"motion\":{";
+  j +=   "\"speedMph\":";          j += f1(kick.speedMph);
+  j +=   ",\"speedKmh\":";         j += f1(kick.speedKmh);
+  j +=   ",\"launchAngle\":";      j += f1(kick.launchAngle);
+  j +=   ",\"flightTimeMs\":";     j += (long)kick.flightTimeMs;
+  j +=   ",\"curlDegrees\":";      j += f1(kick.curlDegrees);
+  j += "},";
+  // Motion section: speed in both units, trajectory info.
+
+  j += "\"spin\":{";
+  j +=   "\"rateRPM\":";           j += (int)(kick.spinRPM + 0.5f);
+  j +=   ",\"clipped\":";          j += kick.rpmClipped ? "true" : "false";
+  j +=   ",\"axis\":\"";           j += kick.spinAxis; j += "\"";
+  j +=   ",\"mixedSpin\":";        j += kick.mixedSpin ? "true" : "false";
+  j += "},";
+  // Spin section: how fast, which axis, whether the sensor maxed out.
+
+  j += "\"strike\":{";
+  j +=   "\"quality\":";           j += kick.strikeQuality;
+  j +=   ",\"classification\":\""; j += kick.strikeClass; j += "\"";
+  j +=   ",\"intensity\":";        j += kick.strikeIntensity;
+  j +=   ",\"contactMs\":";        j += kick.contactMs;
+  j += "},";
+  // Strike section: microphone-based contact quality data.
+
+  j += "\"session\":{";
+  j +=   "\"totalKicks\":";        j += sessionKicks;
+  j +=   ",\"consistencyScore\":"; j += consistencyScore();
+  j +=   ",\"avgSpeedMph\":";      j += f1(avgSpeedMph());
+  j +=   ",\"avgPowerScore\":";    j += (int)(avgPower() + 0.5f);
+  j +=   ",\"improvementTrend\":\""; j += improvementTrend(); j += "\"";
+  j += "},";
+  // Session section: how the whole session is going so far.
+
+  j += "\"personalBests\":{";
+  j +=   "\"speedMph\":";          j += f1(bests.speedMph);
+  j +=   ",\"powerScore\":";       j += (int)(bests.powerScore + 0.5f);
+  j +=   ",\"spinRPM\":";          j += (int)(bests.spinRPM + 0.5f);
+  j +=   ",\"strikeQuality\":";    j += (int)(bests.strikeQuality + 0.5f);
+  j +=   ",\"newBestBroken\":";    j += newBestBroken ? "true" : "false";
+  j +=   ",\"whichBest\":\"";      j += whichBest; j += "\"";
+  j += "},";
+  // Personal bests section: all-time records and whether one was just broken.
+
+  j += "\"battery\":{";
+  j +=   "\"percentage\":";        j += batteryPct;
+  j +=   ",\"lowBattery\":";       j += batteryLow ? "true" : "false";
+  j += "},";
+  // Battery section: current charge level.
+
+  j += "\"recommendations\":[";
+  for (int i = 0; i < recCount; i++) {
+    if (i) j += ",";
+    j += "\""; j += jsonEscape(recommendations[i]); j += "\"";
+  }
+  j += "]}";
+  // Recommendations section: up to 3 coaching tips from AMIR.
+  // Each tip is wrapped in quotes and separated by commas.
+
+  return j;
+  // Return the complete JSON string. Example of what it looks like:
+  // {"kick":{"number":3,"classification":"curve_ball","powerScore":71},
+  //  "motion":{"speedMph":36.2,"launchAngle":24.0},...}
+}
+
+
+String jsonEscape(const String &in) {
+  // Make a string safe to include inside JSON by escaping special characters.
+  // JSON strings cannot contain raw " or \ characters — they must be preceded
+  // by a backslash: " becomes \" and \ becomes \\.
+
+  String out; out.reserve(in.length() + 8);
+  for (unsigned int i = 0; i < in.length(); i++) {
+    char c = in[i];
+    if (c == '"' || c == '\\') out += '\\';
+    // If the character is a quote or backslash, add a backslash before it.
+    out += c;
+    // Then add the character itself.
+  }
+  return out;
+}
+
+
+// ============================================================================
+//  SMALL HELPER FUNCTIONS
+// ============================================================================
+
+float constrainf(float v, float lo, float hi) {
+  // Clamp a floating-point value between a minimum (lo) and maximum (hi).
+  // Example: constrainf(150.0, 0.0, 100.0) returns 100.0.
+  // Example: constrainf(-5.0, 0.0, 100.0) returns 0.0.
+  // Example: constrainf(72.3, 0.0, 100.0) returns 72.3 (unchanged).
+
+  if (v < lo) return lo;
+  if (v > hi) return hi;
+  return v;
+}
