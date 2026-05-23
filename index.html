@@ -458,7 +458,7 @@ body{
     <p>A smart soccer ball that turns every kick into professional-grade data</p>
   </div>
   <div class="card anim-item">
-    <p>Professional soccer analytics have always belonged to elite clubs with expensive equipment. Spin Off changes that. We embedded a microcontroller, six-axis IMU, and PDM microphone inside a regulation soccer ball. Every kick fires a Bluetooth data packet to the companion web app in under 100 milliseconds — where our AI coaching engine, AMIR, turns raw numbers into instant, actionable feedback.</p>
+    <p>Professional soccer analytics have always belonged to elite clubs with expensive equipment. Spin Off changes that. We embedded a microcontroller, six-axis IMU, and PDM microphone inside a regulation soccer ball. Every kick fires a Bluetooth data packet to the companion web app in under 100 milliseconds, where our AI coaching engine, AMIR, turns raw numbers into instant, actionable feedback.</p>
     <p>No subscription. No dedicated hardware beyond the ball itself. Just kick, connect from any Chrome browser, and improve.</p>
   </div>
   <div class="grid-3 anim-stagger">
@@ -468,15 +468,15 @@ body{
     </div>
     <div class="feature-card anim-item">
       <h3>Spin Analysis</h3>
-      <p>Gyroscope data classifies topspin, backspin, sidespin, and mixed spin at up to 1660 Hz — letting you see exactly what your foot does at the moment of contact.</p>
+      <p>Gyroscope data classifies topspin, backspin, sidespin, and mixed spin at up to 1660 Hz,letting you see exactly what your foot does at the moment of contact.</p>
     </div>
     <div class="feature-card anim-item">
       <h3>AI Coaching</h3>
-      <p>AMIR — our own trained model — analyzes every session and delivers targeted technique feedback after every five kicks.</p>
+      <p>AMIR, our own trained model, analyzes every session and delivers targeted technique feedback after every five kicks.</p>
     </div>
     <div class="feature-card anim-item">
       <h3>Strike Quality</h3>
-      <p>The built-in PDM microphone grades each kick from 0 to 100 based on the acoustic signature of contact — clean strike vs. mishit vs. off-center.</p>
+      <p>The built-in PDM microphone grades each kick from 0 to 100 based on the acoustic signature of contact,clean strike vs. mishit vs. off-center.</p>
     </div>
     <div class="feature-card anim-item">
       <h3>Shot Mapping</h3>
@@ -496,39 +496,35 @@ body{
   </div>
   <div class="card anim-item">
     <h3>What is AMIR?</h3>
-    <p>AMIR is our custom AI coaching engine. It runs as two complementary layers. A fast rule-based system derived from real coach interviews fires on every single kick, catching immediate technique problems. A PyTorch neural network we trained from scratch runs every five kicks to surface trend-based patterns — consistency drops, chronic high launch angles, spin rate degradation from fatigue.</p>
-    <p>Both layers generate specific, prescriptive feedback using language drawn directly from the coaches we interviewed. Not generic tips — the same words a coach would actually say.</p>
+    <p>AMIR is our custom AI coaching engine. It runs as two complementary layers. A fast rule based system derived from real coach interviews fires on every single kick, catching immediate technique problems. A PyTorch neural network we trained from scratch runs every five kicks to surface trend-based patterns  consistency drops, chronic high launch angles, spin rate degradation from fatigue.</p>
+    <p>Both layers generate specific, prescriptive feedback using language drawn directly from the coaches we interviewed. Not generic tips, the same words a coach would actually say.</p>
   </div>
 
   <div class="accordion anim-item">
-    <div class="accordion-header">Full Technical Breakdown — PyTorch training, coach interviews, and feedback rules <span class="accordion-arrow">&#9660;</span></div>
+    <div class="accordion-header">Full Technical Breakdown: PyTorch training, coach interviews, and feedback rules <span class="accordion-arrow">&#9660;</span></div>
     <div class="accordion-body">
       <div class="accordion-inner">
         <h4>PyTorch Training Process</h4>
-        <p>We trained a 3-layer fully-connected neural network using PyTorch. Our dataset: approximately 500 labeled kick samples collected from three local youth soccer coaches and twelve student players across two weeks of field sessions. Each sample included speed (mph), spin rate (RPM), launch angle, strike quality score, impact force, and a coach-assigned quality label — excellent, good, or needs work.</p>
-        <p>Training ran for 80 epochs with the Adam optimizer at learning rate 0.001, cross-entropy loss, and an 80/20 train/validation split. Final validation accuracy: <strong>87.4%</strong>. The trained weights were exported to a JSON array and embedded in the web app so all inference happens in the browser — no server, no API call, no latency.</p>
-        <h4>Coach Interviews</h4>
-        <p>Before writing a single line of feedback logic, we interviewed three youth soccer coaches whose words shaped every threshold and recommendation AMIR gives.</p>
-        <blockquote>"A 50 mph clean strike beats a 70 mph mishit every time. I don't coach for raw power — I coach for contact quality."<cite>Coach Rodriguez — varsity high school, 14 years</cite></blockquote>
-        <blockquote>"Most kids trying to curve the ball strike it dead center. They're killing all the spin before it even transfers. Move the contact point — that's the whole fix."<cite>Coach Kim — club soccer, 9 years</cite></blockquote>
-        <blockquote>"Getting the launch angle right is the single biggest improvement I see in young players. Either a laser into the ground or it's over the crossbar. There's a middle."<cite>Coach Thompson — middle school, 6 years</cite></blockquote>
+        <p>We trained a 3-layer fully-connected neural network using PyTorch. Our dataset: approximately 500 labeled kick samples collected from three local youth soccer coaches and twelve student players across two weeks of field sessions. Each sample included speed (mph), spin rate (RPM), launch angle, strike quality score, impact force, and a coach-assigned quality label, excellent, good, or needs work.</p>
+        <p>Training ran for 80 epochs with the Adam optimizer at learning rate 0.001, cross-entropy loss, and an 80/20 train/validation split. Final validation accuracy: <strong>87.4%</strong>. The trained weights were exported to a JSON array and embedded in the web app so all inference happens in the browser, no server, no API call, no latency.</p>
+
         <h4>Feedback Rule: Weak Shots (under 25 mph)</h4>
         <ul>
           <li>"Your plant foot should land 6–8 inches beside the ball, pointing at your target."</li>
           <li>"Drive through the center of the ball with your laces, not your toe. Toe kicks lose power before it reaches the ball."</li>
-          <li>"Follow all the way through — your kicking leg should finish above hip height."</li>
+          <li>"Follow all the way through, your kicking leg should finish above hip height."</li>
           <li>"Use a 5-step approach to build momentum before contact."</li>
         </ul>
         <h4>Feedback Rule: Low-Spin Curve Balls (under 100 RPM with curve classification)</h4>
         <ul>
-          <li>"Strike the inside edge — not the center. Aim for the outside quarter of the ball's face."</li>
+          <li>"Strike the inside edge, not the center. Aim for the outside quarter of the ball's face."</li>
           <li>"Angle your approach 30–45 degrees to the target line."</li>
           <li>"Snap your ankle outward at contact. That snap is what transfers spin to the ball."</li>
-          <li>"Use the arch of your inside foot — it gives a larger spin surface than the laces."</li>
+          <li>"Use the arch of your inside foot, it gives a larger spin surface than the laces."</li>
         </ul>
         <h4>Feedback Rule: High Launch Angle (above 35 degrees)</h4>
         <ul>
-          <li>"Keep your body over the ball — leaning back at contact is the leading cause of high shots."</li>
+          <li>"Keep your body over the ball, leaning back at contact is the leading cause of high shots."</li>
           <li>"Strike the center or upper half of the ball. The bottom half sends it skyward."</li>
           <li>"Your follow-through should stay horizontal. If your leg swings upward, that is exactly where the ball went."</li>
         </ul>
@@ -558,7 +554,7 @@ body{
   </div>
   <div class="card center anim-item">
     <h3>Our Mission</h3>
-    <p>Professional sports analytics have always been gated behind cost and access. We built Spin Off to remove that gate — and to show that two 7th graders with a question and five months could actually do it.</p>
+    <p>Professional sports analytics have always been gated behind cost and access. We built Spin Off to remove that gate, and to show that two 7th graders with a question and five months could actually do it.</p>
   </div>
 
   <div class="section-gap"></div>
@@ -590,7 +586,7 @@ body{
     </div>
     <div class="feature-card anim-item">
       <h3>Other Sports</h3>
-      <p>Extend the same sensor-and-AI platform to basketball, football, and volleyball — any sport where ball analytics drives improvement.</p>
+      <p>Extend the same sensor-and-AI platform to basketball, football, and volleyball, any sport where ball analytics drives improvement.</p>
     </div>
   </div>
 
@@ -617,12 +613,12 @@ body{
     <div class="accordion-body">
       <div class="accordion-inner">
         <p>Now that we look back at Spin Off, we see how far we've come. The obstacles we've overcome, the moments that challenged us, and the progress we didn't always recognize while it was happening.</p>
-        <p>When we first started, it was just an idea: a soccer ball that could measure performance. But turning that idea into something real was far from simple. There were moments when the data didn't make sense, when our system failed in ways we didn't expect, and when we had to step back and rethink everything we had built. At times, it felt like we were going in circles — fixing one problem only to discover another.</p>
+        <p>When we first started, it was just an idea: a soccer ball that could measure performance. But turning that idea into something real was far from simple. There were moments when the data didn't make sense, when our system failed in ways we didn't expect, and when we had to step back and rethink everything we had built. At times, it felt like we were going in circles,fixing one problem only to discover another.</p>
         <p>But looking back, those moments weren't setbacks in the way we first saw them. They were part of the process. Every error forced us to understand our system more deeply, every failure pushed us to improve our design, and every revision brought us one step closer to something that actually worked.</p>
-        <p>And even when things got hard, we weren't alone. We had people who supported us in different ways — through simple encouragement like "keep going," through advice when we were stuck, and through late night conversations that helped us stay motivated when things weren't working the way we hoped. Those moments didn't always feel significant at the time, but they became part of what carried us forward.</p>
+        <p>And even when things got hard, we weren't alone. We had people who supported us in different ways, through simple encouragement like "keep going," through advice when we were stuck, and through late night conversations that helped us stay motivated when things weren't working the way we hoped. Those moments didn't always feel significant at the time, but they became part of what carried us forward.</p>
         <p>Right now, it's 10:30 PM as we write this. And maybe that says something about the project itself. Spin Off wasn't built in a single moment of inspiration. It was built across late nights, early mornings, long debugging sessions, and quiet moments of thinking things through when no one else was around. Most of those moments we won't remember clearly, but together they shaped everything that we've built here.</p>
         <p>The good and the bad are both part of this journey. The successes gave us confidence, and the failures taught us patience. Together, they shaped not only our invention, but also how we think as engineers, problem solvers, and learners.</p>
-        <p>In the end, Spin Off represents something bigger than technology — it represents the belief that improvement should never be guesswork, but something you can see, measure, and build on every day.</p>
+        <p>In the end, Spin Off represents something bigger than technology, it represents the belief that improvement should never be guesswork, but something you can see, measure, and build on every day.</p>
         <p style="margin-top:20px;"><strong>— Sahil &amp; Skyler, Invention Convention 2026</strong></p>
       </div>
     </div>
@@ -651,13 +647,13 @@ body{
       <div class="pipeline-step"><div class="pipeline-num">5</div><div class="pipeline-title">BLE Transmission</div></div>
       <div class="pipeline-step"><div class="pipeline-num">6</div><div class="pipeline-title">AI Analysis</div></div>
     </div>
-    <p>The firmware runs a six-stage state machine — from the moment the kick threshold is crossed to the JSON packet landing in the web app — in under 300 milliseconds.</p>
+    <p>The firmware runs a six-stage state machine, from the moment the kick threshold is crossed to the JSON packet landing in the web app, in under 300 milliseconds.</p>
   </div>
 
   <div class="card anim-item">
     <h3>Kick Detection — State Machine</h3>
     <p>The firmware uses a six-state machine (IDLE → DETECTING → KICK_DETECTED → SPIN_SAMPLING → ANALYZING → SENDING) with a two-tier acceleration gate to eliminate false positives from ball handling, drops, or bounces.</p>
-    <p>When filtered acceleration crosses <strong>5G (KICK_ENTER_G)</strong>, the firmware enters DETECTING and immediately begins integrating velocity. A kick is only confirmed after the 160 ms window if the peak reached <strong>7G (KICK_CONFIRM_G)</strong> with at least 150°/s of concurrent gyroscope rotation — and the threshold crossing count stayed at 1. Catches and bounces produce multiple crossings; a clean kick produces exactly one.</p>
+    <p>When filtered acceleration crosses <strong>5G (KICK_ENTER_G)</strong>, the firmware enters DETECTING and immediately begins integrating velocity. A kick is only confirmed after the 160 ms window if the peak reached <strong>7G (KICK_CONFIRM_G)</strong> with at least 150°/s of concurrent gyroscope rotation,and the threshold crossing count stayed at 1. Catches and bounces produce multiple crossings; a clean kick produces exactly one.</p>
     <div class="code-block"><code><span class="c">// Two-tier gate: enter at 5G, confirm at 7G + 150 dps gyro</span>
 <span class="k">bool</span> <span class="v">strong</span>  = (<span class="v">capPeakG</span> >= <span class="v">KICK_CONFIRM_G</span>) &&
                (<span class="v">capPeakG</span> >= <span class="n">9.0f</span> || <span class="v">capPeakGyroMag</span> >= <span class="v">KICK_GYRO_CONFIRM</span>);
@@ -676,8 +672,8 @@ body{
 
   <div class="card anim-item">
     <h3>Adaptive Signal Processing</h3>
-    <p>A fixed-alpha low-pass filter forces a trade-off: fast response loses noise suppression, slow response misses peaks. The firmware solves this by switching the filter coefficient based on the current state — fast during impact so no peak is clipped, slow at rest so gravity noise averages out completely.</p>
-    <div class="code-block"><code><span class="c">// Alpha switches with state — fast during impact, slow at rest</span>
+    <p>A fixed-alpha low-pass filter forces a trade-off: fast response loses noise suppression, slow response misses peaks. The firmware solves this by switching the filter coefficient based on the current state,fast during impact so no peak is clipped, slow at rest so gravity noise averages out completely.</p>
+    <div class="code-block"><code><span class="c">// Alpha switches with state,fast during impact, slow at rest</span>
 <span class="k">float</span> <span class="f">currentAlpha</span>() {
   <span class="k">switch</span> (<span class="v">state</span>) {
     <span class="k">case</span> <span class="v">S_DETECTING</span>:
@@ -695,7 +691,7 @@ body{
 
   <div class="card anim-item">
     <h3>Physics Engine — Velocity Integration</h3>
-    <p>Previous firmware estimated speed from peak acceleration (the impulse approximation). The new firmware integrates acceleration directly over the impact window — physically accurate for any kick style, not just hard flat strikes.</p>
+    <p>Previous firmware estimated speed from peak acceleration (the impulse approximation). The new firmware integrates acceleration directly over the impact window, physically accurate for any kick style, not just hard flat strikes.</p>
     <p>To integrate accurately, gravity must be subtracted from every reading. But as the ball rotates, the gravity vector rotates too. The firmware tracks it in real time using the gyroscope via a cross-product rotation step each sample:</p>
     <div class="code-block"><code><span class="c">// Rotate the tracked gravity vector using gyro angular velocity</span>
 <span class="k">float</span> <span class="v">omX</span> = <span class="v">fGx</span> * <span class="n">0.01745329f</span>;  <span class="c">// deg/s to rad/s</span>
@@ -710,13 +706,13 @@ body{
 <span class="c">// Subtract rotated gravity, then integrate to velocity</span>
 <span class="k">float</span> <span class="v">linAx</span> = (<span class="v">rawAx</span> - <span class="v">gravKx</span>) * <span class="n">9.81f</span>;
 <span class="v">velX</span> += <span class="v">linAx</span> * <span class="v">dt</span>;</code></div>
-    <p>Launch angle is read directly from the final velocity vector — <code>atan2(|vZ|, vHoriz)</code> — rather than from flight time. This works even for ground passes and shots into the net that never leave the ground.</p>
+    <p>Launch angle is read directly from the final velocity vector <code>atan2(|vZ|, vHoriz)</code>  rather than from flight time. This works even for ground passes and shots into the net that never leave the ground.</p>
   </div>
 
   <div class="card anim-item">
     <h3>BLE Data Transmission</h3>
     <p>All kick data is packed into a single self-describing JSON object and streamed over one BLE characteristic in 160-byte chunks with a 20 ms gap between chunks. The web app reassembles them and parses the full object. This replaces the previous three-characteristic pipe-delimited format and adds session stats, personal bests, battery level, and coaching recommendations to every packet.</p>
-    <div class="code-block"><code><span class="c">// Single JSON characteristic — complete kick payload</span>
+    <div class="code-block"><code><span class="c">// Single JSON characteristic, complete kick payload</span>
 {
   <span class="s">"kick"</span>:    { <span class="s">"number"</span>: <span class="n">12</span>, <span class="s">"classification"</span>: <span class="s">"curve_ball"</span>, <span class="s">"powerScore"</span>: <span class="n">74</span> },
   <span class="s">"motion"</span>:  { <span class="s">"speedMph"</span>: <span class="n">38.4</span>, <span class="s">"launchAngle"</span>: <span class="n">22.0</span>, <span class="s">"curlDegrees"</span>: <span class="n">11.2</span> },
@@ -728,15 +724,15 @@ body{
   <span class="s">"battery"</span>: { <span class="s">"percentage"</span>: <span class="n">82</span>, <span class="s">"lowBattery"</span>: <span class="k">false</span> },
   <span class="s">"recommendations"</span>: [<span class="s">"Focus on a repeatable foot contact point"</span>]
 }</code></div>
-    <p>The single-characteristic design means one BLE notification subscription, no race condition between multiple characteristics, and easy extensibility — new fields are just added to the JSON object.</p>
+    <p>The single-characteristic design means one BLE notification subscription, no race condition between multiple characteristics, and easy extensibility, new fields are just added to the JSON object.</p>
   </div>
 
   <div class="card anim-item">
     <h3>AMIR Architecture</h3>
     <p>AMIR runs as two independent layers that both contribute to the coaching output in the app.</p>
     <p><strong>Layer 1 — Rule Engine (fires every kick):</strong> Explicit thresholds derived from coach interviews. Speed under 25 mph triggers power tips. Spin under 100 RPM on a curve ball triggers spin mechanics tips. Launch angle above 35 degrees triggers body-position tips. Multiple rules can fire on the same kick with priority weighting.</p>
-    <p><strong>Layer 2 — Neural Network (fires every 5 kicks):</strong> A 3-layer fully-connected network trained with PyTorch on 500 labeled kick samples (input: 5 features, hidden: 32 units each, output: 3 classes). Weights are a 4 KB JSON array embedded in the web app — all inference happens in the browser with no server or API call. Final validation accuracy: <strong>87.4%</strong>.</p>
-    <p><strong>On-device session analysis:</strong> The firmware itself tracks a rolling window of up to 80 kicks and computes a consistency score (coefficient of variation of speed) and improvement trend (early vs. late half power score average). Every 5 kicks it generates up to 3 targeted recommendations from a rule set grounded in the coach interviews — these travel inside the JSON packet so the app can surface them immediately.</p>
+    <p><strong>Layer 2 — Neural Network (fires every 5 kicks):</strong> A 3-layer fully-connected network trained with PyTorch on 500 labeled kick samples (input: 5 features, hidden: 32 units each, output: 3 classes). Weights are a 4 KB JSON array embedded in the web app, all inference happens in the browser with no server or API call. Final validation accuracy: <strong>87.4%</strong>.</p>
+    <p><strong>On-device session analysis:</strong> The firmware itself tracks a rolling window of up to 80 kicks and computes a consistency score (coefficient of variation of speed) and improvement trend (early vs. late half power score average). Every 5 kicks it generates up to 3 targeted recommendations from a rule set grounded in the coach interviews, these travel inside the JSON packet so the app can surface them immediately.</p>
     <p><strong>Personal bests tracking:</strong> The firmware tracks peak speed, power score, spin RPM, and strike quality. When a new best is set, <code>newBestBroken: true</code> and <code>whichBest</code> are included in the payload so the app can trigger a celebration in real time.</p>
   </div>
 
@@ -768,14 +764,14 @@ body{
   <div class="card anim-item">
     <h3>Project at a Glance</h3>
     <p>Spin Off is a professional-grade soccer ball analytics system built entirely by two 7th-grade students over five months. It measures kick speed, spin rate, launch angle, flight time, impact force, and strike quality using embedded sensors, transmits data via Bluetooth 5.0, and delivers AI-powered coaching through a self-contained web application.</p>
-    <p>The project was created for Invention Convention 2026 and validated through field testing with four competitive soccer clubs — Beach FC, Sand and Surf SC, ECNL Beach FC, and MLS Next LA Galaxy — using a professional radar gun as the reference standard.</p>
+    <p>The project was created for Invention Convention 2026 and validated through field testing.</p>
   </div>
 
   <div class="grid-2 anim-stagger">
     <div class="card anim-item">
       <h3>The Problem</h3>
       <p>Professional soccer clubs use multi-camera tracking systems, GPS vests, and force-plate sensors to measure player performance. These systems cost tens of thousands of dollars and require dedicated technical staff to operate.</p>
-      <p>Youth players, school teams, and recreational players — who represent the vast majority of people who play the sport — have no access to this data. They improve by feel and guesswork. Or they don't improve at all.</p>
+      <p>Youth players, school teams, and recreational players, who represent the vast majority of people who play the sport, have no access to this data. They improve by feel and guesswork. Or they don't improve at all.</p>
     </div>
     <div class="card anim-item">
       <h3>Our Solution</h3>
@@ -787,83 +783,10 @@ body{
   <div class="section-gap"></div>
 
   <div class="section-header anim-item">
-    <h2>Real-World Validation</h2>
-    <p>Field testing against a professional radar gun — February 2026</p>
-  </div>
-  <div class="card anim-item">
-    <p>We tested Spin Off with four competitive soccer clubs across three days, comparing our speed readings directly against a professional radar gun reading for each kick. All testing was conducted on grass in sunny conditions.</p>
-    <div style="overflow-x:auto; margin-top:18px;">
-      <table class="data-table">
-        <thead>
-          <tr><th>Team / Club</th><th>Skill Level</th><th>Age</th><th>Spin Off (mph)</th><th>Radar Gun (mph)</th><th>Difference</th><th>AI Correct</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Beach FC South Bay</td><td class="int">Intermediate</td><td>13</td><td>28.4–30.2</td><td>29.2–31.5</td><td>0.7–1.3</td><td class="yes">Yes</td></tr>
-          <tr><td>Sand and Surf SC</td><td class="int">Intermediate</td><td>13</td><td>30.6–32.8</td><td>31.9–34.1</td><td>1.3–1.5</td><td class="yes">Yes</td></tr>
-          <tr><td>ECNL Beach FC</td><td class="adv">Advanced</td><td>14</td><td>41.3–44.8</td><td>42.8–46.5</td><td>1.5–1.7</td><td class="yes">Yes</td></tr>
-          <tr><td>MLS Next LA Galaxy</td><td class="adv">Advanced</td><td>15</td><td>51.6–54.8</td><td>53.4–56.9</td><td>1.8–2.1</td><td class="yes">Yes</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
 
-  <div class="accordion anim-item">
-    <div class="accordion-header">What the numbers show — accuracy analysis <span class="accordion-arrow">&#9660;</span></div>
-    <div class="accordion-body">
-      <div class="accordion-inner">
-        <p><strong>Speed accuracy:</strong> Across all 20 kicks in our validation set, the average difference between Spin Off and the radar gun was 1.44 mph — approximately 3.5% relative error. Professional tracking systems typically report ±1–2 mph accuracy, placing Spin Off within the same range.</p>
-        <p><strong>Systematic offset:</strong> Spin Off consistently reads slightly lower than the radar gun at higher speeds. This is expected: the radar gun measures ball velocity at peak (at the foot), while our speed estimate integrates from the IMU after contact. A small calibration factor could close this gap entirely in a future firmware version.</p>
-        <p><strong>AI classification accuracy:</strong> AMIR's shot classification (power shot, curve ball, chip shot, etc.) was correct on all 20 validation kicks. While a 20-kick sample is not statistically conclusive, it is consistent with our 87.4% validation accuracy from the training dataset.</p>
-        <p><strong>Skill-level separation:</strong> The data shows clear separation between intermediate players (28–35 mph) and advanced/elite players (41–55 mph). This confirms the sensor accurately captures meaningful performance differences between skill levels — not just random variation.</p>
-      </div>
-    </div>
-  </div>
 
   <div class="section-gap"></div>
 
-  <div class="section-header anim-item">
-    <h2>Development Timeline</h2>
-    <p>October 2025 to Invention Convention 2026</p>
-  </div>
-  <div class="card anim-item">
-    <div class="timeline">
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="timeline-content">
-          <h3>October 2025</h3>
-          <p>Initial concept. Began researching microcontrollers, IMU sensors, and BLE capabilities. Settled on the Arduino Nano 33 BLE Sense Rev 2 for its onboard IMU and built-in microphone.</p>
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="timeline-content">
-          <h3>November 2025</h3>
-          <p>Research and component selection. Conducted coach interviews that became the foundation of AMIR's feedback logic. Built the first breadboard prototype.</p>
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="timeline-content">
-          <h3>December 2025</h3>
-          <p>Prototype 1. Basic accelerometer readings working over BLE. Speed readings off by 3x — the gravity problem. Rebuilt the detection algorithm from absolute magnitude to change-based detection. Accuracy improved immediately.</p>
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="timeline-content">
-          <h3>January 2026</h3>
-          <p>Final version. Added gyroscope spin detection, PDM microphone for strike quality, full web app, and AMIR trained on 500 labeled kicks. First live session with real-time charts updating from actual kicks.</p>
-        </div>
-      </div>
-      <div class="timeline-item">
-        <div class="timeline-dot"></div>
-        <div class="timeline-content">
-          <h3>February 2026</h3>
-          <p>Field validation with four clubs. Confirmed speed accuracy against radar gun. Presented at Invention Convention 2026.</p>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <div class="section-gap"></div>
 
@@ -872,16 +795,15 @@ body{
   </div>
   <div class="card anim-item">
     <p><strong>Our STEAM teacher</strong> — for pushing us past the comfortable first prototype when it would have been easy to stop.</p>
-    <p><strong>Coach Rodriguez, Coach Kim, and Coach Thompson</strong> — for giving us their time and letting us record their advice for AMIR's feedback engine. Spin Off's coaching voice is theirs.</p>
-    <p><strong>Beach FC South Bay, Sand and Surf SC, ECNL Beach FC, and MLS Next LA Galaxy</strong> — for field-testing with us and providing the validation data that proved the system works across skill levels.</p>
     <p><strong>Our families</strong> — for supporting the project, the late nights, and the soccer balls flying around the house.</p>
+    <p><strong>Our Coaches</strong> — for giving us their time and letting us record their advice for AMIR's feedback engine. Spin Off's coaching voice is theirs.</p>
   </div>
 
   <div class="section-gap"></div>
 
   <div class="contact-band anim-item">
     <h3>Contact for Press &amp; Judges</h3>
-    <p>For questions, demonstrations, source code, or additional documentation — reach us directly.</p>
+    <p>For questions, demonstrations, source code, or additional documentation, reach us directly.</p>
     <p><a href="mailto:inventionconventionspinoff@gmail.com" class="email-link">inventionconventionspinoff@gmail.com</a></p>
     <div class="contact-btns">
       <a href="https://forms.gle/feNw5kNKt2TsMMKo9" target="_blank" rel="noreferrer" class="btn btn-primary btn-lg">Feedback Form</a>
