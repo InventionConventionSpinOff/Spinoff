@@ -699,9 +699,9 @@ body{
   <div id="how-it-works" class="page">
     <div class="section-header"><h2>How It Works</h2><p>The science and technology behind Spin Off</p></div>
     <div class="timeline">
-      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h3>Step 1: Kick Detection</h3><p>The BMI270 IMU streams data via hardware FIFO at 1600 Hz. A kick is confirmed when raw accel exceeds 5 G for 3+ consecutive frames AND the gyroscope exceeds 150 °/s — eliminating false triggers when the device is still.</p></div></div>
-      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h3>Step 2: Data Collection</h3><p>During the 160 ms detection window, the firmware captures peak G-force, integrates velocity for speed, and simultaneously records 70 ms of PDM microphone audio for strike analysis.</p></div></div>
-      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h3>Step 3: Signal Processing</h3><p>A Mahony orientation filter (fusing accelerometer + gyroscope + BMM150 magnetometer) tracks orientation. Post-kick gyro samples estimate spin RPM, then blended with magnetometer rotation for a fused RPM value.</p></div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h3>Step 1: Kick Detection</h3><p>The  IMU streams data via hardware FIFO at 1600 Hz. A kick is confirmed when raw accel exceeds 5 G for 3+ consecutive frames AND the gyroscope exceeds 150 °/s — eliminating false triggers when the device is still.</p></div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h3>Step 2: Data Collection</h3><p>During the 160 ms detection window, the firmware captures peak G-force, integrates velocity for speed, and simultaneously records 70 ms of  microphone audio for strike analysis.</p></div></div>
+      <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h3>Step 3: Signal Processing</h3><p>A Mahony orientation filter (fusing accelerometer + gyroscope +  magnetometer) tracks orientation. Post-kick gyro samples estimate spin RPM, then blended with magnetometer rotation for a fused RPM value.</p></div></div>
       <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h3>Step 4: AMIR On-Device ML</h3><p>The AMIR system runs k-Nearest Neighbours classification against 7 kick archetypes, Welford online statistics for running averages, and least-squares trend analysis — all in under 1 ms with no external libraries.</p></div></div>
       <div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><h3>Step 5: BLE Transmission</h3><p>A flat JSON packet (≈512 bytes) is chunked into 160-byte BLE notifications and sent to the web app. The app reassembles chunks using newline termination, then displays all metrics instantly.</p></div></div>
     </div>
@@ -746,17 +746,13 @@ body{
         <strong>Humidity:</strong> HS3003 temperature &amp; humidity sensor<br>
         <strong>Microphone:</strong> Built-in PDM microphone (16 kHz)<br>
         <strong>Wireless:</strong> Bluetooth 5.0 Low Energy<br>
-        <strong>BLE UUIDs:</strong> Service 19B10000 / Char 19B10001
       </div></div>
       <div class="card"><h3>Software</h3><div class="rich">
         <strong>Firmware:</strong> C++ (Arduino framework, mbed core)<br>
-        <strong>Board target:</strong> arduino:mbed_nano:nano33ble<br>
         <strong>Web App:</strong> HTML5, CSS3, JavaScript (ES6+)<br>
         <strong>Charts:</strong> Chart.js for real-time data visualization<br>
-        <strong>AMIR AI:</strong> On-device k-NN + Welford + linear regression<br>
-        <strong>Cloud AI:</strong> Groq (Llama 3.3 70B) for coaching chat<br>
+        <strong>AMIR AI:</strong> On device AI Built by the Spin Off team,<br>
         <strong>Connectivity:</strong> Web Bluetooth API — chunked BLE notifications<br>
-        <strong>Data Format:</strong> Flat JSON (≈512 bytes) terminated by newline<br>
         <strong>Browser Support:</strong> Chrome, Edge, Opera (Desktop &amp; Mobile)
       </div></div>
     </div>
@@ -777,15 +773,15 @@ body{
   <div id="team" class="page">
     <div class="section-header"><h2>Meet the Inventors</h2><p>7th Grade Students | Invention Convention 2026</p></div>
     <div class="grid-2">
-      <div class="team-card"><div class="team-avatar" data-name="Sahil">S</div><h3>Sahil</h3><div class="team-role">Co-Inventor &amp; Software Developer</div><p>Passionate about electronics and sports technology. Led the hardware integration, BMI270 FIFO configuration, sensor calibration, Mahony filter tuning, AMIR ML system, and all Arduino firmware.</p></div>
-      <div class="team-card"><div class="team-avatar" data-name="Skyler">S</div><h3>Skyler</h3><div class="team-role">Co-Inventor &amp; Testing Lead</div><p>Enthusiastic about the build and led the physical testing. Dedicated to making professional sports analytics accessible to every player, not just the pros.</p></div>
+      <div class="team-card"><div class="team-avatar" data-name="Sahil">S</div><h3>Sahil</h3><div class="team-role">Co-Inventor &amp; Software Developer</div><p>Passionate about electronics and sports technology. Led the hardware and software development. Plays baseball and enjoys building PCs.</p></div>
+      <div class="team-card"><div class="team-avatar" data-name="Skyler">S</div><h3>Skyler</h3><div class="team-role">Co-Inventor &amp; Testing Lead</div><p>Enthusiastic about the build and led the physical testing. Led the AMIR development.</p></div>
     </div>
     <div class="card"><h3 class="center">Our Mission</h3><p class="center">We created Spin Off because professional-level sports analytics shouldn't be limited to elite athletes with expensive equipment. Every player deserves data-driven insights to improve technique, track progress, and reach their goals. By combining affordable hardware with powerful AI, we're making sports analytics accessible to players of all levels.</p></div>
     <div class="card"><h3 class="center">The Journey</h3><p>
-      <strong>October 2025:</strong> Initial concept — "What if we could track soccer ball data like professional teams?"<br><br>
-      <strong>November 2025:</strong> Research phase — chose Arduino Nano 33 BLE Sense Rev2 for its built-in BMI270, BMM150, LPS22HB, HS3003, and PDM mic all in one board.<br><br>
+      <strong>October 2025:</strong> Initial concept — "What if we could track soccer ball data?"<br><br>
+      <strong>November 2025:</strong> Research phase — chose Arduino Nano 33 BLE Sense Rev2 <br><br>
       <strong>December 2025:</strong> Prototype 1 — basic FIFO-based IMU readings and BLE streaming.<br><br>
-      <strong>January 2026:</strong> Final version — Mahony filter, AMIR on-device ML, strike FFT, web app, and AI coaching complete.
+      <strong>January 2026:</strong> Final version — AMIR on-device ML, added to AMIR dataset strike FFT, web app, and AI coaching complete.
     </p></div>
   </div>
 </div>
