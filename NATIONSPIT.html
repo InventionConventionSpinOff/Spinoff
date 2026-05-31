@@ -387,6 +387,21 @@ body{
   <p class="hero-subtitle">Professional Soccer Ball Analytics System</p>
   <p class="hero-tagline">Powered by AI • Built by Skyler and Sahil</p>
 </div>
+<script>
+    // Disable F12 and common inspect shortcuts
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'F12' || 
+            (event.ctrlKey && event.shiftKey && (event.key === 'I' || event.key === 'C' || event.key === 'J')) || 
+            (event.ctrlKey && event.key === 'U')) {
+            event.preventDefault();
+        }
+    });
+
+    // Disable right-click
+    document.addEventListener('contextmenu', function(event) {
+        event.preventDefault();
+    });
+</script>
 
 <div class="nav">
   <button class="nav-btn active" data-page="home">Home</button>
@@ -793,7 +808,7 @@ body{
    Battery-only heartbeat (servicePeriodicBattery):
      {"bat": <integer>}
    ==================================================================== */
-const GROQ_API_KEY     = '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';
+const GROQ_API_KEY     = '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';
 const STORAGE_KEY      = 'spinoffSessionHistory';
 const CHAT_STORAGE_KEY = 'spinoffChatHistory';
 const THEME_KEY        = 'spinoffTheme';
