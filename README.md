@@ -69,26 +69,34 @@ The signal processing pipeline is what makes all of this reliable. Raw accelerom
 
 ## How We Built AMIR
 
-AMIR (Athletic Motion Intelligence and Recognition) is the AI coaching engine at the heart of Spin Off. We built and trained it ourselves using PyTorch, the same deep learning framework used by researchers at Meta and Tesla. Unlike a generic AI API, AMIR was designed specifically for soccer ball sensor data, trained on hundreds of kicks we collected ourselves, and shaped by real conversations with soccer coaches about what the numbers actually mean. It looks at speed, spin, impact force, launch angle, and contact duration all at once to recognize patterns in technique and generate feedback that is specific to what the data actually shows - not just generic advice.
+AMIR (Athletic Motion Intelligence and Recognition) is the AI coach in the Spin Off web app. It runs on Llama 3.3 70B, a large language model, through Groq's API. We didn't train the model ourselves. Our work went into what we give it: when you ask AMIR for feedback, the web app builds a message from your session (max and average speed, spin, consistency, improvement trend, kick type and your last few speeds) and tells the model how to coach, asking for a short assessment, three things to improve and one drill. AMIR can also write a 4-week training plan, or you can just chat with it about your kicks.
+
+The ball also coaches you by itself, without the internet. Every five kicks the firmware checks your session against rules we wrote after talking to coaches and sends up to three tips along with the kick data.
 
 <details>
-<summary>Click here to learn more about how AMIR was built</summary>
+<summary>Click here to learn more about the coach interviews and the rules in the ball</summary>
 
-Before we could train anything, we had to build our own dataset. Every kick produced a stream of accelerometer and gyroscope readings across all three axes, and we had to label all of it manually - tagging each kick with its type, quality, speed range, spin classification, and whether the contact was clean or off-center. That process alone took weeks, and we learned quickly that bad data produces a bad model. Early versions of AMIR would confidently misclassify kicks or give coaching advice that made no sense at all, and almost every time we traced it back to a labeling error or a gap in the training data.
+The most important part of building the coaching was sitting down with actual soccer coaches and asking them what specific problems look like in the data. We would show them a set of readings and ask: if a player is consistently hitting 25 mph when they should be hitting 45 mph, what is happening physically? What is the player doing wrong and what drill fixes it?
 
-The neural network itself was designed in PyTorch with multiple layers that each learn different things. Early layers detect basic features like peak impact force and contact duration. Deeper layers learn more complex relationships, like how spin rate and launch angle interact to determine whether a curve ball will actually bend or just die in the air, or how the ratio between impact G-force and exit speed reveals whether a player is making clean contact or hitting through the ball poorly.
+For a weak shot, coaches told us the problem is almost always one of three things: poor plant foot positioning, no follow-through, or striking with the wrong part of the foot. Low speed together with short contact and low impact force usually means the player is jabbing at the ball instead of driving through it. The advice is not just "kick harder". It's to focus on the approach angle, lock the ankle on contact, and drive the knee over the ball.
 
-The most important part of building AMIR was sitting down with actual soccer coaches and asking them what specific problems look like in the data. We would show them a set of readings and ask - if a player is consistently hitting 25 mph when they should be hitting 45 mph, what is happening physically? What is the player doing wrong and what drill fixes it? Those conversations shaped every feedback rule in the system.
+For a curve ball with too little spin, coaches explained that the player is likely hitting too close to the center instead of striking the side of the ball with the inside of the foot. The fix is to change the foot angle at contact and aim for the lower outside part of the ball.
 
-For a weak shot, coaches told us the problem is almost always one of three things - poor plant foot positioning, no follow-through, or striking with the wrong part of the foot. AMIR was trained to look at the combination of low exit speed, short contact duration, and low impact G-force together, because that specific pattern almost always means the player is jabbing at the ball rather than driving through it. The feedback it gives is not just "kick harder" - it tells the player to focus on their approach angle, lock their ankle on contact, and drive their knee over the ball.
+For a shot with a high launch angle and not much distance, the player is usually leaning back at contact. The fix is to keep the body over the ball and drive through with the laces instead of scooping underneath it.
 
-For a curve ball with too little spin, coaches explained that the player is likely hitting too close to center rather than striking the inside of the ball with the inside of their foot. AMIR detects this through the spin axis data - a true curve ball has a dominant sidespin signature, and when that signature is weak relative to the speed, the feedback directs the player to adjust their foot angle at contact and aim for the lower outside quadrant of the ball.
+Those conversations became the rules the ball runs every five kicks:
 
-For a shot with a high launch angle and low distance, the model learned to recognize the combination of high vertical acceleration and low horizontal momentum as a sign that the player is leaning back at contact. The coaching response walks them through keeping their body over the ball and driving through with their laces rather than scooping underneath.
+| If the session shows... | The ball says... |
+|---|---|
+| Consistency score under 60 | Plant your standing foot the same way each kick |
+| Spin changing by more than 80 RPM between kicks | Focus on a repeatable foot contact point |
+| Average launch angle under 18° | Aim higher on the ball |
+| Average launch angle over 55° | Strike through the center for more drive |
+| Average speed over 40 mph but little spin | Work on adding spin for curve and dip |
+| Average speed under 25 mph | Follow through fully and accelerate the kicking leg |
+| None of the above | Solid session, keep repeating your technique |
 
-For a shot that is consistently off-center according to the microphone data, AMIR cross-references the strike classification with the spin axis to figure out which direction the player is mishitting. If the contact is off-center to the outside with a weak spin signature, the feedback focuses on approach angle. If it is off-center with a strong but erratic spin reading, the feedback focuses on foot placement and follow-through consistency.
-
-Training AMIR was one of the hardest parts of the entire project. We ran training loops for hours only to find the model had overfit on our limited dataset and was basically memorizing kicks rather than learning from them. We had to go back repeatedly to add more data, adjust the learning rate, apply dropout to prevent overfitting, and retune the model from scratch. There were nights where nothing worked and we had no idea why. But every failure taught us something about how the model was thinking, and slowly it started producing results that actually made sense. By the end, AMIR could classify kick types with high accuracy and generate coaching feedback that real coaches agreed with when we showed it to them. It took about two months from rough idea to something reliable, and it is the part of Spin Off we are most proud of.
+The same firmware also sorts every kick into a type (power shot, curve ball, chip shot, lob pass, ground pass or header) using thresholds on speed, launch angle, spin and contact time.
 
 </details>
 
@@ -107,7 +115,8 @@ Software:
 - Firmware: C++ (Arduino Framework)
 - Web App: HTML5, CSS3, JavaScript
 - Data Visualization: Chart.js library
-- AI Engine: AMIR - custom trained using PyTorch
+- AI Coach: AMIR - Llama 3.3 70B through the Groq API
+- On-ball coaching: rule-based tips and kick classification in the firmware
 - Connectivity: Web Bluetooth API
 - Built inside VS Code on a Windows PC
 - From start to finish, designing the AI, creating the website, and coding the ball, took around **5 MONTHS TO BUILD AND CREATE**
@@ -148,6 +157,32 @@ Download your session data in JSON or CSV format to:
 - Analyze in spreadsheet software
 - Track long-term progress
 - Create custom visualizations
+
+---
+
+## Setting up the AI coach
+
+Never put the Groq API key in `NATIONSPIT.html`. Everything in that file is public, so anyone could copy the key and use it on your account. There are two safe ways to give AMIR a key.
+
+**Option 1: a small proxy (for the public website).** The proxy keeps the key on Cloudflare and forwards AMIR's requests to Groq. It's free for this amount of use.
+1. Create a free Cloudflare account and go to **Workers & Pages → Create → Worker**.
+2. Replace the Worker's code with [`worker/groq-proxy.js`](worker/groq-proxy.js) and deploy it.
+3. In the Worker's **Settings → Variables and Secrets**, add a secret named `GROQ_API_KEY` with your Groq key.
+4. Copy the Worker's URL (like `https://spinoff-ai.yourname.workers.dev`) into `AI_PROXY_URL` near the top of the script in `NATIONSPIT.html`, and push.
+
+The proxy only accepts requests from the GitHub Pages site and only forwards chat messages to the Llama model, so it can't be used for anything else.
+
+**Option 2: no proxy (for a demo laptop).** Leave `AI_PROXY_URL` empty. The first time someone uses AMIR, the app asks for a Groq key and saves it only in that browser. It's never sent anywhere except Groq.
+
+---
+
+## Repository layout
+
+- `index.html` - the project website
+- `NATIONSPIT.html` - the web app (live tracker, AMIR coach, chat)
+- `firmware/SpinOff/SpinOff.ino` - the Arduino firmware. Open it in the Arduino IDE. The website publishes it as `spinoffexplained.txt` so it can be read in a browser.
+- `worker/groq-proxy.js` - the optional AI proxy described above
+- `.github/workflows/deploy.yml` - publishes the site to GitHub Pages on every push to `main`
 
 ---
 
