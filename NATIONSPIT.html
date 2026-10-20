@@ -426,7 +426,7 @@ body{
     <div class="grid-3">
       <div class="feature-card"><h3>Real-Time Speed</h3><p>Measure kick speed with professional-grade accuracy using a BMI270 IMU sampling at 1600 Hz. Track your progress over time.</p></div>
       <div class="feature-card"><h3>Spin Analysis</h3><p>Monitor fused RPM (gyro + magnetometer) and spin type — topspin, backspin, sidespin or mixed — to perfect curve shots.</p></div>
-      <div class="feature-card"><h3>AMIR AI Coaching</h3><p>AMIR, our AI coach running on Llama 3.3 through Groq, turns your session data into feedback, drills and training plans. The ball adds its own training tips as you kick.</p></div>
+      <div class="feature-card"><h3>AMIR AI Coaching</h3><p>AMIR, our AI coach running on gpt-oss-120b through Groq, turns your session data into feedback, drills and training plans. The ball adds its own training tips as you kick.</p></div>
       <div class="feature-card"><h3>Strike Quality</h3><p>PDM microphone + FFT frequency analysis grades how cleanly you strike the ball on every contact.</p></div>
       <div class="feature-card"><h3>Shot Mapping</h3><p>Visualize shot placement on an interactive soccer field to perfect accuracy and track shot patterns.</p></div>
       <div class="feature-card"><h3>Mobile Ready</h3><p>Works on any device with Bluetooth 5.0. Train anywhere, anytime using Web Bluetooth in Chrome or Edge.</p></div>
@@ -707,7 +707,7 @@ body{
     </div>
     <div class="card">
       <h3>How the App Works</h3>
-      <p>The web app receives one JSON message per kick from the Arduino over Bluetooth and reads both the nested format (<code>kick</code>, <code>motion</code>, <code>spin</code>, ...) and the compact flat format (<code>spd</code>, <code>rpmF</code>, <code>sq</code>, ...). When you ask for coaching, your session numbers are sent to AMIR, which runs on Llama 3.3 through Groq. Sessions are saved in browser localStorage, and you can export CSV or JSON reports at any time.</p>
+      <p>The web app receives one JSON message per kick from the Arduino over Bluetooth and reads both the nested format (<code>kick</code>, <code>motion</code>, <code>spin</code>, ...) and the compact flat format (<code>spd</code>, <code>rpmF</code>, <code>sq</code>, ...). When you ask for coaching, your session numbers are sent to AMIR, which runs on gpt-oss-120b through Groq. Sessions are saved in browser localStorage, and you can export CSV or JSON reports at any time.</p>
     </div>
     <div class="card">
       <h3>Frequently Asked Questions</h3>
@@ -751,7 +751,7 @@ body{
         <strong>Firmware:</strong> C++ (Arduino framework, mbed core)<br>
         <strong>Web App:</strong> HTML5, CSS3, JavaScript (ES6+)<br>
         <strong>Charts:</strong> Chart.js for real-time data visualization<br>
-        <strong>AMIR AI Coach:</strong> Llama 3.3 70B via the Groq API, prompted with your session data<br>
+        <strong>AMIR AI Coach:</strong> gpt-oss-120b (OpenAI's open model) via the Groq API, prompted with your session data<br>
         <strong>Connectivity:</strong> Web Bluetooth API — chunked BLE notifications<br>
         <strong>Browser Support:</strong> Chrome, Edge, Opera (Desktop &amp; Mobile)
       </div></div>
@@ -808,7 +808,7 @@ body{
 // server (worker/groq-proxy.js) that holds the Groq key so it never appears
 // in this page. Without a proxy, each browser is asked once for its own Groq
 // key, which is kept only in that browser's localStorage.
-const AI_PROXY_URL     = '';
+const AI_PROXY_URL     = 'https://spinoff-ai.minecraftboy1331.workers.dev';
 const AI_KEY_STORAGE   = 'spinoffGroqKey';
 const STORAGE_KEY      = 'spinoffSessionHistory';
 const CHAT_STORAGE_KEY = 'spinoffChatHistory';
@@ -1543,10 +1543,13 @@ async function groqChat(messages,maxTokens){
     url='https://api.groq.com/openai/v1/chat/completions';
     headers.Authorization=`Bearer ${key}`;
   }
+  // The app shows replies as plain text, so ask for no markdown.
+  messages=[{role:'system',content:'Reply in plain text only: no markdown, tables, ** or # symbols.'},...messages];
+  // gpt-oss reasons before answering; the extra 512 tokens leave room for that.
   const r=await fetch(url,{
     method:'POST',
     headers,
-    body:JSON.stringify({model:'llama-3.3-70b-versatile',messages,temperature:0.7,max_tokens:maxTokens})
+    body:JSON.stringify({model:'openai/gpt-oss-120b',messages,temperature:0.7,reasoning_effort:'low',max_completion_tokens:maxTokens+512})
   });
   const data=await r.json().catch(()=>({}));
   if(r.status===401&&!AI_PROXY_URL) localStorage.removeItem(AI_KEY_STORAGE);
@@ -1628,7 +1631,7 @@ async function sendChatMessage(){
       `The ball uses an Arduino Nano 33 BLE Sense Rev2 with a BMI270 IMU (1600 Hz accel, 3200 Hz gyro, \u00B116G) `+
       `and BMM150 magnetometer, LPS22HB barometer, HS3003 humidity sensor, and PDM microphone. `+
       `Kick data is sent as JSON over Bluetooth. The firmware sorts kicks into types with rules and adds training tips. `+
-      `You are AMIR, the AI coach in the web app; you run on Llama 3.3 through Groq and see the player's session stats. `+
+      `You are AMIR, the AI coach in the web app; you run on gpt-oss-120b through Groq and see the player's session stats. `+
       `You know about fused spin RPM, kick types, strike quality (FFT), personal bests, `+
       `environmental data (temp/humidity/altitude), session history, exports and sharing. `+
       `Current stats: Max speed ${sessionData.maxSpeed} mph, Avg ${sessionData.avgSpeed} mph, `+

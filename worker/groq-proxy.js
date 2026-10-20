@@ -5,8 +5,10 @@
 // Setup is in README.md under "Setting up the AI coach".
 
 const ALLOWED_ORIGINS = ['https://inventionconventionspinoff.github.io'];
-const MODEL = 'llama-3.3-70b-versatile';
+const MODEL = 'openai/gpt-oss-120b';
 const MAX_TOKENS = 1000;
+// gpt-oss reasons before it answers, and those tokens count toward the limit.
+const REASONING_TOKENS = 512;
 const MAX_MESSAGES = 30;
 const MAX_CHARS = 20000;
 
@@ -42,7 +44,8 @@ export default {
         model: MODEL,
         messages: messages.map(m => ({ role: m.role, content: m.content })),
         temperature: 0.7,
-        max_tokens: Math.min(Number(body.max_tokens) || 500, MAX_TOKENS),
+        reasoning_effort: 'low',
+        max_completion_tokens: Math.min(Number(body.max_completion_tokens) || 1000, MAX_TOKENS + REASONING_TOKENS),
       }),
     });
     return new Response(upstream.body, {

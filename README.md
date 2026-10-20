@@ -69,7 +69,7 @@ The signal processing pipeline is what makes all of this reliable. Raw accelerom
 
 ## How We Built AMIR
 
-AMIR (Athletic Motion Intelligence and Recognition) is the AI coach in the Spin Off web app. It runs on Llama 3.3 70B, a large language model, through Groq's API. We didn't train the model ourselves. Our work went into what we give it: when you ask AMIR for feedback, the web app builds a message from your session (max and average speed, spin, consistency, improvement trend, kick type and your last few speeds) and tells the model how to coach, asking for a short assessment, three things to improve and one drill. AMIR can also write a 4-week training plan, or you can just chat with it about your kicks.
+AMIR (Athletic Motion Intelligence and Recognition) is the AI coach in the Spin Off web app. It runs on gpt-oss-120b, an open large language model from OpenAI, through Groq's API. (It used Llama 3.3 70B until Groq retired that model in August 2026.) We didn't train the model ourselves. Our work went into what we give it: when you ask AMIR for feedback, the web app builds a message from your session (max and average speed, spin, consistency, improvement trend, kick type and your last few speeds) and tells the model how to coach, asking for a short assessment, three things to improve and one drill. AMIR can also write a 4-week training plan, or you can just chat with it about your kicks.
 
 The ball also coaches you by itself, without the internet. Every five kicks the firmware checks your session against rules we wrote after talking to coaches and sends up to three tips along with the kick data.
 
@@ -115,7 +115,7 @@ Software:
 - Firmware: C++ (Arduino Framework)
 - Web App: HTML5, CSS3, JavaScript
 - Data Visualization: Chart.js library
-- AI Coach: AMIR - Llama 3.3 70B through the Groq API
+- AI Coach: AMIR - gpt-oss-120b through the Groq API
 - On-ball coaching: rule-based tips and kick classification in the firmware
 - Connectivity: Web Bluetooth API
 - Built inside VS Code on a Windows PC
@@ -170,7 +170,7 @@ Never put the Groq API key in `NATIONSPIT.html`. Everything in that file is publ
 3. In the Worker's **Settings → Variables and Secrets**, add a secret named `GROQ_API_KEY` with your Groq key.
 4. Copy the Worker's URL (like `https://spinoff-ai.yourname.workers.dev`) into `AI_PROXY_URL` near the top of the script in `NATIONSPIT.html`, and push.
 
-The proxy only accepts requests from the GitHub Pages site and only forwards chat messages to the Llama model, so it can't be used for anything else.
+The proxy only accepts requests from the GitHub Pages site and only forwards chat messages to the gpt-oss model, so it can't be used for anything else.
 
 **Option 2: no proxy (for a demo laptop).** Leave `AI_PROXY_URL` empty. The first time someone uses AMIR, the app asks for a Groq key and saves it only in that browser. It's never sent anywhere except Groq.
 
