@@ -151,6 +151,10 @@ body{
 .kick-power{text-align:center;}
 .kick-power .num{font-size:3.4em;font-weight:900;color:var(--gold);line-height:1;}
 .kick-power .lbl{font-size:.78em;text-transform:uppercase;letter-spacing:.12em;color:var(--text-muted);}
+.lib-tip{margin-top:16px;background:var(--bg-soft);border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:10px;padding:14px 18px;overflow-wrap:break-word;}
+.lib-tip-label{font-size:.74em;color:var(--primary);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:6px;}
+.lib-tip-text{color:var(--text);line-height:1.6;}
+.lib-tip-note{font-size:.8em;color:var(--text-muted);margin-top:6px;}
 .gauge-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;}
 .gauge{
   --pct:0;width:170px;height:170px;border-radius:50%;
@@ -370,6 +374,7 @@ body{
 [data-theme="dark"] .ai-response{box-shadow:inset 0 0 18px rgba(224,86,74,.12);}
 [data-theme="dark"] .shot-marker{box-shadow:0 0 14px var(--gold),0 0 24px rgba(212,185,120,.5);}
 [data-theme="dark"] .arch-badge{box-shadow:0 0 10px rgba(224,86,74,.45);}
+[data-theme="dark"] .lib-tip{box-shadow:inset 0 0 18px rgba(212,185,120,.1);}
 @media(max-width:768px){
   .hero{padding:60px 16px 46px;}.hero h1{font-size:2.4em;letter-spacing:.05em;}
   .nav{gap:7px;padding:9px;}.nav-btn{padding:9px 13px;font-size:.7em;}
@@ -487,6 +492,11 @@ body{
             <div class="num" id="kickPowerScore">0</div>
             <div class="lbl">Power Score</div>
           </div>
+        </div>
+        <div class="lib-tip" id="libTip" style="display:none;">
+          <div class="lib-tip-label">From AMIR's tip library</div>
+          <div class="lib-tip-text" id="libTipText"></div>
+          <div class="lib-tip-note" id="libTipNote"></div>
         </div>
       </div>
 
@@ -708,7 +718,7 @@ body{
     </div>
     <div class="card">
       <h3>How the App Works</h3>
-      <p>The web app receives one JSON message per kick from the Arduino over Bluetooth and reads both the nested format (<code>kick</code>, <code>motion</code>, <code>spin</code>, ...) and the compact flat format (<code>spd</code>, <code>rpmF</code>, <code>sq</code>, ...). When you ask for coaching, your session numbers are sent to AMIR, which runs on gpt-oss-120b through Groq. Sessions are saved in browser localStorage, and you can export CSV or JSON reports at any time.</p>
+      <p>The web app receives one JSON message per kick from the Arduino over Bluetooth and reads both the nested format (<code>kick</code>, <code>motion</code>, <code>spin</code>, ...) and the compact flat format (<code>spd</code>, <code>rpmF</code>, <code>sq</code>, ...). When you ask for coaching, your session numbers are sent to AMIR, which runs on gpt-oss-120b through Groq. After each kick, the app also shows a tip from AMIR's tip library: coaching tips we wrote by hand for our SpinOff_AI project. A nearest-match search in your browser picks one for the kick's type, speed, spin, launch angle and strike quality, and the AI Coach's feedback request includes it. Ground passes and headers have no tips yet. Sessions are saved in browser localStorage, and you can export CSV or JSON reports at any time.</p>
     </div>
     <div class="card">
       <h3>Frequently Asked Questions</h3>
@@ -1119,6 +1129,7 @@ function handleKickPacket(j){
   sessionData.lastUpdate  = new Date().toLocaleString();
 
   updateCurrentKick(k);
+  updateLibraryTip(k);
   updateLiveMetrics(k);
   updateQuickStats();
   updateGauges(k);
@@ -1413,6 +1424,7 @@ function resetSessionData(){
   document.getElementById('kickSubInfo').textContent='Kick #-- \u2022 Spin: --';
   document.getElementById('kickIcon').textContent='--';
   const archEl=document.getElementById('kickArch');if(archEl)archEl.innerHTML='';
+  clearLibraryTip();
   animateGauge(document.getElementById('consistencyGauge'),document.getElementById('consistencyValue'),0);
   animateGauge(document.getElementById('powerGauge'),document.getElementById('powerGaugeValue'),0);
   document.getElementById('strikeMeterFill').style.width='0%';
@@ -1496,6 +1508,80 @@ function drawShotLine(x1,y1,x2,y2){
 }
 function clearField(){document.querySelectorAll('.shot-marker,.shot-line').forEach(el=>el.remove());shots=[];shotLocation=null;}
 
+/* ===================== AMIR TIP LIBRARY ===================== */
+// After each kick, the app shows one of the coaching tips the team wrote for
+// SpinOff_AI. amir/tips.json holds them with their k-NN index (built from
+// feedback_database.csv and feedback_knn.pkl). The lookup ranks tips the same
+// way as amir_pipeline._get_tip: scale [type id, speed, spin, angle, quality]
+// the way sklearn's StandardScaler does with float32 input, take the k nearest
+// tips, and keep the first one written for the same kick type. Unlike
+// _get_tip, it never falls back to a tip written for another kick type.
+// tip-lookup:start (tests/tip-library-parity.test.mjs runs this block in Node)
+// Firmware kick types -> tip-library types. Ground passes and headers have no
+// tips, so they get none rather than a tip written for another kick.
+const TIP_TYPES={power_shot:'power_shot',curve_ball:'curve_ball',chip_shot:'chip_shot',lob_pass:'chip_shot'};
+function tipNeighbours(T,type,speed,spin,angle,quality){
+  const f=Math.fround,q=[T.shot_type_id[type]??0,speed,spin,angle,quality].map((v,i)=>f(f(f(v)-T.mean[i])/T.scale[i]));
+  return T.X.map((r,i)=>[r.reduce((s,v,j)=>s+(v-q[j])**2,0),i])
+    .sort((a,b)=>a[0]-b[0]||a[1]-b[1]).slice(0,T.k).map(p=>p[1]);
+}
+// Index of the first of the k nearest tips written for `type` and not in
+// `skip`, or -1 if there is none.
+function tipIndex(T,type,speed,spin,angle,quality,skip=[]){
+  return tipNeighbours(T,type,speed,spin,angle,quality).find(i=>T.shot_type[i]===type&&!skip.includes(i))??-1;
+}
+// The tip for a kick from handleKickPacket(), or null. Strike quality stands in
+// for the library's quality score. T.skip lists tips about fatigue or a whole
+// session, which one kick cannot show.
+function libraryTipFor(T,k){
+  const type=TIP_TYPES[k.classification],v=[k.speedMph,k.spinRPM,k.launchAngle,k.strikeQuality];
+  if(!type||!v.every(Number.isFinite)) return null;
+  const i=tipIndex(T,type,...v,T.skip||[]);
+  return i<0?null:{index:i,type,tip:T.tip[i]};
+}
+function validTipTable(T){
+  const row=r=>Array.isArray(r)&&r.length===5&&r.every(Number.isFinite),n=T&&Array.isArray(T.X)?T.X.length:0;
+  return n>0&&Number.isInteger(T.k)&&T.k>0&&row(T.mean)&&row(T.scale)&&T.scale.every(v=>v>0)&&T.X.every(row)&&
+    !!T.shot_type_id&&typeof T.shot_type_id==='object'&&Array.isArray(T.shot_type)&&T.shot_type.length===n&&
+    Array.isArray(T.tip)&&T.tip.length===n&&T.tip.every(t=>typeof t==='string')&&
+    (T.skip===undefined||(Array.isArray(T.skip)&&T.skip.every(Number.isInteger)));
+}
+// tip-lookup:end
+let tipLibrary=null, libraryTip=null, tipSeq=0;
+// Fetched once and cached. Resolves to null if the file cannot load (for
+// example when the page is opened from file://); then no tip is shown.
+function loadTipLibrary(){
+  if(!tipLibrary) tipLibrary=fetch('amir/tips.json').then(r=>r.ok?r.json():null)
+    .then(T=>validTipTable(T)?T:null).catch(()=>null);
+  return tipLibrary;
+}
+async function updateLibraryTip(k){
+  const seq=++tipSeq;
+  const T=await loadTipLibrary();
+  if(seq!==tipSeq) return;   // a newer kick or a new session came first
+  const t=T&&libraryTipFor(T,k);
+  libraryTip=t?Object.assign(t,{kick:k}):null;
+  renderLibraryTip();
+}
+function clearLibraryTip(){tipSeq++;libraryTip=null;renderLibraryTip();}
+function renderLibraryTip(){
+  const box=document.getElementById('libTip');if(!box)return;
+  box.style.display=libraryTip?'block':'none';
+  if(!libraryTip)return;
+  document.getElementById('libTipText').textContent=libraryTip.tip;
+  document.getElementById('libTipNote').textContent=
+    `Nearest ${KICK_TYPES[libraryTip.type].name.toLowerCase()} tip for this kick's speed, spin, launch angle and strike quality.`;
+}
+// The tip and the kick it was picked for, as lines for the AMIR prompt.
+function libraryTipPrompt(){
+  if(!libraryTip)return '';
+  const k=libraryTip.kick;
+  return `Latest kick: ${KICK_TYPES[k.classification].name}, ${k.speedMph.toFixed(1)} mph, `+
+    `${Math.round(k.spinRPM)} RPM${k.rpmClipped?' (sensor limit, may be higher)':''}, `+
+    `${k.launchAngle.toFixed(1)} degree launch angle, strike quality ${Math.round(k.strikeQuality)}/100\n`+
+    `Tip from our tip library: ${libraryTip.tip}\n`;
+}
+
 /* ===================== AI COACH ===================== */
 async function getAICoaching(){
   const btn=document.getElementById('coachBtn'),res=document.getElementById('coachResponse');
@@ -1507,8 +1593,9 @@ async function getAICoaching(){
       `Total kicks: ${sessionData.kicks}\nMax speed: ${sessionData.maxSpeed} mph\nAvg speed: ${sessionData.avgSpeed} mph\n`+
       `Max spin: ${sessionData.maxSpin} RPM\nConsistency: ${sessionData.consistency}/100\nTrend: ${sessionData.improvementTrend}\n`+
       `Kick style: ${sessionData.lastArch||'unknown'}\nAvg power: ${sessionData.avgPower}\n`+
-      `Recent speeds: ${sessionData.speeds.slice(-5).map(s=>Number(s).toFixed(1)).join(', ')} mph\n\n`+
-      `Provide: 1) 2-sentence assessment, 2) top 3 improvement tips, 3) one drill. Be encouraging.`;
+      `Recent speeds: ${sessionData.speeds.slice(-5).map(s=>Number(s).toFixed(1)).join(', ')} mph\n`+
+      libraryTipPrompt()+
+      `\nProvide: 1) 2-sentence assessment, 2) top 3 improvement tips${libraryTip?' (build on the tip from our tip library where it fits)':''}, 3) one drill. Be encouraging.`;
     res.innerHTML=aiReplyHtml(await groqChat([{role:'user',content:prompt}],500));
   }catch(err){
     res.innerHTML=`<p style="color:var(--bad);">Error: ${escapeHtml(err.message)}</p>`+
@@ -1822,6 +1909,7 @@ window.addEventListener('load',()=>{
   loadSessionHistory();
   loadChatHistory();
   updateDeviceStatus();
+  loadTipLibrary();   // start the download early so the first kick gets its tip
 });
 </script>
 </body>
