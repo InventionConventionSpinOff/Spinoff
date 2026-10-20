@@ -79,7 +79,8 @@ let chartCache = null;   // Chart.js body, fetched once per run if reachable
 
 // Opens a page with the Worker stubbed and every other outside request
 // blocked, except Chart.js (fetched from cdnjs when reachable, unless
-// opts.chart === 'block'). Returns handles the tests inspect.
+// opts.chart === 'block' or SPINOFF_BLOCK_CHART=1 simulates being offline).
+// Returns handles the tests inspect.
 async function openPage(browser, url, opts = {}) {
   const context = await browser.newContext({
     viewport: { width: opts.width || 1280, height: opts.height || 900 },
@@ -108,7 +109,7 @@ async function openPage(browser, url, opts = {}) {
         : { error: { message: 'stubbed failure' } };
       return route.fulfill({ status: h.aiStatus, headers: cors, contentType: 'application/json', body: JSON.stringify(reply) });
     }
-    if (u.hostname === CHART_HOST && opts.chart !== 'block') {
+    if (u.hostname === CHART_HOST && opts.chart !== 'block' && process.env.SPINOFF_BLOCK_CHART !== '1') {
       if (!chartCache) {
         try {
           const r = await route.fetch({ timeout: 15000 });

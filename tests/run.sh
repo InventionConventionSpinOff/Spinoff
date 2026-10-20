@@ -3,6 +3,7 @@
 # need Playwright + Chromium) and tests/*.test.mjs (plain Node tests).
 # Exits non-zero if any test fails. Usage: bash tests/run.sh
 # Playwright is found through $PW, or the global npm install if PW is unset.
+# SPINOFF_BLOCK_CHART=1 blocks Chart.js in every test, as if cdnjs were offline.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 if [ -z "${PW:-}" ]; then

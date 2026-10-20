@@ -43,13 +43,21 @@ test('both pages load without page errors', async t => {
 });
 
 test('app still loads and tracks kicks when Chart.js cannot load', async () => {
-  const h = await app({ chart: 'block' });
-  assert.equal(await h.page.evaluate(() => typeof Chart), 'undefined');
+  const h = await app({ chart: 'block', width: 360 });
+  const p = h.page;
+  assert.equal(await p.evaluate(() => typeof Chart), 'undefined');
   await connect(h);
   await send(h, H.nestedKick());
-  assert.equal(await H.waitText(h.page, 'quickKicks', '1'), '1');
-  await h.page.click('#newSessionBtn');
-  assert.equal(await H.waitText(h.page, 'quickKicks', '0'), '0');
+  assert.equal(await H.waitText(p, 'quickKicks', '1'), '1');
+  // Unsized chart canvases must not push the page sideways at phone width.
+  for (const tab of await p.$$eval('.nav-btn', b => b.map(x => x.dataset.page))) {
+    await p.evaluate(t => switchPage(t), tab);
+    const sw = await p.evaluate(() => document.documentElement.scrollWidth);
+    assert.equal(sw, 360, `no Chart.js, app tab ${tab} at 360px: scrollWidth ${sw}`);
+  }
+  await p.evaluate(() => switchPage('tracker'));
+  await p.click('#newSessionBtn');
+  assert.equal(await H.waitText(p, 'quickKicks', '0'), '0');
   noErrors(h);
   await h.context.close();
 });
