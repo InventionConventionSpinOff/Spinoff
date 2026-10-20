@@ -331,9 +331,11 @@ test('How It Works step 1 matches the firmware kick detection', async () => {
   const strongG = String(Number(src.match(/capPeakG >= ([\d.]+)f \|\|/)[1]));
   const h = await app();
   const text = await h.page.$eval('#how-it-works .timeline-item:first-child p', e => e.textContent);
-  for (const s of [def('KICK_ENTER_G') + ' G', def('DETECT_WINDOW_MS') + ' ms', def('KICK_CONFIRM_G') + ' G',
-    strongG + ' G', def('KICK_GYRO_CONFIRM') + ' °/s', def('KICK_SETTLE_G') + ' G', 'crossed just once'])
-    assert.ok(text.includes(s), 'step 1 mentions ' + s);
+  // Numbers and units are joined by a non-breaking space so they never wrap apart.
+  const nb = '\u00a0';
+  for (const s of [def('KICK_ENTER_G') + nb + 'G', def('DETECT_WINDOW_MS') + nb + 'ms', def('KICK_CONFIRM_G') + nb + 'G',
+    strongG + nb + 'G', def('KICK_GYRO_CONFIRM') + nb + '°/s', def('KICK_SETTLE_G') + nb + 'G', 'crossed just once'])
+    assert.ok(text.includes(s), 'step 1 mentions ' + JSON.stringify(s));
   assert.ok(!/consecutive frames/.test(text), 'old 3-frame rule is gone');
   await h.context.close();
 });
