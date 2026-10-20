@@ -933,6 +933,9 @@ function applyChartTheme(chart){
   chart.update('none');
 }
 function initCharts(){
+  // Chart.js comes from a CDN; if it did not load (offline), skip the charts
+  // so the rest of the tracker still works.
+  if(typeof Chart==='undefined'){console.warn('Chart.js not loaded: charts disabled');return;}
   charts.speed =makeChart('chartSpeed','Speed','#8B0000');
   charts.spin  =makeChart('chartSpin','Spin','#C6A75E');
   charts.power =makeChart('chartPower','Power','#c0392b');
@@ -942,6 +945,7 @@ function initCharts(){
   Object.values(charts).forEach(applyChartTheme);
 }
 function pushChart(chart,label,value){
+  if(!chart) return;
   chart.data.labels.push(label);
   chart.data.datasets[0].data.push(value);
   if(chart.data.labels.length>MAX_CHART_POINTS){chart.data.labels.shift();chart.data.datasets[0].data.shift();}
