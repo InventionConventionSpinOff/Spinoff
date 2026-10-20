@@ -24,9 +24,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject API key
-        run: |
-          sed -i "s|__GROQ_API_KEY__|${{ secrets.GROQ_API_KEY }}|g" NATIONSPIT.html
+      # Keep the old spinoffexplained.txt link working: browsers show .txt
+      # as text, while a .ino file would download.
+      - name: Publish firmware as text
+        run: cp firmware/SpinOff/SpinOff.ino spinoffexplained.txt
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
