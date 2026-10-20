@@ -122,6 +122,9 @@ async function openPage(browser, url, opts = {}) {
     h.blocked.push(req.url());
     return route.abort();
   });
+  // opts.routes: [[pattern, handler], ...] registered after the catch-all
+  // above, so they take over matching requests (e.g. to fail or delay a file).
+  for (const [pattern, handler] of opts.routes || []) await context.route(pattern, handler);
   const page = h.page = await context.newPage();
   page.on('pageerror', e => h.errors.push(e.message));
   page.on('dialog', d => d.accept());
