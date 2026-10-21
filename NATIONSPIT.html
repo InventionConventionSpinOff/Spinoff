@@ -6,6 +6,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SPIN OFF - Professional Grade Soccer Analytics</title>
 <meta name="description" content="Advanced soccer ball tracking system with AI-powered coaching by Sahil & Skyler">
+<meta name="theme-color" content="#8B0000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 <style>
 /* ============================ THEME TOKENS ============================ */
@@ -385,6 +389,40 @@ body{
   .timeline-dot{left:18px;}.soccer-field{height:380px;}
   .kick-banner{justify-content:center;text-align:center;}.compare-grid{grid-template-columns:1fr 1fr;}
 }
+/* ---- extras: demo, tagging, fatigue, progress, training data, read aloud ---- */
+.demo-badge{display:none;margin-left:10px;padding:3px 10px;border-radius:50px;background:rgba(245,158,11,.18);color:var(--warn);font-size:.6em;font-weight:800;letter-spacing:.12em;text-transform:uppercase;vertical-align:middle;}
+body.demo-on .demo-badge{display:inline-block;}
+.status-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center;}
+.demo-btn{padding:12px 22px;}
+.tag-row{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;}
+.tag-q{font-weight:700;color:var(--text);margin-bottom:8px;}
+.tag-q span{font-weight:400;font-size:.85em;color:var(--text-muted);}
+.tag-btns{display:flex;flex-wrap:wrap;gap:8px;}
+.tag-btn{border:1px solid var(--border);background:var(--bg-soft);color:var(--text);border-radius:50px;padding:8px 14px;font:inherit;font-size:.85em;cursor:pointer;min-height:38px;}
+.tag-btn:hover{border-color:var(--primary);}
+.tag-btn[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:#fff;}
+.tag-note{font-size:.8em;color:var(--text-muted);margin-top:8px;min-height:1.2em;}
+.fatigue-text{font-size:1.05em;font-weight:700;color:var(--text);}
+.fatigue-text.tired{color:var(--bad);}.fatigue-text.dip{color:var(--warn);}.fatigue-text.ok{color:var(--good);}
+.fatigue-note{font-size:.82em;margin-top:6px;}
+.progress-wrap{margin:4px 0 20px;}
+.progress-wrap h4{font-size:.9em;color:var(--text);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.progress-canvas{position:relative;height:260px;}
+.progress-canvas canvas{max-width:100%;}
+.train-counts{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;}
+.train-count{background:var(--bg-soft);border:1px solid var(--border);border-radius:10px;padding:8px 12px;font-size:.88em;color:var(--text);}
+.train-actions{display:flex;flex-wrap:wrap;gap:10px;}
+.train-actions .btn{padding:11px 20px;}
+.train-actions .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+.player-field{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;color:var(--text);}
+.player-field input{flex:1;min-width:160px;max-width:280px;padding:9px 14px;border:2px solid var(--border);border-radius:25px;font:inherit;background:var(--bg-soft);color:var(--text);}
+.player-field input:focus{outline:none;border-color:var(--primary);}
+.speak-row{display:none;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:.92em;color:var(--text-muted);}
+.speak-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.speak-toggle input{width:18px;height:18px;accent-color:var(--primary);}
+.speak-stop{padding:6px 16px;}
+.memory-note{font-size:.85em;text-align:center;margin-top:12px;}
+@media(max-width:768px){.status-actions{width:100%;}.status-actions button{flex:1;}}
 </style>
 </head>
 <body>
@@ -418,6 +456,7 @@ body{
   <button class="nav-btn" data-page="technology">Technology</button>
   <button class="nav-btn" data-page="team">Our Team</button>
   <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">Dark</button>
+  <button class="theme-toggle" id="installBtn" style="display:none;" onclick="installApp()" title="Install Spin Off as an app">Install app</button>
 </div>
 
 <div class="container">
@@ -455,8 +494,12 @@ body{
       <div class="status-text">
         <span class="status-indicator" id="statusIndicator"></span>
         <span id="statusText">Not Connected</span>
+        <span class="demo-badge">Demo</span>
       </div>
-      <button id="connectBtn" class="connect-btn">Connect Device</button>
+      <div class="status-actions">
+        <button id="connectBtn" class="connect-btn">Connect Device</button>
+        <button id="demoBtn" class="btn demo-btn" onclick="toggleDemo()" aria-pressed="false">Try a demo (no ball)</button>
+      </div>
     </div>
 
     <div class="card">
@@ -479,7 +522,7 @@ body{
 
       <!-- current kick -->
       <div class="card">
-        <h3>Latest Kick</h3>
+        <h3>Latest Kick <span class="demo-badge">Demo &middot; simulated kicks</span></h3>
         <div class="pb-banner" id="pbBanner"></div>
         <div class="kick-banner">
           <div class="kick-icon" id="kickIcon">--</div>
@@ -498,6 +541,18 @@ body{
           <div class="lib-tip-text" id="libTipText"></div>
           <div class="lib-tip-note" id="libTipNote"></div>
         </div>
+        <div class="tag-row" id="tagRow" style="display:none;">
+          <div class="tag-q">What kick was that? <span>Tag it to build real training data for AMIR.</span></div>
+          <div class="tag-btns" id="tagBtns"></div>
+          <div class="tag-note" id="tagNote"></div>
+        </div>
+      </div>
+
+      <!-- fatigue check -->
+      <div class="card">
+        <h3>Fatigue Check</h3>
+        <p class="fatigue-text" id="fatigueText">Fatigue check starts after 10 kicks (0 so far).</p>
+        <p class="muted fatigue-note">A simple rule, not AI: it compares the average speed of your last 5 kicks with your best 5-kick stretch this session.</p>
       </div>
 
       <!-- quick stats -->
@@ -664,7 +719,25 @@ body{
         <div class="summary-card"><strong>Average Speed</strong><span>--</span></div>
         <div class="summary-card"><strong>Recent Session</strong><span>--</span></div>
       </div>
+      <div class="progress-wrap">
+        <h4>Progress over time</h4>
+        <div id="progressBox" style="display:none;"><div class="progress-canvas"><canvas id="progressChart"></canvas></div></div>
+        <p class="muted" id="progressHint">Save at least 2 sessions to see your progress over time.</p>
+      </div>
       <div id="sessionHistory" class="session-history"></div>
+    </div>
+
+    <!-- tagged kicks -->
+    <div class="card">
+      <h3>Training Data for AMIR</h3>
+      <p class="muted">Kicks you tag on the Latest Kick card are saved in this browser. Download them to retrain AMIR on real kicks from the ball (see ball_bridge.py in the AI project). Demo kicks are marked and left out.</p>
+      <div class="player-field"><label for="tagPlayer">Player</label><input id="tagPlayer" type="text" maxlength="60" placeholder="Name or nickname (optional)" autocomplete="off"></div>
+      <div class="train-counts" id="trainCounts"></div>
+      <div class="train-actions">
+        <button class="btn" id="tagCsvBtn" onclick="exportTaggedCSV()">Download tagged kicks (CSV)</button>
+        <button class="btn" id="tagJsonBtn" onclick="exportTaggedJSON()">Download (JSON)</button>
+        <button class="btn" id="tagClearBtn" onclick="clearTaggedKicks()">Clear tagged kicks</button>
+      </div>
     </div>
 
     <div id="noData" class="card center" style="padding:70px 20px;">
@@ -685,6 +758,8 @@ body{
         <button class="btn btn-primary" onclick="getAICoaching()" id="coachBtn" style="margin:8px;">Get Coaching Feedback</button>
         <button class="btn btn-primary" onclick="generateTrainingPlan()" id="planBtn" style="margin:8px;">Generate Training Plan</button>
       </div>
+      <p class="muted memory-note">AMIR can see your last 5 saved sessions.</p>
+      <div class="speak-row"><label class="speak-toggle"><input type="checkbox" onchange="setSpeak(this.checked)"> Read replies aloud</label><button type="button" class="btn speak-stop" style="display:none;" onclick="stopSpeaking()">Stop</button></div>
       <div id="trainingPlanContainer" style="display:none;margin-top:26px;">
         <div id="trainingPlanContent" class="ai-response"></div>
       </div>
@@ -697,7 +772,8 @@ body{
     <div class="card">
       <div class="chat-container">
         <div class="chat-messages" id="chatMessages"></div>
-        <p class="chat-help">Try asking: "How do I export my session?", "What does spin axis mean?", "How does Bluetooth connect?"</p>
+        <p class="chat-help">Try asking: "How do I export my session?", "What does spin axis mean?", "How does Bluetooth connect?" AMIR can see your last 5 saved sessions.</p>
+        <div class="speak-row" style="margin:0 18px 14px;"><label class="speak-toggle"><input type="checkbox" onchange="setSpeak(this.checked)"> Read replies aloud</label><button type="button" class="btn speak-stop" style="display:none;" onclick="stopSpeaking()">Stop</button></div>
         <div class="chat-input-container">
           <input type="text" class="chat-input" id="chatInput" placeholder="Ask me anything about your kicks, training, or technique..." autocomplete="off">
           <button class="chat-send-btn" id="chatSendBtn" onclick="sendChatMessage()">Send</button>
@@ -880,6 +956,7 @@ function applyTheme(theme){
   document.getElementById('themeToggle').textContent = theme==='dark' ? 'Light' : 'Dark';
   localStorage.setItem(THEME_KEY,theme);
   Object.values(charts).forEach(applyChartTheme);
+  if(typeof themeProgress==='function') themeProgress();
 }
 document.getElementById('themeToggle').addEventListener('click',()=>{
   applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');
@@ -968,6 +1045,7 @@ document.getElementById('connectBtn').addEventListener('click',connectDevice);
 async function connectDevice(){
   try{
     if(!navigator.bluetooth){showAlert('Bluetooth not supported. Please use Chrome, Edge, or Opera.');return;}
+    if(demoTimer) stopDemo(true);
     document.getElementById('statusText').textContent='Searching...';
     document.getElementById('connectBtn').disabled=true;
     device=await navigator.bluetooth.requestDevice({
@@ -1052,8 +1130,8 @@ function normalizePacket(p){
   return f;
 }
 function processPacket(line){
-  let j;
-  try{ j=normalizePacket(JSON.parse(line)); }
+  let j,raw;
+  try{ raw=JSON.parse(line); j=normalizePacket(raw); }
   catch(e){ console.warn('Bad packet (ignored):',line.slice(0,80)); return; }
 
   // Battery-only heartbeat
@@ -1067,6 +1145,7 @@ function processPacket(line){
 
   // Full kick packet
   if(j.n !== undefined){
+    j.demo=!!raw.is_demo; j.__raw=raw;
     handleKickPacket(j);
   }
 }
@@ -1104,6 +1183,9 @@ function handleKickPacket(j){
     altitude:        Number(j.alt)  || 0,
     light:           Number(j.light)|| 0
   };
+  k.demo=!!j.demo;
+  kickRaw.set(k,j.__raw||j);
+  if(k.demo) sessionData.demo=true;
   allKicks.push(k);
 
   sessionData.speeds.push(k.speedMph);
@@ -1130,6 +1212,8 @@ function handleKickPacket(j){
 
   updateCurrentKick(k);
   updateLibraryTip(k);
+  tagKick=k; renderTagRow();
+  updateFatigue();
   updateLiveMetrics(k);
   updateQuickStats();
   updateGauges(k);
@@ -1333,6 +1417,7 @@ function updateDeviceStatus(){
   const btn=document.getElementById('connectBtn');
   if(connected){btn.textContent='Connected';btn.classList.add('connected');}
   else{btn.textContent='Connect Device';btn.classList.remove('connected');}
+  const db=document.getElementById('demoBtn');if(db)db.style.display=connected?'none':'';
 }
 
 /* ===================== HELPERS ===================== */
@@ -1347,7 +1432,7 @@ function prettyTrend(t){
 function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
 /* ===================== SESSION HISTORY ===================== */
-function getSessionHistory(){return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}
+function getSessionHistory(){const h=readJSON(STORAGE_KEY,[]);return Array.isArray(h)?h:[];}
 function saveSessionHistory(h){localStorage.setItem(STORAGE_KEY,JSON.stringify(h));updateDeviceStatus();}
 function renderSessionHistory(history){
   const container=document.getElementById('sessionHistory');
@@ -1355,6 +1440,7 @@ function renderSessionHistory(history){
   if(!history.length){
     summary.innerHTML='<div class="summary-card"><strong>Saved Sessions</strong><span>0</span></div><div class="summary-card"><strong>Best Speed</strong><span>--</span></div><div class="summary-card"><strong>Average Speed</strong><span>--</span></div><div class="summary-card"><strong>Recent Session</strong><span>--</span></div>';
     container.innerHTML='<p class="muted">No saved sessions yet. Start a session, then save or export it to build your history.</p>';
+    renderProgress(history);
     return;
   }
   const total=history.length;
@@ -1374,10 +1460,11 @@ function renderSessionHistory(history){
       <span><strong>Consistency:</strong> ${s.consistency??'--'} &nbsp;&bull;&nbsp; <strong>Style:</strong> ${s.lastArch?s.lastArch.replace(/_/g,' '):'--'}</span>
       <span><strong>Trend:</strong> ${prettyTrend(s.improvementTrend)}</span>
     </div>`).join('');
+  renderProgress(history);
 }
 function loadSessionHistory(){renderSessionHistory(getSessionHistory());updateDeviceStatus();}
 function saveCurrentSession(){
-  if(sessionData.kicks===0) return;
+  if(sessionData.kicks===0||sessionData.demo) return;   // demo and godmode kicks are never saved
   const history=getSessionHistory();
   history.unshift({
     sessionDate:      sessionData.startedAt,
@@ -1396,6 +1483,8 @@ function saveCurrentSession(){
   renderSessionHistory(history);
 }
 function startNewSession(){
+  if(demoTimer){stopDemo(true);showAlert('Demo stopped. Demo kicks are never saved.');return;}
+  if(sessionData.demo){resetSessionData();showAlert('Simulated kicks are never saved. New session started.');return;}
   if(sessionData.kicks>0){saveCurrentSession();showAlert('Previous session saved. New session started.');}
   else showAlert('New session started.');
   resetSessionData();
@@ -1435,6 +1524,8 @@ function resetSessionData(){
   updateComparison();
   updateRecommendations([]);
   clearField();
+  tagKick=null; renderTagRow();
+  updateFatigue();
 }
 
 /* ===================== EXPORT / SHARE ===================== */
@@ -1594,9 +1685,10 @@ async function getAICoaching(){
       `Max spin: ${sessionData.maxSpin} RPM\nConsistency: ${sessionData.consistency}/100\nTrend: ${sessionData.improvementTrend}\n`+
       `Kick style: ${sessionData.lastArch||'unknown'}\nAvg power: ${sessionData.avgPower}\n`+
       `Recent speeds: ${sessionData.speeds.slice(-5).map(s=>Number(s).toFixed(1)).join(', ')} mph\n`+
-      libraryTipPrompt()+
+      libraryTipPrompt()+fatiguePrompt()+pastSessionsPrompt()+
       `\nProvide: 1) 2-sentence assessment, 2) top 3 improvement tips${libraryTip?' (build on the tip from our tip library where it fits)':''}, 3) one drill. Be encouraging.`;
-    res.innerHTML=aiReplyHtml(await groqChat([{role:'user',content:prompt}],500));
+    const reply=await groqChat([{role:'user',content:prompt}],500);
+    res.innerHTML=aiReplyHtml(reply);speakReply(reply);
   }catch(err){
     res.innerHTML=`<p style="color:var(--bad);">Error: ${escapeHtml(err.message)}</p>`+
       `<p style="margin-top:12px;">Quick analysis: avg speed ${sessionData.avgSpeed} mph shows `+
@@ -1613,8 +1705,10 @@ async function generateTrainingPlan(){
     const lvl=sessionData.avgSpeed<25?'Beginner':sessionData.avgSpeed<40?'Intermediate':'Advanced';
     const prompt=`Create a progressive 4-week soccer training plan for a ${lvl} player. `+
       `Max speed ${sessionData.maxSpeed} mph, avg ${sessionData.avgSpeed} mph, max spin ${sessionData.maxSpin} RPM, `+
-      `consistency ${sessionData.consistency}/100, kick style ${sessionData.lastArch||'unknown'}. Use clear week headers and specific daily drills.`;
-    content.innerHTML=aiReplyHtml(await groqChat([{role:'user',content:prompt}],1000));
+      `consistency ${sessionData.consistency}/100, kick style ${sessionData.lastArch||'unknown'}. Use clear week headers and specific daily drills.\n`+
+      pastSessionsPrompt();
+    const reply=await groqChat([{role:'user',content:prompt}],1000);
+    content.innerHTML=aiReplyHtml(reply);speakReply(reply);
   }catch(err){content.innerHTML=`<p style="color:var(--bad);">Error: ${escapeHtml(err.message)}</p>`;}
   btn.disabled=false;
 }
@@ -1627,6 +1721,7 @@ function getGroqKey(){
   return key;
 }
 async function groqChat(messages,maxTokens){
+  if(navigator.onLine===false) throw new Error('AMIR needs an internet connection');
   let url=AI_PROXY_URL;
   const headers={'Content-Type':'application/json'};
   if(!url){
@@ -1705,7 +1800,7 @@ async function sendChatMessage(){
         `Stats: Max speed ${sessionData.maxSpeed} mph, Avg ${sessionData.avgSpeed} mph, Max spin ${sessionData.maxSpin} RPM, `+
         `Total kicks ${sessionData.kicks}, Consistency ${sessionData.consistency}, Kick style: ${sessionData.lastArch||'unknown'}.`;
       const reply=await groqChat([{role:'system',content:sys},{role:'user',content:'Roast me!'}],300);
-      removeChatLoading();addChatMessage(reply,false);chatHistory.push({role:'assistant',content:reply});saveChatHistory();
+      removeChatLoading();addChatMessage(reply,false);speakReply(reply);chatHistory.push({role:'assistant',content:reply});saveChatHistory();
     }catch(err){
       removeChatLoading();
       const fallback=sessionData.kicks===0
@@ -1729,9 +1824,10 @@ async function sendChatMessage(){
       `Current stats: Max speed ${sessionData.maxSpeed} mph, Avg ${sessionData.avgSpeed} mph, `+
       `Max spin ${sessionData.maxSpin} RPM, Total kicks ${sessionData.kicks}, `+
       `Consistency ${sessionData.consistency}, Kick style: ${sessionData.lastArch||'unknown'}. `+
-      `Be encouraging, specific and concise. For hardware details point to the Technology tab.`;
+      `Be encouraging, specific and concise. For hardware details point to the Technology tab.\n`+
+      fatiguePrompt()+pastSessionsPrompt();
     const reply=await groqChat([{role:'system',content:sys},...chatHistory],500);
-    removeChatLoading();addChatMessage(reply,false);
+    removeChatLoading();addChatMessage(reply,false);speakReply(reply);
     chatHistory.push({role:'assistant',content:reply});
     if(chatHistory.length>20)chatHistory=chatHistory.slice(-20);
     saveChatHistory();
@@ -1849,6 +1945,7 @@ function activateGodmode(){
       :baseSpeed;
     // Flat JSON exactly matching buildKickJson() key names
     const fakePacket={
+      demo: true,
       n:    allKicks.length+1,
       ts:   Date.now(),
       cls:  classes[i],
@@ -1901,6 +1998,326 @@ function activateGodmode(){
   setTimeout(fire,600);
 }
 
+/* ===================== EXTRAS =====================
+   Kick tagging, AMIR memory, progress chart, demo mode, fatigue check,
+   read-aloud and install-as-app. Everything here is optional: if a browser
+   lacks a feature (speech, service workers, Chart.js offline) it hides itself.
+   ==================================================== */
+
+// localStorage that survives full storage, private mode and corrupt data.
+function readJSON(key,fallback){try{const v=JSON.parse(localStorage.getItem(key));return v==null?fallback:v;}catch(e){return fallback;}}
+function writeJSON(key,val){try{localStorage.setItem(key,JSON.stringify(val));return true;}catch(e){return false;}}
+
+/* ---------- Tag your kicks (real training data for AMIR) ----------
+   Export columns are a contract shared with SpinOff_AI/ball_bridge.py:
+   change them in both places or not at all. */
+const TAG_KEY='spinoffTaggedKicks', TAG_PLAYER_KEY='spinoffTagPlayer', TAG_MAX=5000;
+const TAG_LABELS=[['power_shot','Power shot'],['curve_ball','Curve'],['chip_shot','Chip'],
+  ['lob_pass','Lob pass'],['ground_pass','Ground pass'],['header','Header'],['other','Other']];
+const TAG_COLUMNS=['tagged_at','session_id','player','label','is_demo','kick_number','speed_mph','speed_kmh',
+  'spin_rpm','spin_clipped','spin_axis','mixed_spin','launch_angle_deg','flight_time_ms','curl_deg','peak_g',
+  'g_clipped','contact_ms','strike_quality','strike_class','strike_intensity','power_score','firmware_class'];
+const kickRaw=new WeakMap(), kickTagId=new WeakMap();
+let tagKick=null;
+
+function getTaggedKicks(){const t=readJSON(TAG_KEY,[]);return Array.isArray(t)?t:[];}
+function tagPlayer(){const i=document.getElementById('tagPlayer');return i?i.value.trim().slice(0,60):'';}
+function tagRecord(k,label){
+  return {tagged_at:new Date().toISOString(),session_id:sessionData.startedAt,player:tagPlayer(),label,
+    is_demo:!!k.demo,kick_number:k.number,speed_mph:k.speedMph,speed_kmh:k.speedKmh,spin_rpm:k.spinRPM,
+    spin_clipped:!!k.rpmClipped,spin_axis:k.spinAxis||'',mixed_spin:!!k.mixedSpin,launch_angle_deg:k.launchAngle,
+    flight_time_ms:k.flightTimeMs,curl_deg:k.curlDegrees,peak_g:k.peakG,g_clipped:!!k.gClipped,
+    contact_ms:k.contactMs,strike_quality:k.strikeQuality,strike_class:k.strikeClass||'',
+    strike_intensity:k.strikeIntensity,power_score:k.powerScore,firmware_class:k.classification||'',
+    raw:kickRaw.get(k)||null};
+}
+function tagCurrentKick(label){
+  const k=tagKick;if(!k)return;
+  const list=getTaggedKicks(),id=kickTagId.get(k);
+  const i=id?list.findIndex(r=>r.id===id):-1;
+  if(i>=0){list[i].label=label;list[i].player=tagPlayer();}
+  else{
+    if(list.length>=TAG_MAX){showAlert('Tag storage is full (5,000 kicks). Download your tagged kicks, then clear them to keep tagging.',6000);return;}
+    const r=tagRecord(k,label);r.id=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+    list.push(r);kickTagId.set(k,r.id);
+  }
+  if(!writeJSON(TAG_KEY,list)){
+    if(i<0)kickTagId.delete(k);
+    showAlert('Could not save the tag: browser storage is full. Download your tagged kicks, then clear them.',6000);return;
+  }
+  renderTagRow();renderTrainingData();
+}
+function renderTagRow(){
+  const row=document.getElementById('tagRow');if(!row)return;
+  row.style.display=tagKick?'block':'none';
+  if(!tagKick)return;
+  const id=kickTagId.get(tagKick),rec=id&&getTaggedKicks().find(r=>r.id===id);
+  document.querySelectorAll('#tagBtns .tag-btn').forEach(b=>b.setAttribute('aria-pressed',String(!!rec&&rec.label===b.dataset.label)));
+  document.getElementById('tagNote').textContent=tagKick.demo
+    ?'Demo kick: tags are saved as demo data and left out of training.'
+    :rec?'Saved. Tap another type to change it.':'';
+}
+function renderTrainingData(){
+  const box=document.getElementById('trainCounts');if(!box)return;
+  const list=getTaggedKicks(),real=list.filter(r=>!r.is_demo);
+  const counts=TAG_LABELS.map(([v,name])=>[name,real.filter(r=>r.label===v).length]);
+  box.innerHTML=`<div class="train-count"><strong>${real.length}</strong> real kicks tagged</div>`+
+    counts.filter(c=>c[1]).map(([n,c])=>`<div class="train-count">${escapeHtml(n)}: <strong>${c}</strong></div>`).join('')+
+    (list.length>real.length?`<div class="train-count muted">${list.length-real.length} demo</div>`:'');
+  ['tagCsvBtn','tagJsonBtn','tagClearBtn'].forEach(b=>{const e=document.getElementById(b);if(e)e.disabled=!list.length;});
+}
+function csvCell(v){
+  if(v===null||v===undefined)return '';
+  if(typeof v==='boolean')return v?'true':'false';
+  const s=String(v);return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+}
+function taggedKicksCSV(list){
+  return [TAG_COLUMNS.join(','),...list.map(r=>TAG_COLUMNS.map(c=>csvCell(r[c])).join(','))].join('\r\n')+'\r\n';
+}
+function tagStamp(){return new Date().toISOString().replace(/[:.]/g,'-');}
+function exportTaggedCSV(){
+  const list=getTaggedKicks();if(!list.length)return;
+  downloadBlob(taggedKicksCSV(list),'text/csv',`spinoff-tagged-kicks-${tagStamp()}.csv`);
+}
+function exportTaggedJSON(){
+  const list=getTaggedKicks();if(!list.length)return;
+  const out=list.map(r=>{const o={};TAG_COLUMNS.forEach(c=>o[c]=r[c]===undefined?null:r[c]);o.raw=r.raw||null;return o;});
+  downloadBlob(JSON.stringify(out,null,1),'application/json',`spinoff-tagged-kicks-${tagStamp()}.json`);
+}
+function clearTaggedKicks(){
+  if(!confirm('Delete all tagged kicks from this browser? Download them first if you want to keep them.'))return;
+  try{localStorage.removeItem(TAG_KEY);}catch(e){}
+  renderTagRow();renderTrainingData();showAlert('Tagged kicks cleared.');
+}
+
+/* ---------- AMIR remembers your past sessions ---------- */
+function pastSessionsPrompt(){
+  const past=getSessionHistory().filter(s=>s&&!s.demo).slice(0,5);
+  if(!past.length)return '';
+  const d=s=>{const t=new Date(s.sessionDate);return isNaN(t)?'unknown date':t.toLocaleDateString();};
+  return '\nPast saved sessions, newest first (compare with them when it helps; never invent other sessions):\n'+
+    past.map(s=>`- ${d(s)}: ${s.kicks} kicks, max ${s.maxSpeed} mph, avg ${s.avgSpeed} mph, max spin ${s.maxSpin} RPM, `+
+      `consistency ${s.consistency??'--'}, trend ${s.improvementTrend||'--'}`).join('\n')+'\n';
+}
+
+/* ---------- Progress over time ---------- */
+let progressChart=null;
+function renderProgress(history){
+  const box=document.getElementById('progressBox'),hint=document.getElementById('progressHint');if(!box)return;
+  const s=(history||[]).filter(x=>x&&!x.demo).slice().reverse();   // oldest first
+  const can=typeof Chart!=='undefined',show=s.length>=2&&can;
+  hint.textContent=show?'':s.length>=2?'The progress chart needs the chart library, which could not load (offline?).'
+    :s.length?'Save one more session to see your progress over time.':'Save at least 2 sessions to see your progress over time.';
+  box.style.display=show?'block':'none';
+  if(!show){if(progressChart){progressChart.destroy();progressChart=null;}return;}
+  const num=v=>{const n=Number(v);return Number.isFinite(n)?n:null;};
+  const labels=s.map(x=>{const t=new Date(x.sessionDate);return isNaN(t)?'?':t.toLocaleDateString(undefined,{month:'short',day:'numeric'});});
+  const data=[s.map(x=>num(x.maxSpeed)),s.map(x=>num(x.avgSpeed)),s.map(x=>num(x.consistency))];
+  if(!progressChart){
+    const ds=(label,color,i,axis,dash)=>({label,data:data[i],borderColor:color,backgroundColor:color,yAxisID:axis,
+      borderDash:dash||[],tension:.3,borderWidth:2.5,pointRadius:4,fill:false});
+    progressChart=new Chart(document.getElementById('progressChart').getContext('2d'),{
+      type:'line',
+      data:{labels,datasets:[ds('Max speed (mph)','#8B0000',0,'y'),ds('Avg speed (mph)','#C6A75E',1,'y'),
+        ds('Consistency (0-100)','#2980b9',2,'y1',[6,4])]},
+      options:{responsive:true,maintainAspectRatio:false,animation:{duration:400},
+        plugins:{legend:{display:true,labels:{boxWidth:14,font:{size:11}}}},
+        // Axis titles only where there is room; the legend names every line.
+        scales:{y:{beginAtZero:true,title:{display:innerWidth>520,text:'mph'}},
+          y1:{position:'right',min:0,max:100,title:{display:innerWidth>520,text:'consistency'},grid:{drawOnChartArea:false}},
+          x:{}}}
+    });
+  }else{
+    progressChart.data.labels=labels;
+    progressChart.data.datasets.forEach((d,i)=>d.data=data[i]);
+  }
+  themeProgress();
+}
+function themeProgress(){
+  if(!progressChart)return;
+  const tc=themeColors(),o=progressChart.options;
+  ['x','y','y1'].forEach(a=>{o.scales[a].ticks={color:tc.text,font:{size:10}};o.scales[a].grid=Object.assign(o.scales[a].grid||{},{color:tc.grid});
+    if(o.scales[a].title)o.scales[a].title.color=tc.text;});
+  o.plugins.legend.labels.color=tc.text;
+  progressChart.update('none');
+}
+
+/* ---------- Fatigue check (a simple rule, not AI) ---------- */
+function fatigueCheck(){
+  const sp=sessionData.speeds.map(Number).filter(Number.isFinite),n=sp.length;
+  if(n<10)return {state:'wait',pct:0,text:`Fatigue check starts after 10 kicks (${n} so far).`};
+  const mean=a=>a.reduce((x,y)=>x+y,0)/a.length,last=mean(sp.slice(-5));
+  let best=0;
+  for(let i=0;i<=n-6;i++)best=Math.max(best,mean(sp.slice(i,i+5)));   // every stretch before the latest one
+  const pct=best>0&&best>last?Math.round((best-last)/best*100):0;
+  if(pct>=10)return {state:'tired',pct,text:`Your last 5 kicks are ${pct}% slower than your best stretch — a short break might help.`};
+  if(pct>=5)return {state:'dip',pct,text:`Speed is dipping a little (${pct}%).`};
+  return {state:'ok',pct,text:'No sign of fatigue (speed is holding steady).'};
+}
+function updateFatigue(){
+  const el=document.getElementById('fatigueText');if(!el)return;
+  const f=fatigueCheck();el.textContent=f.text;el.className='fatigue-text '+f.state;
+}
+function fatiguePrompt(){return `Fatigue check (simple speed rule, not AI): ${fatigueCheck().text}\n`;}
+
+/* ---------- Demo mode: simulated kicks through the real packet path ---------- */
+const DEMO_INTERVAL_MS=2500;
+const DEMO_RECS={
+  cons:'Your strike consistency is low - plant your standing foot the same way each kick',
+  spinSd:'Your spin rate is inconsistent - focus on a repeatable foot contact point',
+  low:'Launch angle too low for curve shots - aim higher on the ball',
+  high:'Launch angle very high - strike through the centre for more drive',
+  spin:'Speed is your strongest stat - work on adding spin for curve and dip',
+  slow:'Generate more speed - follow through fully and accelerate the kicking leg',
+  solid:'Solid all-round session - keep repeating your technique to lock it in'};
+let demoTimer=null,demo=null;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+// Same order of checks as classifyKick() in the firmware.
+function classifyLikeFirmware(spd,ang,rpm,g,ct){
+  if(g>=13&&ang<25&&rpm<120&&spd>=35)return 'power_shot';
+  if(rpm>=160&&ang>=15)return 'curve_ball';
+  if(ang>=50&&spd<30)return 'chip_shot';
+  if(ang>=35&&spd>=25)return 'lob_pass';
+  if(ang<18&&spd<28)return 'ground_pass';
+  if(ct>=18&&rpm<100&&ang>=20)return 'header';
+  return 'ground_pass';
+}
+function demoPacket(){
+  const d=demo;d.n++;
+  const pool=['power_shot','power_shot','power_shot','curve_ball','curve_ball','curve_ball','chip_shot','lob_pass','ground_pass','ground_pass','header'];
+  const want=pool[Math.floor(Math.random()*pool.length)];
+  // Speeds slowly fall after kick 12 so the fatigue check has something to show.
+  const tire=d.n>12?Math.max(.8,1-(d.n-12)*.012):1;
+  const R={power_shot:{s:[38,62],a:[8,24],r:[40,115],g:[13,16.4],c:[7,12],ax:'topspin'},
+    curve_ball:{s:[28,48],a:[16,34],r:[165,360],g:[9,14],c:[8,13],ax:Math.random()<.5?'sidespin_left':'sidespin_right'},
+    chip_shot:{s:[15,29],a:[50,62],r:[60,150],g:[7.5,11],c:[7,11],ax:'backspin'},
+    lob_pass:{s:[26,38],a:[36,48],r:[60,150],g:[8,12],c:[7,12],ax:'backspin'},
+    ground_pass:{s:[14,27],a:[3,16],r:[30,140],g:[7.2,10],c:[6,11],ax:'topspin'},
+    header:{s:[15,24],a:[22,34],r:[10,90],g:[7.2,9.5],c:[18,24],ax:'mixed'}}[want];
+  const spd=Math.min(70,rnd(...R.s)*(want==='ground_pass'||want==='header'?1:tire));
+  const ang=rnd(...R.a),rpmDraw=rnd(...R.r),gDraw=rnd(...R.g),ct=Math.round(rnd(...R.c));
+  const rpmClip=rpmDraw>333,rpm=Math.round(Math.min(rpmDraw,333));
+  const gClip=gDraw>=15,g=gClip?16:Math.round(gDraw*10)/10;
+  const cls=classifyLikeFirmware(spd,ang,rpm,g,ct);
+  const flt=Math.round(2*spd*.44704*Math.sin(ang*Math.PI/180)/9.81*1000);
+  const side=R.ax.startsWith('sidespin')?rpm*6:rpm*.6;
+  const curl=Math.min(45,Math.max(0,side*flt/1000*.008));
+  const q=Math.round(Math.min(98,Math.max(35,rnd(60,95)*(tire<1?tire+.05:1))));
+  const sc=q>=78?'clean':q>=50?'off_center':'mishit';
+  const pwr=Math.min(100,Math.round(.5*Math.min(100,spd/70*100)+.3*Math.min(100,g/16*100)+.2*Math.min(100,rpm/333*100)));
+  d.speeds.push(spd);d.powers.push(pwr);d.angles.push(ang);d.spins.push(rpm);
+  const mean=a=>a.reduce((x,y)=>x+y,0)/a.length,ms=mean(d.speeds);
+  const sd=Math.sqrt(mean(d.speeds.map(v=>(v-ms)**2)));
+  const cons=d.n<2?100:Math.max(0,Math.min(100,Math.round(100-sd/ms*220)));
+  let trend='plateau';
+  if(d.n>=6){const h=Math.floor(d.n/2),diff=mean(d.powers.slice(h))-mean(d.powers.slice(0,h));trend=diff>4?'improving':diff<-4?'declining':'plateau';}
+  const b=d.bests;let which='';
+  if(spd>b.s){b.s=spd;which='speedMph';}
+  if(pwr>b.p){b.p=pwr;which='powerScore';}
+  if(rpm>b.r){b.r=rpm;which='spinRPM';}
+  if(q>b.q){b.q=q;which='strikeQuality';}
+  if(d.n%5===0){   // generateRecommendations() runs every 5 kicks
+    const as=ms,aa=mean(d.angles),spm=mean(d.spins),ssd=Math.sqrt(mean(d.spins.map(v=>(v-spm)**2)));
+    const r=[];const add=t=>{if(r.length<3)r.push(t);};
+    if(cons<60)add(DEMO_RECS.cons);if(ssd>80)add(DEMO_RECS.spinSd);if(aa<18)add(DEMO_RECS.low);
+    if(aa>55)add(DEMO_RECS.high);if(spm<80&&as>40)add(DEMO_RECS.spin);if(as<25)add(DEMO_RECS.slow);
+    if(!r.length)add(DEMO_RECS.solid);d.recs=r;
+  }
+  if(d.n%8===0&&d.bat>20)d.bat--;
+  const f1=v=>Math.round(v*10)/10;
+  return {kick:{number:d.n,timestamp:Math.round(performance.now()),classification:cls,powerScore:pwr},
+    impact:{peakG:g,clipped:gClip},
+    motion:{speedMph:f1(spd),speedKmh:f1(spd*1.609),launchAngle:f1(ang),flightTimeMs:flt,curlDegrees:f1(curl)},
+    spin:{rateRPM:rpm,clipped:rpmClip,axis:R.ax,mixedSpin:R.ax==='mixed'},
+    strike:{quality:q,classification:sc,intensity:Math.round(rnd(40,85)),contactMs:ct},
+    session:{totalKicks:d.n,consistencyScore:cons,avgSpeedMph:f1(ms),avgPowerScore:Math.round(mean(d.powers)),improvementTrend:trend},
+    personalBests:{speedMph:f1(b.s),powerScore:b.p,spinRPM:b.r,strikeQuality:b.q,newBestBroken:!!which,whichBest:which},
+    battery:{percentage:d.bat,lowBattery:false},recommendations:d.recs,is_demo:true};
+}
+function demoKick(){if(demo)processPacket(JSON.stringify(demoPacket()));}
+function toggleDemo(){demoTimer?stopDemo():startDemo();}
+function startDemo(){
+  if(device&&device.gatt&&device.gatt.connected){showAlert('Spin Off is connected, so you are already seeing real kicks.');return;}
+  if(sessionData.kicks>0&&!sessionData.demo){saveCurrentSession();showAlert('Your session was saved. Starting a demo with simulated kicks.',4000);}
+  resetSessionData();
+  demo={n:0,speeds:[],powers:[],angles:[],spins:[],bests:{s:0,p:0,r:0,q:0},recs:[],bat:96};
+  document.getElementById('dataDisplay').style.display='block';
+  document.getElementById('noData').style.display='none';
+  setDemoUI(true);
+  demoKick();demoTimer=setInterval(demoKick,DEMO_INTERVAL_MS);
+}
+function stopDemo(quiet){
+  if(!demoTimer&&!demo)return;
+  clearInterval(demoTimer);demoTimer=null;demo=null;
+  resetSessionData();   // simulated kicks are never kept
+  setDemoUI(false);
+  if(!(device&&device.gatt&&device.gatt.connected)){
+    document.getElementById('dataDisplay').style.display='none';
+    document.getElementById('noData').style.display='block';
+  }
+  if(!quiet)showAlert('Demo stopped. The simulated kicks were cleared.');
+}
+function setDemoUI(on){
+  document.body.classList.toggle('demo-on',on);
+  const b=document.getElementById('demoBtn');
+  if(b){b.textContent=on?'Stop demo':'Try a demo (no ball)';b.setAttribute('aria-pressed',String(on));}
+}
+
+/* ---------- AMIR reads replies aloud ---------- */
+const SPEAK_KEY='spinoffSpeak';
+let speakingUtterance=null;
+function speakSupported(){return 'speechSynthesis' in window&&typeof SpeechSynthesisUtterance!=='undefined';}
+function speakOn(){try{return localStorage.getItem(SPEAK_KEY)==='1';}catch(e){return false;}}
+function setSpeak(on){
+  try{localStorage.setItem(SPEAK_KEY,on?'1':'0');}catch(e){}
+  document.querySelectorAll('.speak-toggle input').forEach(i=>i.checked=on);
+  if(!on)stopSpeaking();
+}
+function showSpeakStop(on){document.querySelectorAll('.speak-stop').forEach(b=>b.style.display=on?'inline-block':'none');}
+function speakReply(text){
+  if(!text||!speakSupported()||!speakOn())return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(String(text).slice(0,4000));
+    u.lang='en-US';u.rate=1;
+    const v=(speechSynthesis.getVoices()||[]).find(v=>/^en([-_]|$)/i.test(v.lang));if(v)u.voice=v;
+    u.onend=u.onerror=()=>{if(speakingUtterance===u){speakingUtterance=null;showSpeakStop(false);}};
+    speakingUtterance=u;showSpeakStop(true);speechSynthesis.speak(u);
+  }catch(e){speakingUtterance=null;showSpeakStop(false);}
+}
+function stopSpeaking(){speakingUtterance=null;try{if(speakSupported())speechSynthesis.cancel();}catch(e){}showSpeakStop(false);}
+
+/* ---------- Install as an app (works offline except AMIR) ---------- */
+let installPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();installPrompt=e;
+  const b=document.getElementById('installBtn');if(b)b.style.display='inline-block';
+});
+window.addEventListener('appinstalled',()=>{installPrompt=null;const b=document.getElementById('installBtn');if(b)b.style.display='none';});
+async function installApp(){
+  if(!installPrompt)return;
+  installPrompt.prompt();try{await installPrompt.userChoice;}catch(e){}
+  installPrompt=null;document.getElementById('installBtn').style.display='none';
+}
+function registerServiceWorker(){
+  if(!('serviceWorker' in navigator))return;
+  if(location.protocol==='https:'||['localhost','127.0.0.1'].includes(location.hostname))
+    navigator.serviceWorker.register('sw.js').catch(e=>console.warn('Service worker not registered:',e));
+}
+
+function initExtras(){
+  const p=document.getElementById('tagPlayer');
+  if(p){try{p.value=localStorage.getItem(TAG_PLAYER_KEY)||'';}catch(e){}
+    p.addEventListener('input',()=>{try{localStorage.setItem(TAG_PLAYER_KEY,p.value.slice(0,60));}catch(e){}});}
+  document.getElementById('tagBtns').innerHTML=TAG_LABELS.map(([v,n])=>
+    `<button type="button" class="tag-btn" data-label="${v}" aria-pressed="false" onclick="tagCurrentKick('${v}')">${n}</button>`).join('');
+  if(speakSupported()){
+    document.querySelectorAll('.speak-row').forEach(r=>r.style.display='flex');
+    document.querySelectorAll('.speak-toggle input').forEach(i=>i.checked=speakOn());
+  }
+  renderTrainingData();updateFatigue();registerServiceWorker();
+}
+
 /* ===================== INIT ===================== */
 window.addEventListener('load',()=>{
   applyTheme(localStorage.getItem(THEME_KEY)||'light');
@@ -1910,6 +2327,7 @@ window.addEventListener('load',()=>{
   loadChatHistory();
   updateDeviceStatus();
   loadTipLibrary();   // start the download early so the first kick gets its tip
+  initExtras();
 });
 </script>
 </body>
