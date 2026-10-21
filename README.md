@@ -40,10 +40,11 @@ That's why we built Spin Off - to democratize sports science and help every play
 ## How It Works
 
 ### The Hardware
-At the heart of Spin Off is a Seeed Studio XIAO nRF52840 Sense - a powerful microcontroller packed with sensors:
+At the heart of Spin Off is an Arduino Nano 33 BLE Sense Rev2 - a powerful microcontroller packed with sensors:
 
-- LSM6DS3TR-C Accelerometer - Measures acceleration in all three axes
-- LSM6DS3TR-C Gyroscope - Tracks rotational movement
+- BMI270 Accelerometer - Measures acceleration in all three axes
+- BMI270 Gyroscope - Tracks rotational movement
+- BMM150 Magnetometer - Senses the ball's orientation
 - PDM Microphone - Analyzes strike quality at contact
 - Bluetooth 5.0 - Wirelessly transmits data to your device
 
@@ -109,8 +110,9 @@ The same firmware also sorts every kick into a type (power shot, curve ball, chi
 ## Technology Stack
 
 Hardware:
-- Seeed Studio XIAO nRF52840 Sense
-- LSM6DS3TR-C 6-axis IMU (accelerometer + gyroscope)
+- Arduino Nano 33 BLE Sense Rev2
+- BMI270 6-axis IMU (accelerometer + gyroscope)
+- BMM150 3-axis magnetometer
 - Built-in PDM microphone
 - Nordic nRF52840 Bluetooth 5.0 module
 - 1000mAh LiPo battery
