@@ -1,0 +1,34 @@
+name: Checks
+
+# Runs the regression suite (tests/run.sh) on every push and pull request:
+# the web app in a real browser, the tip library against the team's Python
+# lookup, and the Cloudflare Worker. It never deploys anything.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - name: Run tests
+        run: bash tests/run.sh
+        env:
+          PW: playwright

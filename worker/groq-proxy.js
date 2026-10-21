@@ -31,10 +31,10 @@ export default {
 
     // Only pass through plain chat messages, and keep requests small so the
     // proxy can't be used for anything other than the coach.
-    const messages = Array.isArray(body.messages) ? body.messages : [];
+    const messages = body && Array.isArray(body.messages) ? body.messages : [];
     const valid = messages.length > 0 && messages.length <= MAX_MESSAGES &&
-      messages.every(m => ['system', 'user', 'assistant'].includes(m.role) && typeof m.content === 'string');
-    const chars = messages.reduce((n, m) => n + (m.content || '').length, 0);
+      messages.every(m => m && ['system', 'user', 'assistant'].includes(m.role) && typeof m.content === 'string');
+    const chars = valid ? messages.reduce((n, m) => n + m.content.length, 0) : 0;
     if (!valid || chars > MAX_CHARS) return error('Invalid messages', 400, cors);
 
     const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {

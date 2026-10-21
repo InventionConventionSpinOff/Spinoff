@@ -5,97 +5,175 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Spin Off — Soccer Ball Analytics</title>
 <meta name="description" content="A soccer ball that measures every kick. Built by Sahil and Skyler, 7th grade, for Invention Convention 2026.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#fbfaf8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#161514" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://inventionconventionspinoff.github.io/Spinoff/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Spin Off">
+<meta property="og:title" content="Spin Off: a soccer ball that measures every kick">
+<meta property="og:description" content="A soccer ball that measures every kick. Built by Sahil and Skyler, 7th grade, for Invention Convention 2026.">
+<meta property="og:url" content="https://inventionconventionspinoff.github.io/Spinoff/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400..700&display=swap">
 <style>
 :root{
-  --bg:#fbfaf8; --text:#1c1b1a; --muted:#5f5b55; --line:#e4e0da;
-  --accent:#8b1a1a; --accent-text:#fff; --code-bg:#f2f0ec;
+  --bg:#fbfaf8; --text:#1c1b1a; --muted:#5f5b55; --line:#dcd7cf;
+  --accent:#8b1a1a; --accent-hover:#6f1414; --accent-text:#fff; --code-bg:#f2f0ec;
+  --serif:"Source Serif 4",Charter,"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,"Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
+  --measure:680px;
+  color-scheme:light dark;
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --bg:#161514; --text:#ecebe8; --muted:#a39e96; --line:#2f2d2a;
-    --accent:#e07a6f; --accent-text:#1a0f0e; --code-bg:#201f1d;
+    --bg:#161514; --text:#e6e3de; --muted:#a39e96; --line:#3b3835;
+    --accent:#e07a6f; --accent-hover:#eb948a; --accent-text:#1a0f0e; --code-bg:#201f1d;
   }
 }
 *{box-sizing:border-box;}
 html{-webkit-text-size-adjust:100%;}
-body{
-  margin:0; background:var(--bg); color:var(--text);
-  font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-}
-a{color:var(--accent); text-underline-offset:2px;}
-a:hover{text-decoration-thickness:2px;}
+body{margin:0; background:var(--bg); color:var(--text); font:1.0625rem/1.6 var(--sans);}
+::selection{background:color-mix(in srgb,var(--accent) 22%,transparent);}
+a{color:var(--accent); text-decoration-thickness:1px; text-underline-offset:.2em;
+  text-decoration-color:color-mix(in srgb,currentColor 40%,transparent);}
+a:hover{text-decoration-color:currentColor;}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:2px;}
 
 .site-header{border-bottom:1px solid var(--line);}
 .site-header .inner{
-  max-width:760px; margin:0 auto; padding:14px 20px;
-  display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  max-width:var(--measure); margin:0 auto; padding:4px 20px;
+  display:flex; align-items:center; justify-content:space-between; column-gap:16px; flex-wrap:wrap;
 }
-.wordmark{font-weight:700; color:var(--text); text-decoration:none;}
-.site-header nav{display:flex; gap:20px; font-size:15px;}
-.site-header nav a{color:var(--muted); text-decoration:none;}
-.site-header nav a:hover{color:var(--text);}
+.wordmark{font:600 1.1875rem/1.2 var(--serif); letter-spacing:-.01em; color:var(--text); text-decoration:none; padding:12px 0;}
+.site-header nav{display:flex; flex-wrap:wrap; column-gap:20px; font-size:.9375rem;}
+.site-header nav a{color:var(--muted); text-decoration:none; padding:12px 0; white-space:nowrap;}
+.site-header nav a:hover{color:var(--text); text-decoration:underline; text-decoration-color:currentColor; text-underline-offset:.35em;}
 
-main{max-width:760px; margin:0 auto; padding:0 20px 64px;}
-section{padding-top:48px;}
-h1{font-size:44px; line-height:1.1; margin:56px 0 16px; letter-spacing:-.02em; cursor:default;}
-h2{font-size:24px; line-height:1.25; margin:0 0 12px; letter-spacing:-.01em;}
-h3{font-size:18px; margin:28px 0 8px;}
-p{margin:0 0 14px;}
-.lede{font-size:20px; line-height:1.5; color:var(--text); max-width:36em;}
-.byline{color:var(--muted); font-size:15px;}
+main{max-width:var(--measure); margin:0 auto; padding:0 20px 96px;}
+section{margin-top:88px; scroll-margin-top:24px;}
+h1{font:600 3.5rem/1.02 var(--serif); letter-spacing:-.015em; margin:72px 0 20px; cursor:default;}
+h2{font:600 1.875rem/1.15 var(--serif); letter-spacing:-.01em; margin:0 0 16px;}
+h3{font-size:1.0625rem; font-weight:650; line-height:1.35; margin:36px 0 8px;}
+p{margin:0 0 16px;}
+p,li,blockquote,td,.lede{text-wrap:pretty;}
+h1,h2,summary{text-wrap:balance;}
+.lede{font-family:var(--serif); font-size:1.375rem; line-height:1.45;}
+.byline{color:var(--muted); font-size:.9375rem;}
+/* Only the segments stay whole; the separators are where the line may break. */
+.segs > span:not(.sep){white-space:nowrap;}
 .muted{color:var(--muted);}
 
-.actions{display:flex; gap:12px; flex-wrap:wrap; margin:24px 0 8px;}
+.actions{display:flex; flex-wrap:wrap; align-items:center; gap:12px 24px; margin:28px 0 0;}
+.actions a:not(.button){font-size:.9375rem; font-weight:600;}
 .button{
-  display:inline-block; padding:10px 18px; border-radius:6px; font-size:15px; font-weight:600;
+  display:inline-block; padding:11px 20px; border-radius:4px; font-size:.9375rem; font-weight:600;
   text-decoration:none; border:1px solid var(--accent); color:var(--accent);
+  transition:background-color .15s, border-color .15s;
 }
 .button.primary{background:var(--accent); color:var(--accent-text);}
-.button:hover{text-decoration:none; opacity:.88;}
+.button.primary:hover{background:var(--accent-hover); border-color:var(--accent-hover);}
+.note{margin:14px 0 0; font-size:.875rem; color:var(--muted);}
 
-ol,ul{padding-left:22px; margin:0 0 14px;}
-li{margin-bottom:6px;}
+ol,ul{padding-left:22px; margin:0 0 16px;}
+li{margin-bottom:8px;}
+li::marker{color:var(--muted); font-variant-numeric:tabular-nums;}
 
-table{width:100%; border-collapse:collapse; margin:8px 0 16px; font-size:15px;}
-th,td{text-align:left; vertical-align:top; padding:9px 12px 9px 0; border-bottom:1px solid var(--line);}
+table{width:100%; border-collapse:collapse; margin:8px 0 16px; font-size:.9375rem;}
+th,td{text-align:left; vertical-align:top; padding:10px 16px 10px 0; border-bottom:1px solid var(--line);}
 th{font-weight:600; white-space:nowrap;}
-thead th{font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); font-weight:600;}
+thead th{font-size:.875rem; color:var(--muted);}
+tbody tr:last-child > *{border-bottom:0;}
 
+code{font-family:var(--mono); font-size:.88em;}
 pre{
-  background:var(--code-bg); border-radius:6px; padding:14px 16px; overflow-x:auto;
-  font-size:13.5px; line-height:1.5; margin:8px 0 16px;
+  background:var(--code-bg); border:1px solid var(--line); border-radius:4px; padding:16px 18px;
+  overflow-x:auto; font-size:.8125rem; line-height:1.6; tab-size:2; margin:8px 0 16px;
 }
-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.9em;}
 pre code{font-size:inherit;}
-p code,li code,td code{background:var(--code-bg); padding:1px 5px; border-radius:4px;}
+pre:focus-visible{outline-offset:-2px;}
+pre.flow{white-space:pre-wrap; text-wrap:balance;}
+p code,li code,td code{
+  background:var(--code-bg); padding:.1em .3em; border-radius:3px;
+  -webkit-box-decoration-break:clone; box-decoration-break:clone;
+}
 
-details{border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin:16px 0;}
-details + details{border-top:0; margin-top:-16px;}
-summary{cursor:pointer; padding:12px 0; font-weight:600;}
-details[open] summary{margin-bottom:4px;}
-details > :last-child{margin-bottom:18px;}
+details{border-top:1px solid var(--line); border-bottom:1px solid var(--line); margin:24px 0; padding-left:24px;}
+summary{
+  list-style:none; display:flex; gap:13px; align-items:flex-start;
+  margin-left:-24px; padding:16px 0; font-weight:600; cursor:pointer;
+}
+summary::-webkit-details-marker{display:none;}
+summary::before{
+  content:""; flex:none; width:11px; height:11px; margin-top:calc(.8em - 5.5px); color:var(--accent);
+  background:linear-gradient(currentColor,currentColor) center/11px 2px no-repeat,
+             linear-gradient(currentColor,currentColor) center/2px 11px no-repeat;
+}
+details[open] > summary::before{background-size:11px 2px, 0 0;}
+@media (forced-colors: active){
+  summary::before{forced-color-adjust:none; color:CanvasText;}
+}
+summary:hover{color:var(--accent);}
+summary:focus-visible{outline-offset:4px;}
+details > :last-child{margin-bottom:24px;}
+details h3,details h4{font-size:.9375rem; font-weight:650; line-height:1.35; margin:32px 0 6px;}
+details > summary + h3,details > summary + h4{margin-top:12px;}
 
-blockquote{margin:0 0 10px; padding-left:14px; border-left:3px solid var(--line); color:var(--muted);}
+blockquote{
+  margin:0 0 12px; padding-left:16px; color:var(--text);
+  border-left:2px solid var(--line);
+  border-left-color:color-mix(in srgb,var(--accent) 35%,transparent);
+}
 
-.team{display:grid; grid-template-columns:1fr 1fr; gap:28px;}
-.team h3{margin-top:0;}
-.team .role{color:var(--muted); font-size:15px; margin-bottom:6px;}
+.team{display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-bottom:40px;}
+.team > div > :last-child{margin-bottom:0;}
+.team h3{margin:0 0 2px;}
+.team .role{color:var(--muted); font-size:.9375rem; margin-bottom:8px;}
 
-footer{border-top:1px solid var(--line); color:var(--muted); font-size:15px;}
-footer .inner{max-width:760px; margin:0 auto; padding:24px 20px 40px;}
+#contact a[href^="mailto"]{overflow-wrap:anywhere;}
+
+footer{border-top:1px solid var(--line); color:var(--muted); font-size:.875rem;}
+footer .inner{max-width:var(--measure); margin:0 auto; padding:32px 20px 48px;}
+footer a{white-space:nowrap;}
+footer .quote{font:400 1.125rem/1.5 var(--serif); color:var(--text); max-width:30em; margin-bottom:12px;}
 
 .falling-ball{position:fixed; top:-2em; pointer-events:none; z-index:10; animation:fall linear forwards;}
 @keyframes fall{to{transform:translateY(110vh) rotate(540deg);}}
 
+@media (min-width:661px){
+  /* Code boxes span the full column, flush with the details rules; code lines up with the prose. */
+  details pre{margin-left:-24px; margin-right:0; padding-left:23px;}
+}
+@media (max-width:660px){
+  /* Below this the longest code line no longer fits an indented box, so code goes edge to edge. */
+  details{padding-left:0;}
+  summary{margin-left:0;}
+  pre{margin-left:-20px; margin-right:-20px; border-radius:0; border-width:1px 0; padding:14px 20px; font-size:.78125rem;}
+}
 @media (max-width:600px){
-  body{font-size:16px;}
-  h1{font-size:34px; margin-top:36px;}
-  .lede{font-size:18px;}
-  .team{grid-template-columns:1fr;}
-  .site-header nav{gap:14px;}
+  body{font-size:1rem;}
+  h1{font-size:2.5rem; margin-top:44px;}
+  h2{font-size:1.5625rem;}
+  .lede{font-size:1.1875rem;}
+  section{margin-top:64px;}
+  .team{grid-template-columns:1fr; gap:24px;}
+  .site-header nav{column-gap:14px;}
   th{white-space:normal;}
 }
-@media (prefers-reduced-motion: reduce){.falling-ball{display:none;}}
+@media (max-width:520px){
+  .segs > span{display:block;}
+  .segs > span:not(.sep){white-space:normal;}
+  .segs > .sep{display:none;}
+}
+@media (max-width:359px){
+  .site-header nav{width:100%; justify-content:space-between; column-gap:8px; font-size:.875rem;}
+}
+@media (prefers-reduced-motion: reduce){
+  .falling-ball{display:none;}
+  .button{transition:none;}
+}
 </style>
 </head>
 <body>
@@ -104,10 +182,10 @@ footer .inner{max-width:760px; margin:0 auto; padding:24px 20px 40px;}
   <div class="inner">
     <a class="wordmark" href="#">Spin Off</a>
     <nav>
-      <a href="NATIONSPIT.html">Web app</a>
       <a href="#how-it-works">How it works</a>
       <a href="#amir">AI coach</a>
       <a href="#contact">Contact</a>
+      <a href="NATIONSPIT.html">Web app</a>
     </nav>
   </div>
 </header>
@@ -116,41 +194,42 @@ footer .inner{max-width:760px; margin:0 auto; padding:24px 20px 40px;}
 
 <h1 id="title">Spin Off</h1>
 <p class="lede">A soccer ball that measures every kick. Sensors inside the ball record speed, spin, launch angle and how cleanly you struck it, send the numbers to a web app over Bluetooth, and an AI coach turns them into advice.</p>
-<p class="byline">Built by Sahil and Skyler, 7th grade · Invention Convention 2026</p>
+<p class="byline segs"><span>Built by Sahil and Skyler, 7th grade</span><span class="sep"> · </span><span>Invention Convention 2026</span></p>
 <div class="actions">
   <a class="button primary" href="NATIONSPIT.html">Open the web app</a>
-  <a class="button" href="spinoffexplained.txt">Read the firmware</a>
+  <a href="https://github.com/InventionConventionSpinOff/Spinoff/blob/main/firmware/SpinOff/SpinOff.ino">Read the firmware</a>
 </div>
+<p class="note">The web app needs Chrome, Edge or Opera on a computer or an Android phone. Safari and Firefox can&rsquo;t connect to the ball, and on iPhone and iPad none of these browsers&nbsp;can.</p>
 
 <section id="why">
   <h2>Why we built it</h2>
-  <p>Professional clubs measure their players with camera tracking, GPS vests and force plates. Those systems cost tens of thousands of dollars and need staff to run them. Youth players, school teams and people who just play for fun don't get any of that data, so they improve by feel.</p>
-  <p>We wanted the same kind of numbers for anyone with a ball and a phone. Spin Off is a small sensor package that fits inside a regulation ball, runs on a 1000&nbsp;mAh battery, and talks to a web page in Chrome. The extra hardware costs under $40 per ball. There's no subscription and no account.</p>
+  <p>Professional clubs measure their players with camera tracking, GPS vests and force plates. Those systems cost tens of thousands of dollars and need staff to run them. Youth players, school teams and people who just play for fun don’t get any of that data, so they improve by feel.</p>
+  <p>We wanted the same kind of numbers for anyone with a ball and a phone. Spin Off is a small sensor package that fits inside a regulation ball, runs on a 1000&nbsp;mAh battery, and talks to a web page in Chrome. The extra hardware costs under $40 per ball. There’s no subscription and no account.</p>
 </section>
 
 <section id="measures">
-  <h2>What it measures</h2>
-  <table>
-    <thead><tr><th>Metric</th><th>How the ball gets it</th></tr></thead>
+  <h2 id="measures-title">What it measures</h2>
+  <table aria-labelledby="measures-title">
+    <thead><tr><th scope="col">Metric</th><th scope="col">How the ball gets it</th></tr></thead>
     <tbody>
-      <tr><th>Speed</th><td>Acceleration is added up over the moment of impact, with gravity removed, to get the ball's velocity. Up to about 70&nbsp;mph.</td></tr>
-      <tr><th>Spin</th><td>The gyroscope measures rotation after the kick and labels it topspin, backspin, sidespin or mixed.</td></tr>
-      <tr><th>Launch angle</th><td>The direction of the velocity at the end of the impact, so it works for ground passes too.</td></tr>
-      <tr><th>Impact force</th><td>The peak G-force during contact (the sensor reads up to ±16&nbsp;G).</td></tr>
-      <tr><th>Strike quality</th><td>The microphone listens to the contact and scores it 0–100: clean, mishit or off-center.</td></tr>
-      <tr><th>Kick type</th><td>Rules on speed, angle, spin and contact time sort each kick into power shot, curve ball, chip, lob pass, ground pass or header.</td></tr>
+      <tr><th scope="row">Speed</th><td>Acceleration is added up over the moment of impact, with gravity removed, to get the ball’s velocity. Up to about 70&nbsp;mph.</td></tr>
+      <tr><th scope="row">Spin</th><td>The gyroscope measures rotation after the kick and labels it topspin, backspin, sidespin or mixed.</td></tr>
+      <tr><th scope="row">Launch angle</th><td>The direction of the velocity at the end of the impact, so it works for ground passes too.</td></tr>
+      <tr><th scope="row">Impact force</th><td>The peak G-force during contact (the sensor reads up to ±16&nbsp;G).</td></tr>
+      <tr><th scope="row">Strike quality</th><td>The microphone listens to the contact and scores it 0–100: clean, mishit or&nbsp;off-center.</td></tr>
+      <tr><th scope="row">Kick type</th><td>Rules on speed, impact force, angle, spin and contact time sort each kick into power shot, curve ball, chip, lob pass, ground pass or header.</td></tr>
     </tbody>
   </table>
-  <p>The web app also keeps personal bests, a consistency score and an improvement trend for the session, lets you mark shots on a field map, and exports everything as CSV or JSON.</p>
+  <p>The ball also tracks personal bests, a consistency score and an improvement trend for the session. The web app shows them, lets you mark shots on a field map, and exports your kicks as CSV or JSON.</p>
 </section>
 
 <section id="how-it-works">
   <h2>How it works</h2>
   <ol>
-    <li><strong>Detect.</strong> The ball waits until it feels more than 5&nbsp;G. It only counts a kick if the force reaches 7&nbsp;G with real rotation behind it, which filters out catches, drops and bounces.</li>
-    <li><strong>Measure.</strong> For the next 160&nbsp;ms it records acceleration, rotation and sound from the microphone.</li>
+    <li><strong>Detect.</strong> The ball waits until it feels more than 5&nbsp;G. It only counts a kick if the force reaches 7&nbsp;G in one clean spike, with real rotation or a peak over 9&nbsp;G, which filters out bumps, drops and bounces.</li>
+    <li><strong>Measure.</strong> For the next 160&nbsp;ms it records acceleration and rotation, while the microphone captures 70&nbsp;ms of sound from the moment of impact, long enough to cover the whole contact. Then it waits 20&nbsp;ms for the vibration to die down and measures spin for 60&nbsp;ms.</li>
     <li><strong>Process.</strong> The firmware filters out noise and works out speed, spin, launch angle, strike quality and kick type.</li>
-    <li><strong>Send.</strong> All of it goes to the web app as one JSON message over Bluetooth, in under 300&nbsp;ms from contact.</li>
+    <li><strong>Send.</strong> All of it goes to the web app as one JSON message over Bluetooth. Sending starts once spin has been measured, about 240&nbsp;ms after the ball first feels the kick.</li>
     <li><strong>Coach.</strong> Every five kicks the ball adds training tips. In the web app, AMIR can analyze the whole session.</li>
   </ol>
 
@@ -158,12 +237,14 @@ footer .inner{max-width:760px; margin:0 auto; padding:24px 20px 40px;}
     <summary>Technical details: firmware, physics and data format</summary>
 
     <h3>Kick detection</h3>
-    <p>The firmware is a state machine: <code>IDLE → DETECTING → KICK_DETECTED → SPIN_SAMPLING → ANALYZING → SENDING</code>. Crossing 5&nbsp;G (<code>KICK_ENTER_G</code>) starts the 160&nbsp;ms detection window. A kick is confirmed only if the peak reached 7&nbsp;G (<code>KICK_CONFIRM_G</code>) with at least 150&nbsp;°/s of rotation, and the threshold was crossed exactly once. Catches and bounces cross it several times; a clean kick crosses it once.</p>
-<pre><code>// Two-tier gate: enter at 5G, confirm at 7G + 150 dps gyro
+    <p>The firmware is a state machine:</p>
+<pre class="flow"><code>IDLE&nbsp;→ DETECTING&nbsp;→ KICK_DETECTED&nbsp;→ SPIN_SAMPLING&nbsp;→ ANALYZING&nbsp;→ SENDING</code></pre>
+    <p>Crossing <code>KICK_ENTER_G</code> (5&nbsp;G) starts the 160&nbsp;ms detection window. A kick is confirmed only if the peak reached <code>KICK_CONFIRM_G</code> (7&nbsp;G) and either passed 9&nbsp;G or came with at least 150&nbsp;°/s of rotation, the threshold was crossed exactly once, and the reading is back under <code>KICK_SETTLE_G</code> (3&nbsp;G) when the window ends. Bounces and shakes cross it several times; a clean kick crosses it&nbsp;once.</p>
+<pre tabindex="0" role="region" aria-label="Kick detection gate code"><code>// Two-tier gate: enter at 5G, confirm at 7G plus (9G or 150 dps gyro)
 bool strong  = (capPeakG >= KICK_CONFIRM_G) &amp;&amp;
                (capPeakG >= 9.0f || capPeakGyroMag >= KICK_GYRO_CONFIRM);
-bool single  = (kickCrossCount <= KICK_MAX_CROSSINGS);
-bool settled = (magF < KICK_SETTLE_G);
+bool single  = (kickCrossCount &lt;= KICK_MAX_CROSSINGS);
+bool settled = (magF &lt; KICK_SETTLE_G);
 
 if (strong &amp;&amp; single &amp;&amp; settled) {
   enterState(S_KICK_DETECTED);
@@ -172,11 +253,11 @@ if (strong &amp;&amp; single &amp;&amp; settled) {
   refractoryUntil = millis() + (REFRACTORY_MS / 2);
   enterState(S_IDLE);
 }</code></pre>
-    <p>After a confirmed kick, detection is paused for 600&nbsp;ms so one strike can't register twice as the ball slows down.</p>
+    <p>After each kick has been sent, detection stays paused for another 600&nbsp;ms so one strike can’t register twice as the ball slows down.</p>
 
     <h3>Filtering</h3>
     <p>A low-pass filter with a fixed setting has to choose between reacting fast and smoothing well. The firmware changes the setting with the state: fast during impact so no peak gets cut off, slow at rest so the noise averages out.</p>
-<pre><code>float currentAlpha() {
+<pre tabindex="0" role="region" aria-label="Adaptive filter code"><code>float currentAlpha() {
   switch (state) {
     case S_DETECTING:
     case S_KICK_DETECTED: return 0.85f;  // ALPHA_IMPACT
@@ -190,42 +271,55 @@ fAx = a*ax + b*fAx;</code></pre>
 
     <h3>Speed</h3>
     <p>Speed comes from adding up acceleration over the impact window. To do that, gravity has to be subtracted from every reading, and because the ball is spinning, the direction of gravity keeps changing. The firmware tracks it with the gyroscope:</p>
-<pre><code>// Rotate the tracked gravity vector using gyro angular velocity
+<pre tabindex="0" role="region" aria-label="Gravity tracking code"><code>// Rotate the tracked gravity vector using gyro angular velocity
 float omX = fGx * 0.01745329f;  // deg/s to rad/s
 float omY = fGy * 0.01745329f;
 float omZ = fGz * 0.01745329f;
 
-gravKx += (omY*gravKz - omZ*gravKy) * dt;
-gravKy += (omZ*gravKx - omX*gravKz) * dt;
-gravKz += (omX*gravKy - omY*gravKx) * dt;
+float dGx = (omY * gravKz - omZ * gravKy) * dt;
+float dGy = (omZ * gravKx - omX * gravKz) * dt;
+float dGz = (omX * gravKy - omY * gravKx) * dt;
+gravKx += dGx; gravKy += dGy; gravKz += dGz;
+
+// Rescale it back to length 1
+float gn = sqrtf(gravKx*gravKx + gravKy*gravKy + gravKz*gravKz);
+if (gn &gt; 0.01f) { gravKx/=gn; gravKy/=gn; gravKz/=gn; }
 
 // Subtract rotated gravity, then integrate to velocity
 float linAx = (rawAx - gravKx) * 9.81f;
 velX += linAx * dt;</code></pre>
-    <p>Launch angle is <code>atan2(|vZ|, vHoriz)</code> of the final velocity, so it doesn't depend on the ball leaving the ground.</p>
+    <p>Launch angle is <code>atan2(|vZ|, vHoriz)</code> of the final velocity, so it doesn’t depend on the ball leaving the&nbsp;ground.</p>
 
     <h3>Data format</h3>
-    <p>Each kick is one JSON object, sent over a single Bluetooth characteristic in 160-byte pieces 20&nbsp;ms apart and ending with a newline. The web app puts the pieces back together.</p>
-<pre><code>{
-  "kick":    { "number": 12, "classification": "curve_ball", "powerScore": 74 },
-  "motion":  { "speedMph": 38.4, "launchAngle": 22.0, "curlDegrees": 11.2 },
-  "spin":    { "rateRPM": 212, "axis": "sidespin_left", "mixedSpin": false },
-  "strike":  { "quality": 83, "classification": "clean", "contactMs": 9 },
-  "session": { "totalKicks": 12, "consistencyScore": 77, "improvementTrend": "improving" },
+    <p>Each kick is one JSON object, sent over a single Bluetooth characteristic in 160-byte pieces 20&nbsp;ms apart and ending with a newline. The web app puts the pieces back together. Here is an example, with some fields left out:</p>
+<pre tabindex="0" role="region" aria-label="Example kick JSON"><code>{
+  "kick":    { "number": 12, "classification": "curve_ball",
+               "powerScore": 63 },
+  "impact":  { "peakG": 12.0, "clipped": false },
+  "motion":  { "speedMph": 38.4, "launchAngle": 22.0,
+               "curlDegrees": 11.2 },
+  "spin":    { "rateRPM": 212, "axis": "sidespin_left",
+               "mixedSpin": false },
+  "strike":  { "quality": 83, "classification": "clean",
+               "contactMs": 9 },
+  "session": { "totalKicks": 12, "consistencyScore": 77,
+               "improvementTrend": "improving" },
   "personalBests": { "speedMph": 54.1, "newBestBroken": false },
   "battery": { "percentage": 82, "lowBattery": false },
-  "recommendations": ["Your spin rate is inconsistent - focus on a repeatable foot contact point"]
+  "recommendations": [
+    "Launch angle too low for curve shots - aim higher on the ball"
+  ]
 }</code></pre>
 
-    <h3>Specifications</h3>
-    <table>
+    <h3 id="specs-title">Specifications</h3>
+    <table aria-labelledby="specs-title">
       <tbody>
-        <tr><th>Motion sensor sample rate</th><td>1660 Hz</td></tr>
-        <tr><th>Accelerometer range</th><td>±16 G</td></tr>
-        <tr><th>Gyroscope range</th><td>±2000 °/s</td></tr>
-        <tr><th>Bluetooth</th><td>Bluetooth Low Energy, one JSON characteristic, about 30 m range</td></tr>
-        <tr><th>Battery</th><td>1000 mAh LiPo</td></tr>
-        <tr><th>Added hardware cost</th><td>Under $40 per ball</td></tr>
+        <tr><th scope="row">Motion sensor sample rate</th><td>1660&nbsp;Hz</td></tr>
+        <tr><th scope="row">Accelerometer range</th><td>±16&nbsp;G</td></tr>
+        <tr><th scope="row">Gyroscope range</th><td>±2000&nbsp;°/s</td></tr>
+        <tr><th scope="row">Bluetooth</th><td>Bluetooth Low Energy, one JSON characteristic, about 30&nbsp;m range</td></tr>
+        <tr><th scope="row">Battery</th><td>1000&nbsp;mAh LiPo</td></tr>
+        <tr><th scope="row">Added hardware cost</th><td>Under $40 per ball</td></tr>
       </tbody>
     </table>
   </details>
@@ -233,31 +327,38 @@ velX += linAx * dt;</code></pre>
 
 <section id="amir">
   <h2>AMIR, the AI coach</h2>
-  <p>AMIR is the coach in the web app. It runs on gpt-oss-120b, an open large language model from OpenAI, through Groq's API. When you ask for feedback, the app sends AMIR your session numbers (speeds, spin, consistency, trend and the type of your last kick) along with instructions we wrote about how to coach. AMIR writes back an assessment, three things to work on and a drill. It can also build a four-week training plan, or you can just chat with it about your kicks.</p>
+  <p>AMIR is the coach in the web app. It runs on gpt-oss-120b, an open large language model from OpenAI, through Groq’s API. When you ask for feedback, the app sends AMIR your session numbers (speeds, spin, consistency, trend and the type of your last kick) along with instructions we wrote about how to coach. AMIR writes back an assessment, three things to work on and a drill. It can also build a four-week training plan, or you can just chat with it about your kicks.</p>
 
   <h3>Training tips from the ball</h3>
   <p>The ball also gives its own tips, without the internet. Every five kicks the firmware checks the session against rules we wrote after talking to coaches, and sends up to three tips:</p>
   <ul>
     <li>Consistency score under 60 → plant your standing foot the same way each kick.</li>
-    <li>Spin changing by more than 80&nbsp;RPM between kicks → find a repeatable contact point.</li>
+    <li>Spin varying a lot across the session (a spread of more than 80&nbsp;RPM) → find a repeatable contact point.</li>
     <li>Average launch angle under 18° → aim higher on the ball. Over 55° → strike through the center.</li>
-    <li>Fast kicks with little spin → work on adding spin for curve and dip.</li>
+    <li>Average speed over 40&nbsp;mph with little spin (under 80&nbsp;RPM) → work on adding spin for curve and dip.</li>
     <li>Average speed under 25&nbsp;mph → follow through fully and speed up the kicking leg.</li>
   </ul>
 
+  <h3>AMIR’s tip library</h3>
+  <p>After every kick the app also shows one of 201 coaching tips we wrote by hand, each tied to ranges of speed, spin, launch angle and strike quality. It picks the nearest tip for that kick type, and AMIR builds on it when it coaches you.</p>
+
+  <h3>Training our own models</h3>
+  <p>We also started training our own AI in Python: a neural network that sorts kicks into types, a technique scorer, and a model that looks for tiredness across 30 kicks. We didn’t have thousands of recorded kicks yet, so we trained them on 120,000 kicks made by a program we wrote. They score well on that generated data, but that only shows they learned the patterns we designed. They haven’t been tested on real kicks, and the ball can’t measure some of their inputs, so they aren’t in the app yet.</p>
+  <p>The next step is built: players tag each real kick in the app (“What kick was that?”), and we retrain on those real kicks using only what the ball measures.</p>
+
   <details>
     <summary>What the coaches told us</summary>
-    <h3>Weak shots</h3>
-    <blockquote>"Your plant foot should land 6–8 inches beside the ball, pointing at your target."</blockquote>
-    <blockquote>"Drive through the center of the ball with your laces, not your toe."</blockquote>
-    <blockquote>"Follow all the way through. Your kicking leg should finish above hip height."</blockquote>
-    <h3>Curve balls without enough spin</h3>
-    <blockquote>"Strike the inside edge, not the center. Aim for the outside quarter of the ball."</blockquote>
-    <blockquote>"Angle your approach 30–45 degrees to the target line."</blockquote>
-    <blockquote>"Use the inside of your foot. It gives you more surface for spin than the laces."</blockquote>
-    <h3>Shots that go too high</h3>
-    <blockquote>"Keep your body over the ball. Leaning back at contact is the main cause of high shots."</blockquote>
-    <blockquote>"Your follow-through should stay level. If your leg swings up, that's where the ball goes."</blockquote>
+    <h4>Weak shots</h4>
+    <blockquote>“Your plant foot should land 6–8 inches beside the ball, pointing at your target.”</blockquote>
+    <blockquote>“Drive through the center of the ball with your laces, not your toe.”</blockquote>
+    <blockquote>“Follow all the way through. Your kicking leg should finish above hip height.”</blockquote>
+    <h4>Curve balls without enough spin</h4>
+    <blockquote>“Strike the inside edge, not the center. Aim for the outside quarter of the ball.”</blockquote>
+    <blockquote>“Angle your approach 30–45 degrees to the target line.”</blockquote>
+    <blockquote>“Use the inside of your foot. It gives you more surface for spin than the laces.”</blockquote>
+    <h4>Shots that go too high</h4>
+    <blockquote>“Keep your body over the ball. Leaning back at contact is the main cause of high shots.”</blockquote>
+    <blockquote>“Your follow-through should stay level. If your leg swings up, that’s where the ball goes.”</blockquote>
   </details>
 </section>
 
@@ -272,14 +373,14 @@ velX += linAx * dt;</code></pre>
     <div>
       <h3>Skyler</h3>
       <div class="role">Co-inventor, testing lead</div>
-      <p>Field testing with club and academy players, the coach interviews behind the training tips, and accuracy improvements.</p>
+      <p>Field testing with club and academy players, the coach interviews behind the training tips, and accuracy&nbsp;improvements.</p>
     </div>
   </div>
   <p>We built Spin Off over five months to show that two 7th graders could make sports analytics that anyone can afford.</p>
 </section>
 
 <section id="next">
-  <h2>What's next</h2>
+  <h2>What’s next</h2>
   <ul>
     <li>iOS and Android apps with offline storage and steadier Bluetooth connections.</li>
     <li>Video sync: line up phone video with the sensor data to show speed and spin at the moment of contact.</li>
@@ -299,11 +400,11 @@ velX += linAx * dt;</code></pre>
 
   <details>
     <summary>A note from us</summary>
-    <p>Now that we look back at Spin Off, we see how far we've come. The obstacles we've overcome, the moments that challenged us, and the progress we didn't always recognize while it was happening.</p>
-    <p>When we first started, it was just an idea: a soccer ball that could measure performance. But turning that idea into something real was far from simple. There were moments when the data didn't make sense, when our system failed in ways we didn't expect, and when we had to step back and rethink everything we had built. At times, it felt like we were going in circles, fixing one problem only to discover another.</p>
-    <p>But looking back, those moments weren't setbacks in the way we first saw them. They were part of the process. Every error forced us to understand our system more deeply, every failure pushed us to improve our design, and every revision brought us one step closer to something that actually worked.</p>
-    <p>And even when things got hard, we weren't alone. We had people who supported us in different ways, through simple encouragement like "keep going," through advice when we were stuck, and through late night conversations that helped us stay motivated when things weren't working the way we hoped. Those moments didn't always feel significant at the time, but they became part of what carried us forward.</p>
-    <p>Right now, it's 10:30 PM as we write this. And maybe that says something about the project itself. Spin Off wasn't built in a single moment of inspiration. It was built across late nights, early mornings, long debugging sessions, and quiet moments of thinking things through when no one else was around. Most of those moments we won't remember clearly, but together they shaped everything that we've built here.</p>
+    <p>Now that we look back at Spin Off, we see how far we’ve come. The obstacles we’ve overcome, the moments that challenged us, and the progress we didn’t always recognize while it was happening.</p>
+    <p>When we first started, it was just an idea: a soccer ball that could measure performance. But turning that idea into something real was far from simple. There were moments when the data didn’t make sense, when our system failed in ways we didn’t expect, and when we had to step back and rethink everything we had built. At times, it felt like we were going in circles, fixing one problem only to discover another.</p>
+    <p>But looking back, those moments weren’t setbacks in the way we first saw them. They were part of the process. Every error forced us to understand our system more deeply, every failure pushed us to improve our design, and every revision brought us one step closer to something that actually worked.</p>
+    <p>And even when things got hard, we weren’t alone. We had people who supported us in different ways, through simple encouragement like “keep going,” through advice when we were stuck, and through late night conversations that helped us stay motivated when things weren’t working the way we hoped. Those moments didn’t always feel significant at the time, but they became part of what carried us forward.</p>
+    <p>Right now, it’s 10:30 PM as we write this. And maybe that says something about the project itself. Spin Off wasn’t built in a single moment of inspiration. It was built across late nights, early mornings, long debugging sessions, and quiet moments of thinking things through when no one else was around. Most of those moments we won’t remember clearly, but together they shaped everything that we’ve built here.</p>
     <p>The good and the bad are both part of this journey. The successes gave us confidence, and the failures taught us patience. Together, they shaped not only our invention, but also how we think as engineers, problem solvers, and learners.</p>
     <p>In the end, Spin Off represents something bigger than technology. It represents the belief that improvement should never be guesswork, but something you can see, measure, and build on every day.</p>
     <p>— Sahil &amp; Skyler</p>
@@ -312,15 +413,15 @@ velX += linAx * dt;</code></pre>
 
 <section id="contact">
   <h2>Contact</h2>
-  <p>We'd like to hear from players, coaches, parents, judges and other inventors. Email <a href="mailto:inventionconventionspinoff@gmail.com">inventionconventionspinoff@gmail.com</a> or fill out the <a href="https://forms.gle/feNw5kNKt2TsMMKo9" target="_blank" rel="noreferrer">feedback form</a>.</p>
+  <p>We’d like to hear from players, coaches, parents, judges and other inventors. Email <a href="mailto:inventionconventionspinoff@gmail.com">inventionconventionspinoff@gmail.com</a> or fill out the <a href="https://forms.gle/feNw5kNKt2TsMMKo9" target="_blank" rel="noreferrer">feedback form</a>.</p>
 </section>
 
 </main>
 
 <footer>
   <div class="inner">
-    <p>"It always seems impossible until you start, then every step makes it more possible than you ever expected."</p>
-    <p>Spin Off · Invention Convention 2026 · <a href="https://github.com/InventionConventionSpinOff/Spinoff">Source on GitHub</a></p>
+    <p class="quote">“It always seems impossible until you start, then every step makes it more possible than you ever expected.”</p>
+    <p class="segs"><span>Spin Off</span><span class="sep"> · </span><span>Invention Convention 2026</span><span class="sep"> · </span><span><a href="https://github.com/InventionConventionSpinOff/Spinoff">Source on GitHub</a></span></p>
   </div>
 </footer>
 
@@ -334,9 +435,11 @@ velX += linAx * dt;</code></pre>
     timer = setTimeout(() => clicks = 0, 600);
     if (clicks < 3) return;
     clicks = 0;
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     for (let i = 0; i < 40; i++) {
       const b = document.createElement('div');
       b.className = 'falling-ball';
+      b.setAttribute('aria-hidden', 'true');
       b.textContent = '⚽';
       b.style.left = Math.random() * 100 + 'vw';
       b.style.fontSize = (1.2 + Math.random() * 1.4) + 'em';
@@ -347,6 +450,29 @@ velX += linAx * dt;</code></pre>
       setTimeout(() => b.remove(), (dur + 1.5) * 1000);
     }
   });
+})();
+
+// Code boxes are a keyboard tab stop only when they actually scroll sideways.
+(function () {
+  const pres = [...document.querySelectorAll('pre[aria-label]')];
+  pres.forEach(p => p.dataset.label = p.getAttribute('aria-label'));
+  function update() {
+    pres.forEach(p => {
+      if (!p.clientWidth) return; // inside a closed <details>
+      if (p.scrollWidth > p.clientWidth) {
+        p.tabIndex = 0;
+        p.setAttribute('role', 'region');
+        p.setAttribute('aria-label', p.dataset.label);
+      } else {
+        p.removeAttribute('tabindex');
+        p.removeAttribute('role');
+        p.removeAttribute('aria-label');
+      }
+    });
+  }
+  addEventListener('resize', update);
+  document.addEventListener('toggle', update, true);
+  update();
 })();
 </script>
 </body>
