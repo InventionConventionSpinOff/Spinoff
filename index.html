@@ -333,11 +333,18 @@ velX += linAx * dt;</code></pre>
   <p>The ball also gives its own tips, without the internet. Every five kicks the firmware checks the session against rules we wrote after talking to coaches, and sends up to three tips:</p>
   <ul>
     <li>Consistency score under 60 → plant your standing foot the same way each kick.</li>
-    <li>Spin changing by more than 80&nbsp;RPM between kicks → find a repeatable contact point.</li>
+    <li>Spin varying a lot across the session (a spread of more than 80&nbsp;RPM) → find a repeatable contact point.</li>
     <li>Average launch angle under 18° → aim higher on the ball. Over 55° → strike through the center.</li>
-    <li>Fast kicks with little spin → work on adding spin for curve and dip.</li>
+    <li>Average speed over 40&nbsp;mph with little spin (under 80&nbsp;RPM) → work on adding spin for curve and dip.</li>
     <li>Average speed under 25&nbsp;mph → follow through fully and speed up the kicking leg.</li>
   </ul>
+
+  <h3>AMIR’s tip library</h3>
+  <p>After every kick the app also shows one of 201 coaching tips we wrote by hand, each tied to ranges of speed, spin, launch angle and strike quality. It picks the nearest tip for that kick type, and AMIR builds on it when it coaches you.</p>
+
+  <h3>Training our own models</h3>
+  <p>We also started training our own AI in Python: a neural network that sorts kicks into types, a technique scorer, and a model that looks for tiredness across 30 kicks. We didn’t have thousands of recorded kicks yet, so we trained them on 120,000 kicks made by a program we wrote. They score well on that generated data, but that only shows they learned the patterns we designed. They haven’t been tested on real kicks, and the ball can’t measure some of their inputs, so they aren’t in the app yet.</p>
+  <p>The next step is built: players tag each real kick in the app (“What kick was that?”), and we retrain on those real kicks using only what the ball measures.</p>
 
   <details>
     <summary>What the coaches told us</summary>

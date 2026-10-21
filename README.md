@@ -51,7 +51,7 @@ All of this fits inside a lightweight, impact-resistant enclosure that attaches 
 
 ### The Process
 1. Detection - When you kick the ball, the accelerometer detects a sudden change in motion
-2. Measurement - Sensors continuously sample data at 416 times per second
+2. Measurement - Sensors continuously sample data about 1,660 times per second
 3. Processing - Our custom algorithm filters noise and calculates speed, spin, and trajectory
 4. Transmission - Data is sent via Bluetooth Low Energy to the web app
 5. Analysis - AI examines your performance and provides personalized coaching
@@ -59,7 +59,7 @@ All of this fits inside a lightweight, impact-resistant enclosure that attaches 
 <details>
 <summary>Click here to learn more about the science behind Spin Off</summary>
 
-We use physics equations that NASA uses for projectile motion to convert raw sensor readings into meaningful numbers. Speed is calculated from the peak acceleration during impact using an impulse model with calibration factors tuned to a regulation soccer ball. Spin rate takes the raw angular velocity output from the gyroscope in degrees per second and converts it to rotations per minute. Launch angle is derived from the tilt of the acceleration vector at the moment of contact. Flight time is estimated using projectile motion equations once the initial velocity and angle are known. All of these calculations happen in under 100 milliseconds on the microcontroller before the data is ever sent to the app.
+We use physics equations that NASA uses for projectile motion to convert raw sensor readings into meaningful numbers. Speed is calculated by adding up the acceleration over the moment of impact (with gravity removed) and applying a calibration factor tuned to a regulation soccer ball. Spin rate takes the raw angular velocity output from the gyroscope in degrees per second and converts it to rotations per minute. Launch angle comes from the direction of the ball's velocity at the end of the impact. Flight time is estimated using projectile motion equations once the initial velocity and angle are known. All of these calculations happen on the microcontroller, and the kick reaches the app about a quarter of a second after contact.
 
 The signal processing pipeline is what makes all of this reliable. Raw accelerometer data is extremely noisy - even sitting still the sensor produces tiny fluctuations that would ruin the calculations if left unfiltered. We apply a digital low-pass filter with an alpha value of 0.6 that smooths out high-frequency vibration while preserving the real impact signature. On top of that, we use a peak detection algorithm that identifies the exact moment of maximum force during the kick so we are always measuring the right thing.
 
@@ -69,9 +69,13 @@ The signal processing pipeline is what makes all of this reliable. Raw accelerom
 
 ## How We Built AMIR
 
-AMIR (Athletic Motion Intelligence and Recognition) is the AI coach in the Spin Off web app. It runs on gpt-oss-120b, an open large language model from OpenAI, through Groq's API. (It used Llama 3.3 70B until Groq retired that model in August 2026.) We didn't train the model ourselves. Our work went into what we give it: when you ask AMIR for feedback, the web app builds a message from your session (max and average speed, spin, consistency, improvement trend, kick type and your last few speeds) and tells the model how to coach, asking for a short assessment, three things to improve and one drill. AMIR can also write a 4-week training plan, or you can just chat with it about your kicks.
+AMIR (Athletic Motion Intelligence and Recognition) is the AI coach in the Spin Off web app. It runs on gpt-oss-120b, an open large language model from OpenAI, through Groq's API. (It used Llama 3.3 70B until Groq retired that model in August 2026.) We didn't train that model. Our work went into what we give it: when you ask AMIR for feedback, the web app builds a message from your session (max and average speed, spin, consistency, improvement trend, kick type and your last few speeds) and tells the model how to coach, asking for a short assessment, three things to improve and one drill. AMIR can also write a 4-week training plan, or you can just chat with it about your kicks.
 
 The ball also coaches you by itself, without the internet. Every five kicks the firmware checks your session against rules we wrote after talking to coaches and sends up to three tips along with the kick data.
+
+After every kick the app also shows a tip from **AMIR's tip library**: 201 coaching tips we wrote by hand, each tied to ranges of speed, spin, launch angle and strike quality. The app picks the nearest tip for the kick's type (a nearest-neighbour lookup that matched our Python version in our tests), and AMIR builds on it when it coaches you.
+
+We also started training our own AI. In a separate Python project ("AMIR Lab") we built a neural network that sorts kicks into types, a technique scorer and an LSTM that looks for signs of tiredness across 30 kicks. We didn't have thousands of recorded kicks yet, so we trained them on 120,000 kicks generated by a program we wrote. They score well on that generated data (97.9% for kick type), but that only shows they learned the patterns we designed: they haven't been tested on real kicks, and the ball can't measure some of their inputs. That's why they aren't in the app yet. The next step is already built: tag real kicks in the app ("What kick was that?"), download them, and retrain on real ball data with `retrain_on_real.py`.
 
 <details>
 <summary>Click here to learn more about the coach interviews and the rules in the ball</summary>
@@ -122,7 +126,7 @@ Software:
 - From start to finish, designing the AI, creating the website, and coding the ball, took around **5 MONTHS TO BUILD AND CREATE**
 
 Key Features:
-- Real-time data streaming (< 100ms latency)
+- Kick data in the app about a quarter of a second after contact
 - Advanced signal filtering (low-pass filter with 0.6 alpha)
 - Automatic calibration for realistic speed measurements
 - Cross-platform compatibility (Windows, Mac, Android)
@@ -142,7 +146,7 @@ Our AI coach analyzes your performance data and provides:
 - 4-week progressive training plans
 
 ### Shot Mapping
-Visualize exactly where your shots are going with an interactive soccer field display. Mark your position and target to see shot trajectories and accuracy patterns.
+Tap where you kicked from and where the ball went on an interactive soccer field to track your shot placement over time.
 
 ### Session Analytics
 Track your progress with detailed statistics:
@@ -157,6 +161,20 @@ Download your session data in JSON or CSV format to:
 - Analyze in spreadsheet software
 - Track long-term progress
 - Create custom visualizations
+
+---
+
+## New in the web app
+
+- **AMIR's tip library:** a tip from our 201 hand-written tips after every kick.
+- **Tag your kicks:** tap what kick it really was, then download the tagged kicks as CSV or JSON to train AMIR on real ball data.
+- **AMIR remembers you:** AMIR sees a short summary of your last 5 saved sessions, so it can talk about your progress.
+- **Progress over time:** a chart of max speed, average speed and consistency across saved sessions.
+- **Demo mode:** "Try a demo (no ball)" plays simulated kicks, clearly marked DEMO, so the app can be shown without the ball. Demo kicks are never saved.
+- **Fatigue check:** after 10 kicks, a simple rule compares your last 5 kicks' speed with your best stretch (a rule, not AI).
+- **Read replies aloud:** AMIR can speak its answers.
+- **Install as an app:** add it to your home screen; kick tracking works offline (AMIR needs internet).
+- **Automatic checks:** every push runs 45 browser and unit tests (`bash tests/run.sh`) on GitHub.
 
 ---
 
@@ -182,6 +200,9 @@ The proxy only accepts requests from the GitHub Pages site and only forwards cha
 - `NATIONSPIT.html` - the web app (live tracker, AMIR coach, chat)
 - `firmware/SpinOff/SpinOff.ino` - the Arduino firmware. Open it in the Arduino IDE. The website publishes it as `spinoffexplained.txt` so it can be read in a browser.
 - `worker/groq-proxy.js` - the optional AI proxy described above
+- `amir/tips.json` - AMIR's 201 coaching tips for the in-app tip library
+- `manifest.webmanifest`, `sw.js`, `icons/` - install-as-app and offline support (the icons are placeholders)
+- `tests/` - the automatic test suite (`bash tests/run.sh`)
 - `.github/workflows/deploy.yml` - publishes the site to GitHub Pages on every push to `main`
 
 ---
